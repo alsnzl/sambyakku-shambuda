@@ -18,9 +18,21 @@ type Props = {
   letter: Letter
   track: ScriptTrack
   onOpenLetter?: (letter: Letter) => void
+  onPrev?: () => void
+  onNext?: () => void
+  hasPrev?: boolean
+  hasNext?: boolean
 }
 
-export function LetterCard({ letter, track, onOpenLetter }: Props) {
+export function LetterCard({
+  letter,
+  track,
+  onOpenLetter,
+  onPrev,
+  onNext,
+  hasPrev = false,
+  hasNext = false,
+}: Props) {
   const glyph = track === 'sanskrit' ? letter.dewa : letter.siddham
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
@@ -54,20 +66,45 @@ export function LetterCard({ letter, track, onOpenLetter }: Props) {
         </button>
       </div>
 
-      {writeOpen ? (
-        <WritePractice
-          letterId={letter.id}
-          glyph={glyph}
-          track={track}
-          onClose={() => setWriteOpen(false)}
-        />
-      ) : (
-        <div className="letter-card__view">
-          <div className="letter-card__hero-frame">
-            <p className={`letter-card__hero ${heroClass}`} lang="sa" aria-label={letter.iast}>
-              {glyph}
-            </p>
-          </div>
+      <div className="letter-card__view">
+        <div className="letter-card__stage">
+          <button
+            type="button"
+            className="letter-card__side-nav motion-press"
+            onClick={onPrev}
+            disabled={!hasPrev || !onPrev}
+            aria-label="이전 글자"
+          >
+            ‹
+          </button>
+
+          {writeOpen ? (
+            <WritePractice
+              letterId={letter.id}
+              glyph={glyph}
+              track={track}
+              onClose={() => setWriteOpen(false)}
+            />
+          ) : (
+            <div className="letter-card__hero-frame">
+              <p className={`letter-card__hero ${heroClass}`} lang="sa" aria-label={letter.iast}>
+                {glyph}
+              </p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="letter-card__side-nav motion-press"
+            onClick={onNext}
+            disabled={!hasNext || !onNext}
+            aria-label="다음 글자"
+          >
+            ›
+          </button>
+        </div>
+
+        {!writeOpen ? (
           <div className="letter-card__actions">
             <button
               type="button"
@@ -85,8 +122,8 @@ export function LetterCard({ letter, track, onOpenLetter }: Props) {
               발음 듣기
             </button>
           </div>
-        </div>
-      )}
+        ) : null}
+      </div>
 
       <StrokeTeachPanel letterId={letter.id} glyph={glyph} track={track} />
 

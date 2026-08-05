@@ -208,33 +208,6 @@
   transform: scale(0.985);
 }
 
-.learn__nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  margin-top: 1.1rem;
-}
-
-.learn__nav-btn {
-  appearance: none;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.85rem 1rem;
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.learn__nav-btn:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.learn__nav-btn:not(:disabled):active {
-  transform: scale(0.985);
-}
-
 .learn__sheet {
   position: relative;
   margin-top: 0.2rem;

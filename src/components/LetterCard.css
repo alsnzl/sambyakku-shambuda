@@ -61,6 +61,43 @@
   padding: 0.35rem 0 0.5rem;
 }
 
+.letter-card__stage {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 22.5rem;
+}
+
+.letter-card__side-nav {
+  appearance: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.55rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.letter-card__side-nav:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.letter-card__side-nav:not(:disabled):active {
+  transform: scale(0.96);
+}
+
 .letter-card__hero-frame {
   container-type: inline-size;
   width: 100%;
@@ -73,6 +110,12 @@
   border: 1px solid var(--block-border);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+}
+
+.letter-card__stage .write {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
 }
 
 .letter-card__hero {

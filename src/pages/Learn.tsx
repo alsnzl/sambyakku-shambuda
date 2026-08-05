@@ -117,27 +117,12 @@ export function Learn({
               letter={letter}
               track={track}
               onOpenLetter={(item) => openLetter(item, letterReturn)}
+              hasPrev={Boolean(prev)}
+              hasNext={Boolean(next)}
+              onPrev={prev ? () => goPrev(prev) : undefined}
+              onNext={next ? () => goNext(next) : undefined}
             />
           </MotionPage>
-        </div>
-
-        <div className="learn__nav">
-          <button
-            type="button"
-            className="learn__nav-btn motion-press"
-            onClick={() => prev && goPrev(prev)}
-            disabled={!prev}
-          >
-            ← 이전
-          </button>
-          <button
-            type="button"
-            className="learn__nav-btn motion-press"
-            onClick={() => next && goNext(next)}
-            disabled={!next}
-          >
-            다음 →
-          </button>
         </div>
       </main>
     )
