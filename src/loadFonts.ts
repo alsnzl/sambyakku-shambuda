@@ -8,7 +8,7 @@ style.textContent = `
   font-style: normal;
   font-display: swap;
   font-weight: 400 700;
-  src: url('${base}fonts/NotoSansDevanagari.ttf') format('truetype-variations');
+  src: url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans Siddham';
