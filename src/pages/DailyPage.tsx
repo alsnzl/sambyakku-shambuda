@@ -9,10 +9,11 @@ import './tools.css'
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
   onOpenLetter: (letter: Letter) => void
 }
 
-export function DailyPage({ track, onBack, onOpenLetter }: Props) {
+export function DailyPage({ track, onBack, backLabel = '← 학습', onOpenLetter }: Props) {
   const course = getDailyCourse(track, 5)
   const done = new Set(course.doneIds)
   const glyphClass =
@@ -22,7 +23,7 @@ export function DailyPage({ track, onBack, onOpenLetter }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>오늘 학습</h1>
       </header>

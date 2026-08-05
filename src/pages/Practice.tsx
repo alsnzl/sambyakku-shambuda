@@ -10,6 +10,7 @@ import './Practice.css'
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
 }
 
 type Phase = 'ready' | 'quiz' | 'done'
@@ -26,7 +27,7 @@ function scriptClass(kind: 'deva' | 'siddham' | 'latin', role: 'prompt' | 'choic
     : 'practice__choice-script practice__choice-script--siddham'
 }
 
-export function Practice({ track, onBack }: Props) {
+export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
   const [phase, setPhase] = useState<Phase>('ready')
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [index, setIndex] = useState(0)
@@ -86,7 +87,7 @@ export function Practice({ track, onBack }: Props) {
               className="practice__back motion-press"
               onClick={onBack}
             >
-              ← 홈
+              {backLabel}
             </button>
             <h1>{meta.title} 연습</h1>
           </header>
@@ -115,7 +116,7 @@ export function Practice({ track, onBack }: Props) {
               className="practice__back motion-press"
               onClick={onBack}
             >
-              ← 홈
+              {backLabel}
             </button>
             <h1>결과</h1>
           </header>
@@ -152,7 +153,7 @@ export function Practice({ track, onBack }: Props) {
     <main className="practice">
       <header className="practice__bar">
         <button type="button" className="practice__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>
           {index + 1} / {questions.length}

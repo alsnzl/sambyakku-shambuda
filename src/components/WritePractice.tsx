@@ -21,6 +21,7 @@ type Props = {
   letterId: string
   glyph: string
   track: ScriptTrack
+  onClose?: () => void
 }
 
 type PracticeMode = 'trace' | 'watch'
@@ -30,7 +31,7 @@ const MIN_STROKE_MS = 220
 const LIFT_MS = 55
 const glide = (t: number) => 1 - (1 - t) ** 1.25
 
-export function WritePractice({ letterId, glyph, track }: Props) {
+export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const data = getEffectiveGlyphStrokes(letterId, script)
   const fallback = getGlyphStrokes(letterId, script)
@@ -236,7 +237,14 @@ export function WritePractice({ letterId, glyph, track }: Props) {
   return (
     <section className="write" aria-label="쓰기 연습">
       <div className="write__head">
-        <h3>쓰기 연습</h3>
+        <div className="write__title-row">
+          {onClose ? (
+            <button type="button" className="write__back motion-press" onClick={onClose}>
+              ← 글자 보기
+            </button>
+          ) : null}
+          <h3>쓰기 연습</h3>
+        </div>
         <div className="write__actions">
           <button
             type="button"

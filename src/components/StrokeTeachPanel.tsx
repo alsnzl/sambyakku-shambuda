@@ -73,6 +73,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [syncing, setSyncing] = useState(false)
   const [tokenDraft, setTokenDraft] = useState(() => getCloudToken() ?? '')
   const [showToken, setShowToken] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const outlineD = generated?.d
   const maskId = `${useId()}-teach-mask`
@@ -89,6 +90,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setRecorded([])
     setDrawing([])
     setActiveStep(0)
+    setOpen(false)
+    setMessage(null)
     drawingRef.current = false
     pointsRef.current = []
   }, [letterId, script])
@@ -418,12 +421,35 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   void tick
 
   return (
-    <section className="teach" aria-label="획 가르치기">
-      <div className="teach__head">
-        <h3>획 가르치기</h3>
+    <section className={`teach ${open ? 'is-open' : 'is-collapsed'}`} aria-label="획 가르치기">
+      <button
+        type="button"
+        className="teach__toggle motion-press"
+        aria-expanded={open}
+        onClick={() => {
+          setOpen((v) => {
+            if (v) {
+              setMode('idle')
+              setRecorded([])
+              setDrawing([])
+              drawingRef.current = false
+              pointsRef.current = []
+            }
+            return !v
+          })
+        }}
+      >
+        <span className="teach__toggle-main">
+          <span className="teach__toggle-chevron" aria-hidden="true">
+            {open ? '▾' : '▸'}
+          </span>
+          <h3>획 가르치기</h3>
+        </span>
         <span className={`teach__status ${statusClass}`}>{statusLabel}</span>
-      </div>
+      </button>
 
+      {open ? (
+        <>
       <div className="teach__meta">
         {info.strokeCount > 0 ? (
           <>
@@ -680,6 +706,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
           </ol>
         </div>
       )}
+        </>
+      ) : null}
     </section>
   )
 }

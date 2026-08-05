@@ -23,6 +23,21 @@ export type LetterProgress = {
 
 export type TrackProgress = Record<string, LetterProgress>
 
+export type JournalDay = {
+  merit: number
+  quiz: number
+  write: number
+  review: number
+  daily: number
+}
+
+export type LearnerPathState = {
+  merit: number
+  streak: number
+  lastActiveDate: string | null
+  journal: Record<string, JournalDay>
+}
+
 export type LearnerState = {
   favorites: Partial<Record<ScriptTrack, string[]>>
   tracks: Partial<Record<ScriptTrack, TrackProgress>>
@@ -36,10 +51,17 @@ export type LearnerState = {
       }
     >
   >
+  path?: LearnerPathState
 }
 
 function todayKey() {
   const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function yesterdayKey(from = todayKey()): string {
+  const d = new Date(`${from}T12:00:00`)
+  d.setDate(d.getDate() - 1)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -63,15 +85,33 @@ export function defaultLetterProgress(): LetterProgress {
   }
 }
 
+export function defaultPathState(): LearnerPathState {
+  return {
+    merit: 0,
+    streak: 0,
+    lastActiveDate: null,
+    journal: {},
+  }
+}
+
+function emptyJournal(): JournalDay {
+  return { merit: 0, quiz: 0, write: 0, review: 0, daily: 0 }
+}
+
 function emptyState(): LearnerState {
-  return { favorites: {}, tracks: {}, daily: {} }
+  return { favorites: {}, tracks: {}, daily: {}, path: defaultPathState() }
 }
 
 export function loadLearner(): LearnerState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return emptyState()
-    return { ...emptyState(), ...(JSON.parse(raw) as LearnerState) }
+    const parsed = JSON.parse(raw) as LearnerState
+    return {
+      ...emptyState(),
+      ...parsed,
+      path: { ...defaultPathState(), ...parsed.path },
+    }
   } catch {
     return emptyState()
   }
@@ -79,6 +119,45 @@ export function loadLearner(): LearnerState {
 
 function saveLearner(state: LearnerState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+}
+
+export function saveLearnerPath(path: LearnerPathState) {
+  const state = loadLearner()
+  state.path = path
+  saveLearner(state)
+}
+
+export type MeritKind = 'quiz' | 'write' | 'review' | 'daily'
+
+export function grantMerit(kind: MeritKind, amount: number) {
+  if (amount <= 0) return
+  const state = loadLearner()
+  const path = { ...defaultPathState(), ...state.path }
+  const today = todayKey()
+  const yday = yesterdayKey(today)
+
+  if (path.lastActiveDate === today) {
+    // keep streak
+  } else if (path.lastActiveDate === yday) {
+    path.streak += 1
+  } else {
+    path.streak = 1
+  }
+  path.lastActiveDate = today
+  path.merit += amount
+
+  const day = path.journal[today] ?? emptyJournal()
+  day.merit += amount
+  day[kind] += 1
+  path.journal[today] = day
+
+  const keys = Object.keys(path.journal).sort()
+  if (keys.length > 40) {
+    for (const k of keys.slice(0, keys.length - 40)) delete path.journal[k]
+  }
+
+  state.path = path
+  saveLearner(state)
 }
 
 export function getLetterProgress(
@@ -119,37 +198,7 @@ export function markLetterLearned(track: ScriptTrack, letterId: string) {
   }))
 }
 
-export function recordQuizResult(
-  track: ScriptTrack,
-  letterId: string,
-  correct: boolean,
-) {
-  updateLetter(track, letterId, (p) => ({
-    ...p,
-    seen: true,
-    quizCorrect: p.quizCorrect + (correct ? 1 : 0),
-    quizWrong: p.quizWrong + (correct ? 0 : 1),
-    lastSeenAt: new Date().toISOString(),
-  }))
-  reviewSrs(track, letterId, correct ? 'good' : 'again')
-}
-
-export function recordWriteScore(
-  track: ScriptTrack,
-  letterId: string,
-  score: number,
-) {
-  return updateLetter(track, letterId, (p) => ({
-    ...p,
-    seen: true,
-    writeBest: Math.max(p.writeBest, score),
-    learned: p.learned || score >= 70,
-    lastSeenAt: new Date().toISOString(),
-  }))
-}
-
-/** Simple SM-2 style intervals (days). */
-export function reviewSrs(
+function applySrs(
   track: ScriptTrack,
   letterId: string,
   grade: 'again' | 'hard' | 'good' | 'easy',
@@ -187,6 +236,51 @@ export function reviewSrs(
   })
 }
 
+export function recordQuizResult(
+  track: ScriptTrack,
+  letterId: string,
+  correct: boolean,
+) {
+  updateLetter(track, letterId, (p) => ({
+    ...p,
+    seen: true,
+    quizCorrect: p.quizCorrect + (correct ? 1 : 0),
+    quizWrong: p.quizWrong + (correct ? 0 : 1),
+    lastSeenAt: new Date().toISOString(),
+  }))
+  applySrs(track, letterId, correct ? 'good' : 'again')
+  grantMerit('quiz', correct ? 3 : 1)
+}
+
+export function recordWriteScore(
+  track: ScriptTrack,
+  letterId: string,
+  score: number,
+) {
+  const result = updateLetter(track, letterId, (p) => ({
+    ...p,
+    seen: true,
+    writeBest: Math.max(p.writeBest, score),
+    learned: p.learned || score >= 70,
+    lastSeenAt: new Date().toISOString(),
+  }))
+  grantMerit('write', Math.max(1, Math.round(score / 20)))
+  return result
+}
+
+/** Simple SM-2 style intervals (days). */
+export function reviewSrs(
+  track: ScriptTrack,
+  letterId: string,
+  grade: 'again' | 'hard' | 'good' | 'easy',
+) {
+  const result = applySrs(track, letterId, grade)
+  const merit =
+    grade === 'easy' ? 3 : grade === 'good' ? 2 : grade === 'hard' ? 1 : 0
+  if (merit) grantMerit('review', merit)
+  return result
+}
+
 export function getDueLetters(track: ScriptTrack, limit = 20): Letter[] {
   const state = loadLearner()
   const now = Date.now()
@@ -199,7 +293,6 @@ export function getDueLetters(track: ScriptTrack, limit = 20): Letter[] {
     .filter((x) => x.due <= now)
     .sort((a, b) => a.due - b.due)
 
-  // Prefer seen/due; if empty, seed with unseen
   if (due.length === 0) {
     const unseen = letters.filter((l) => !map[l.id]?.seen)
     return (unseen.length ? unseen : letters).slice(0, limit)
@@ -290,9 +383,11 @@ export function markDailyDone(track: ScriptTrack, letterId: string) {
   const date = todayKey()
   const daily = state.daily[track]
   if (!daily || daily.date !== date) return
-  if (!daily.doneIds.includes(letterId)) daily.doneIds.push(letterId)
+  const already = daily.doneIds.includes(letterId)
+  if (!already) daily.doneIds.push(letterId)
   saveLearner(state)
   markLetterLearned(track, letterId)
+  if (!already) grantMerit('daily', 2)
 }
 
 export type ProgressSummary = {

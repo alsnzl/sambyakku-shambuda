@@ -7,9 +7,10 @@ import './tools.css'
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
 }
 
-export function ReviewPage({ track, onBack }: Props) {
+export function ReviewPage({ track, onBack, backLabel = '← 학습' }: Props) {
   const queue = useMemo(() => getDueLetters(track, 15), [track])
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -29,7 +30,7 @@ export function ReviewPage({ track, onBack }: Props) {
       <main className="tool">
         <header className="tool__bar">
           <button type="button" className="tool__back motion-press" onClick={onBack}>
-            ← 홈
+            {backLabel}
           </button>
           <h1>복습</h1>
         </header>
@@ -44,7 +45,7 @@ export function ReviewPage({ track, onBack }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>
           복습 {index + 1}/{queue.length}

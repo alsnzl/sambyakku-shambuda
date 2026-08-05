@@ -11,6 +11,7 @@ type Props = {
   startInChart?: boolean
   initialLetterId?: string | null
   onBack: () => void
+  backLabel?: string
 }
 
 type View = 'menu' | 'chart' | 'group' | 'letter'
@@ -20,6 +21,7 @@ export function Learn({
   startInChart = false,
   initialLetterId = null,
   onBack,
+  backLabel = '← 학습',
 }: Props) {
   const groups = useMemo(() => getLetterGroups(), [])
   const initialLetter = initialLetterId
@@ -186,7 +188,7 @@ export function Learn({
               className="learn__back motion-press"
               onClick={() => (startInChart ? onBack() : setView('menu'))}
             >
-              {startInChart ? '← 홈' : '← 학습'}
+              {startInChart ? backLabel : '← 메뉴'}
             </button>
             <h1>전체 문자</h1>
           </header>
@@ -240,7 +242,7 @@ export function Learn({
     <main className="learn">
       <header className="learn__bar">
         <button type="button" className="learn__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>{meta.title} 학습</h1>
       </header>

@@ -8,10 +8,16 @@ import './tools.css'
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
   onOpenLetter: (letter: Letter) => void
 }
 
-export function FavoritesPage({ track, onBack, onOpenLetter }: Props) {
+export function FavoritesPage({
+  track,
+  onBack,
+  backLabel = '← 학습',
+  onOpenLetter,
+}: Props) {
   const [tab, setTab] = useState<'fav' | 'weak'>('fav')
   const favs = useMemo(() => getFavorites(track), [track])
   const weak = useMemo(() => getWeakLetters(track, 24), [track])
@@ -23,7 +29,7 @@ export function FavoritesPage({ track, onBack, onOpenLetter }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>즐겨찾기 · 약점</h1>
       </header>

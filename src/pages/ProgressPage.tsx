@@ -2,17 +2,27 @@ import type { Letter } from '../data/letters'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { getProgressSummary, getWeakLetters } from '../lib/learnerStore'
+import { getPathSnapshot } from '../lib/pathProgress'
 import './tools.css'
 
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
   onOpenLetter?: (letter: Letter) => void
+  onOpenPath?: () => void
 }
 
-export function ProgressPage({ track, onBack, onOpenLetter }: Props) {
+export function ProgressPage({
+  track,
+  onBack,
+  backLabel = '← 학습',
+  onOpenLetter,
+  onOpenPath,
+}: Props) {
   const s = getProgressSummary(track)
   const weak = getWeakLetters(track, 8)
+  const path = getPathSnapshot()
   const glyphClass =
     track === 'sanskrit' ? 'tool__chip-glyph--deva' : 'tool__chip-glyph--siddham'
   const pct = Math.round((s.learned / Math.max(s.total, 1)) * 100)
@@ -21,11 +31,27 @@ export function ProgressPage({ track, onBack, onOpenLetter }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>진도</h1>
       </header>
       <p className="tool__lead">{trackMeta[track].title} 트랙 학습 현황입니다.</p>
+
+      <section className="tool__block">
+        <h2>수행 · {path.stage.nameKo}</h2>
+        <p className="tool__meta">
+          공덕 {path.path.merit} · 연속 {path.path.streak}일
+        </p>
+        {onOpenPath ? (
+          <button
+            type="button"
+            className="tool__btn tool__btn--primary motion-press"
+            onClick={onOpenPath}
+          >
+            수행 길 보기
+          </button>
+        ) : null}
+      </section>
 
       <section className="tool__block">
         <h2>요약</h2>

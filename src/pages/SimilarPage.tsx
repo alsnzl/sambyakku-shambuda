@@ -5,9 +5,10 @@ import './tools.css'
 type Props = {
   track: ScriptTrack
   onBack: () => void
+  backLabel?: string
 }
 
-export function SimilarPage({ track, onBack }: Props) {
+export function SimilarPage({ track, onBack, backLabel = '← 학습' }: Props) {
   const pairs = getAllSimilarPairs()
   const glyphClass =
     track === 'sanskrit' ? 'tool__chip-glyph--deva' : 'tool__chip-glyph--siddham'
@@ -16,7 +17,7 @@ export function SimilarPage({ track, onBack }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>유사 글자 대비</h1>
       </header>

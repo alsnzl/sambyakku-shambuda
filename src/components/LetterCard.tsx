@@ -23,14 +23,18 @@ type Props = {
 export function LetterCard({ letter, track, onOpenLetter }: Props) {
   const glyph = track === 'sanskrit' ? letter.dewa : letter.siddham
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
+  const [writeOpen, setWriteOpen] = useState(false)
   const similar = getSimilarLetters(letter.id)
   const theory = getTheoryBlurb(letter.id)
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
+  const heroClass =
+    track === 'sanskrit' ? 'letter-card__hero--deva' : 'letter-card__hero--siddham'
 
   useEffect(() => {
     markLetterSeen(track, letter.id)
     setFav(isFavorite(track, letter.id))
+    setWriteOpen(false)
   }, [letter.id, track])
 
   return (
@@ -50,7 +54,39 @@ export function LetterCard({ letter, track, onOpenLetter }: Props) {
         </button>
       </div>
 
-      <WritePractice letterId={letter.id} glyph={glyph} track={track} />
+      {writeOpen ? (
+        <WritePractice
+          letterId={letter.id}
+          glyph={glyph}
+          track={track}
+          onClose={() => setWriteOpen(false)}
+        />
+      ) : (
+        <div className="letter-card__view">
+          <div className="letter-card__hero-frame">
+            <p className={`letter-card__hero ${heroClass}`} lang="sa" aria-label={letter.iast}>
+              {glyph}
+            </p>
+          </div>
+          <div className="letter-card__actions">
+            <button
+              type="button"
+              className="letter-card__write-btn motion-press"
+              onClick={() => setWriteOpen(true)}
+            >
+              쓰기 연습
+            </button>
+            <button
+              type="button"
+              className="letter-card__audio motion-press"
+              onClick={() => playLetterPronunciation(letter)}
+              title="발음 듣기"
+            >
+              발음 듣기
+            </button>
+          </div>
+        </div>
+      )}
 
       <StrokeTeachPanel letterId={letter.id} glyph={glyph} track={track} />
 
@@ -87,15 +123,6 @@ export function LetterCard({ letter, track, onOpenLetter }: Props) {
           </div>
         </div>
       )}
-
-      <button
-        type="button"
-        className="letter-card__audio motion-press"
-        onClick={() => playLetterPronunciation(letter)}
-        title="발음 듣기"
-      >
-        발음 듣기
-      </button>
     </article>
   )
 }

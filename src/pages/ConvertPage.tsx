@@ -4,9 +4,10 @@ import './tools.css'
 
 type Props = {
   onBack: () => void
+  backLabel?: string
 }
 
-export function ConvertPage({ onBack }: Props) {
+export function ConvertPage({ onBack, backLabel = '← 학습' }: Props) {
   const [text, setText] = useState('namaḥ')
   const result = convertIastInput(text)
   const hints = lookupByIastFragment(text).slice(0, 8)
@@ -15,7 +16,7 @@ export function ConvertPage({ onBack }: Props) {
     <main className="tool">
       <header className="tool__bar">
         <button type="button" className="tool__back motion-press" onClick={onBack}>
-          ← 홈
+          {backLabel}
         </button>
         <h1>IAST 변환</h1>
       </header>

@@ -53,6 +53,85 @@
   background: color-mix(in srgb, #c4922a 12%, white);
 }
 
+.letter-card__view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.35rem 0 0.5rem;
+}
+
+.letter-card__hero-frame {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--block-border);
+  background: var(--block-bg);
+  box-shadow: var(--block-shadow);
+}
+
+.letter-card__hero {
+  margin: 0;
+  line-height: 1;
+  color: var(--ink);
+  user-select: none;
+  /* Matches write practice glyph (~148px in 240 viewBox at 280px) */
+  font-size: min(173px, 62cqw);
+}
+
+.letter-card__hero--deva {
+  font-family: var(--deva);
+}
+
+.letter-card__hero--siddham {
+  font-family: var(--siddham);
+}
+
+.letter-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.letter-card__write-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.7rem 1.35rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.letter-card__write-btn:active {
+  transform: scale(0.975);
+}
+
+.letter-card__audio {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.7rem 1.3rem;
+  background: var(--chip);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.letter-card__audio:active {
+  transform: scale(0.975);
+}
+
 .letter-card__theory,
 .letter-card__similar {
   margin-top: 0.75rem;
@@ -148,25 +227,4 @@
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--muted);
-}
-
-.letter-card__audio {
-  margin: 0.95rem auto 0;
-  appearance: none;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.7rem 1.3rem;
-  background: var(--chip);
-  color: var(--ink);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.letter-card__audio:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.letter-card__audio:not(:disabled):active {
-  transform: scale(0.975);
 }
