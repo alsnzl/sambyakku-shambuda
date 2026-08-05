@@ -1,22 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 
-/* Self-hosted so on-screen glyphs match the generated stroke outlines exactly. */
-@font-face {
-  font-family: 'Noto Sans Devanagari';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 400 700;
-  src: url('/fonts/NotoSansDevanagari.ttf') format('truetype-variations');
-}
-
-@font-face {
-  font-family: 'Noto Sans Siddham';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 400;
-  src: url('/fonts/NotoSansSiddham-Regular.ttf') format('truetype');
-  unicode-range: U+11580-115FF;
-}
+/* Script fonts: see loadFonts.ts (BASE_URL-aware for GitHub Pages). */
 
 :root {
   /* Calm study desk — cool mist paper, deep ink, soft teal */
