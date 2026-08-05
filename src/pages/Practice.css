@@ -33,7 +33,7 @@
 
 .practice__progress {
   height: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 8%, transparent);
   margin-bottom: 1.35rem;
   overflow: hidden;
@@ -178,7 +178,7 @@
 .practice__secondary {
   appearance: none;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.95rem 1.25rem;
   font-weight: 600;
   cursor: pointer;

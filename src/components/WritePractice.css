@@ -50,7 +50,7 @@
 .write__btn {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.38rem 0.8rem;
   background: var(--surface);
   color: var(--ink);
@@ -231,7 +231,7 @@
   flex: 0 0 1.4rem;
   width: 1.4rem;
   height: 1.4rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;

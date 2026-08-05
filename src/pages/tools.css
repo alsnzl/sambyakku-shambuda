@@ -108,7 +108,7 @@
 .tool__btn {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.7rem 1rem;
   background: var(--surface);
   color: var(--ink);

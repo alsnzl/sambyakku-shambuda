@@ -48,12 +48,9 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
 
   return (
     <main className="home home--gate">
-      <div className="home__glow" aria-hidden="true" />
-
       <header className="home__hero home__hero--gate">
-        <p className="home__brand">삼뱌꾸샴붓다</p>
-        <h1>산스크리트 · 실담 자모</h1>
-        <p className="home__lead">글자를 익히며, 천천히 부처님께 다가갑니다.</p>
+        <h1 className="home__brand">삼뱌꾸샴붓다</h1>
+        <p className="home__lead">산스크리트 · 실담 자모</p>
         <button type="button" className="home__about motion-press" onClick={onAbout}>
           산스크리트 · 실담이 뭔가요?
         </button>

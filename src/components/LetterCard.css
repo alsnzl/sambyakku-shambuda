@@ -37,7 +37,7 @@
 .letter-card__fav {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   width: 2.4rem;
   height: 2.4rem;
   background: var(--surface);
@@ -103,7 +103,7 @@
 .letter-card__write-btn {
   appearance: none;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.7rem 1.35rem;
   background: var(--accent);
   color: var(--on-accent);
@@ -119,7 +119,7 @@
 .letter-card__audio {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 0.7rem 1.3rem;
   background: var(--chip);
   color: var(--ink);

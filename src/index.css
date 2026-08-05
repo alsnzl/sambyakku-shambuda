@@ -38,15 +38,18 @@
   --sage: var(--moss);
   --rose: var(--clay);
 
+  /* Hangul is not in Fraunces — Noto Serif KR must be next so PC/phone match. */
   --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
-  --sans: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
-  --deva: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+  --sans: 'Noto Sans KR', sans-serif;
+  --deva: 'Noto Sans Devanagari', sans-serif;
   --siddham: 'Noto Sans Siddham', 'Noto Sans Devanagari', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  --radius-sm: 0.55rem;
-  --radius: 0.9rem;
-  --radius-lg: 1.35rem;
+  /* One shared corner radius for blocks, chips, and controls. */
+  --radius-block: 1rem;
+  --radius-sm: var(--radius-block);
+  --radius: var(--radius-block);
+  --radius-lg: var(--radius-block);
   --space: 1.25rem;
   --block-bg: color-mix(in srgb, var(--surface) 92%, white);
   --block-border: var(--line-strong);

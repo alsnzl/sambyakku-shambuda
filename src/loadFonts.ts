@@ -1,4 +1,7 @@
-/** Load public/fonts with Vite BASE_URL so GH Pages + Capacitor both resolve. */
+/**
+ * Script fonts from /public/fonts (same files used for stroke outlines).
+ * Variable Devanagari needs both format hints for iOS Safari.
+ */
 const base = import.meta.env.BASE_URL
 
 const style = document.createElement('style')
@@ -7,8 +10,10 @@ style.textContent = `
   font-family: 'Noto Sans Devanagari';
   font-style: normal;
   font-display: swap;
-  font-weight: 400 700;
-  src: url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
+  font-weight: 100 900;
+  src:
+    url('${base}fonts/NotoSansDevanagari.ttf') format('truetype-variations'),
+    url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans Siddham';

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './uiFonts'
 import './loadFonts'
 import './index.css'
 import './styles/motion.css'

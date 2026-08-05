@@ -127,7 +127,7 @@
 .about__cta {
   appearance: none;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius);
   margin-top: 1.15rem;
   padding: 0.95rem 1.25rem;
   background: var(--accent);
