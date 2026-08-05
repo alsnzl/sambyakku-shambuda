@@ -1,0 +1,172 @@
+.letter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 1.25rem 0.85rem 1.35rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+  box-shadow: 0 12px 32px var(--shadow);
+  transform-origin: center bottom;
+}
+
+.letter-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.letter-card__group {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.letter-card__script-label {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.letter-card__fav {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.letter-card__fav.is-on {
+  color: #c4922a;
+  border-color: color-mix(in srgb, #c4922a 35%, var(--line));
+  background: color-mix(in srgb, #c4922a 12%, white);
+}
+
+.letter-card__theory,
+.letter-card__similar {
+  margin-top: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  border: 1px solid var(--line);
+}
+
+.letter-card__theory h4,
+.letter-card__similar h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.letter-card__theory p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.letter-card__similar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.letter-card__similar-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.55rem;
+  background: var(--surface);
+  cursor: pointer;
+  min-width: 3.2rem;
+}
+
+.letter-card__similar-btn span:last-child {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.letter-card__similar-glyph--deva,
+.letter-card__similar-btn .letter-card__similar-glyph--deva {
+  font-family: var(--deva);
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.letter-card__similar-glyph--siddham {
+  font-family: var(--siddham);
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+
+.letter-card__script-label {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.letter-card__meta {
+  margin-top: 0.4rem;
+  text-align: center;
+}
+
+.letter-card__iast {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+.letter-card__hangul {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.letter-card__note {
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.letter-card__audio {
+  margin: 0.95rem auto 0;
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.7rem 1.3rem;
+  background: var(--chip);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.letter-card__audio:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.letter-card__audio:not(:disabled):active {
+  transform: scale(0.975);
+}

@@ -1,0 +1,9 @@
+{
+  "meta": {
+    "description": "교사가 클라우드에 저장한 획 — 배포 전 src/data/taughtStrokes.json 으로 내장합니다.",
+    "updatedAt": null,
+    "taughtCount": { "deva": 0, "siddham": 0 }
+  },
+  "deva": {},
+  "siddham": {}
+}

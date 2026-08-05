@@ -1,0 +1,51 @@
+---
+description: 교사가 직접 기록한 획 데이터가 앱의 공식 이론·기준이다
+globs: src/data/taughtStrokes.json,src/data/taughtStrokes.ts,src/data/strokes.ts,src/data/glyphStrokes.ts,src/lib/strokeRecord.ts,src/lib/strokeCloud.ts,src/components/WritePractice.tsx,src/components/StrokeTeachPanel.tsx,scripts/merge-taught-strokes.mjs,scripts/pull-taught-strokes.mjs,scripts/generate-glyph-strokes.mjs,cloud/taughtStrokes.json,taught-strokes/**
+alwaysApply: false
+---
+
+# 획 가르치기 — 공식 기준 (교사 기록)
+
+## 장기 계획 (중요)
+
+**획 가르치기 UI는 개발·학습용 임시 도구다.**
+
+1. 지금: 개발자가 앱에서 글자마다 획을 기록 → **GitHub 클라우드**(`cloud/taughtStrokes.json`)에 이론값 저장
+2. 다른 기기에서도 같은 클라우드를 불러와 이어서 가르침
+3. 출시 전: `npm run strokes:pull` 로 클라우드 → `src/data/taughtStrokes.json` 내장
+4. **나중에: `StrokeTeachPanel` / 획 가르치기 메뉴 제거**
+5. 학습자에게는 **쓰기 연습**만 남기고, 내장 획 DB를 기준으로 안내
+
+## 우선순위 (절대 바꾸지 말 것)
+
+1. **GitHub 클라우드 캐시** (`localStorage` 미러 of `cloud/taughtStrokes.json`)
+2. **`src/data/taughtStrokes.json`** — 배포용 내장 공식 기준
+3. **localStorage** (`sambyakku-stroke-overrides`) — 업로드 실패·오프라인 임시
+4. **`src/data/glyphStrokes.ts`** — 미가르친 글자용 자동 생성
+
+`getEffectiveGlyphStrokes()` 가 이 순서를 따른다.
+
+## 교사 워크플로 (개발 기간)
+
+1. 획 가르치기 → **토큰 설정** (GitHub PAT, Contents 쓰기) — 기기당 1회
+2. 기록하기 → 이론값 저장 → 클라우드(`alsnzl/sambyakku-shambuda`)에 반영
+3. 다른 기기: **클라우드 불러오기**
+4. 출시 직전: `npm run strokes:pull` → 내장 JSON → 가르치기 UI 제거
+
+## AI가 지켜야 할 규칙
+
+- **클라우드/`taughtStrokes.json`에 있는 글자는 절대 자동 생성으로 덮어쓰지 않는다**
+- `npm run strokes:generate` 는 `glyphStrokes.ts`만 갱신
+- 내보내기(JSON 다운로드) 워크플로로 되돌리지 말 것 — 클라우드 저장이 기본
+- 가르치기 메뉴를 지금 지우거나 “완성된 제품 UI”처럼 확장하지 말 것
+- 메뉴 제거 요청이 오면: 패널·클라우드 토큰 UI·localStorage 초안 흐름 제거, 내장 `taughtStrokes.json` 우선 조회만 유지
+
+## 파일 역할
+
+| 파일 | 역할 |
+|------|------|
+| `cloud/taughtStrokes.json` | 라이브 교사 DB (GitHub) |
+| `src/data/taughtStrokes.json` | 출시용 내장 획 DB |
+| `src/lib/strokeCloud.ts` | GitHub 읽기/쓰기 |
+| `StrokeTeachPanel.tsx` | 개발용 가르치기 UI (나중에 제거) |
+| `npm run strokes:pull` | 클라우드 → 내장 병합 |

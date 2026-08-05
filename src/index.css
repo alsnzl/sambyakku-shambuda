@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+/* Self-hosted so on-screen glyphs match the generated stroke outlines exactly. */
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url('/fonts/NotoSansDevanagari.ttf') format('truetype-variations');
+}
+
+@font-face {
+  font-family: 'Noto Sans Siddham';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/NotoSansSiddham-Regular.ttf') format('truetype');
+  unicode-range: U+11580-115FF;
+}
+
+:root {
+  /* Calm study desk — cool mist paper, deep ink, soft teal */
+  --paper: #eef1f4;
+  --paper-deep: #e4e9ee;
+  --ink: #1a2330;
+  --ink-soft: #3a4658;
+  --muted: #6b7789;
+  --line: rgba(26, 35, 48, 0.1);
+  --line-strong: rgba(26, 35, 48, 0.16);
+
+  --teal: #2f6f6a;
+  --teal-soft: #4a8f88;
+  --teal-wash: rgba(47, 111, 106, 0.12);
+  --clay: #b45a4a;
+  --clay-wash: rgba(180, 90, 74, 0.12);
+  --moss: #5a7a52;
+  --moss-wash: rgba(90, 122, 82, 0.14);
+
+  --bg: var(--paper);
+  --surface: #f7f8fa;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #f4f8f7;
+  --shadow: rgba(26, 35, 48, 0.08);
+  --shadow-lift: rgba(26, 35, 48, 0.12);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+
+  /* Legacy aliases used across CSS */
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
+  --sans: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  --deva: 'Noto Sans Devanagari', 'Noto Sans', sans-serif;
+  --siddham: 'Noto Sans Siddham', 'Noto Sans Devanagari', sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  --radius-sm: 0.55rem;
+  --radius: 0.9rem;
+  --radius-lg: 1.35rem;
+  --space: 1.25rem;
+  --block-bg: color-mix(in srgb, var(--surface) 92%, white);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 8px 22px var(--shadow);
+
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 12% -10%, rgba(47, 111, 106, 0.11), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 100% 5%, rgba(58, 70, 88, 0.06), transparent 50%),
+    linear-gradient(180deg, #f4f6f8 0%, var(--paper) 40%, var(--paper-deep) 100%);
+  background-attachment: fixed;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--teal-wash);
+  color: var(--ink);
+}
+
+/* Shared content blocks */
+.ui-block {
+  background: var(--block-bg);
+  border: 1px solid var(--block-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--block-shadow);
+}
+
+.ui-block--soft {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  box-shadow: none;
+}

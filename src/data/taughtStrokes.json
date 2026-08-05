@@ -1,0 +1,9 @@
+{
+  "meta": {
+    "description": "교사가 직접 쓴 획 — 앱의 공식 기준. auto-generated보다 항상 우선.",
+    "updatedAt": null,
+    "taughtCount": { "deva": 0, "siddham": 0 }
+  },
+  "deva": {},
+  "siddham": {}
+}

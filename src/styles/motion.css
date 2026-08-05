@@ -1,0 +1,220 @@
+:root {
+  --motion-fast: 180ms;
+  --motion-base: 320ms;
+  --motion-slow: 480ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  /* aliases for older rules */
+  --motion-ios: var(--motion-ease);
+  --motion-ios-in: var(--motion-soft);
+  --motion-ios-soft: var(--motion-soft);
+}
+
+.motion-page {
+  min-height: 100%;
+  animation: motion-fade-up var(--motion-slow) var(--motion-ease) both;
+}
+
+.motion-page--fade {
+  animation-name: motion-fade;
+  animation-duration: var(--motion-base);
+  animation-timing-function: var(--motion-soft);
+}
+
+.motion-page--pop {
+  animation-name: motion-pop;
+  animation-duration: 0.42s;
+  animation-timing-function: var(--motion-ease);
+}
+
+.motion-page--slide-left {
+  animation-name: motion-slide-left;
+  animation-duration: 0.38s;
+  animation-timing-function: var(--motion-ease);
+}
+
+.motion-page--slide-right {
+  animation-name: motion-slide-right;
+  animation-duration: 0.38s;
+  animation-timing-function: var(--motion-ease);
+}
+
+@keyframes motion-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.7rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.motion-sheet {
+  position: relative;
+  animation: motion-fade var(--motion-base) var(--motion-soft) both;
+}
+
+.motion-sheet__panel {
+  animation: motion-pop 0.44s var(--motion-ease) both;
+}
+
+.motion-stagger > * {
+  opacity: 0;
+  animation: motion-fade-up 0.4s var(--motion-ease) both;
+}
+
+.motion-stagger > *:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.motion-stagger > *:nth-child(2) {
+  animation-delay: 0.045s;
+}
+.motion-stagger > *:nth-child(3) {
+  animation-delay: 0.07s;
+}
+.motion-stagger > *:nth-child(4) {
+  animation-delay: 0.095s;
+}
+.motion-stagger > *:nth-child(5) {
+  animation-delay: 0.12s;
+}
+.motion-stagger > *:nth-child(6) {
+  animation-delay: 0.145s;
+}
+.motion-stagger > *:nth-child(7) {
+  animation-delay: 0.17s;
+}
+.motion-stagger > *:nth-child(8) {
+  animation-delay: 0.195s;
+}
+.motion-stagger > *:nth-child(9) {
+  animation-delay: 0.22s;
+}
+.motion-stagger > *:nth-child(10) {
+  animation-delay: 0.245s;
+}
+.motion-stagger > *:nth-child(n + 11) {
+  animation-delay: 0.27s;
+}
+
+.motion-press {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    box-shadow var(--motion-base) var(--motion-soft),
+    color var(--motion-fast) ease;
+}
+
+.motion-press:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px var(--shadow);
+}
+
+.motion-press:not(:disabled):active {
+  transform: translateY(0) scale(0.985);
+  transition-duration: 100ms;
+}
+
+.motion-flash-correct {
+  animation: motion-flash-correct 0.4s var(--motion-ease);
+}
+
+.motion-flash-wrong {
+  animation: motion-flash-wrong 0.4s var(--motion-soft);
+}
+
+@keyframes motion-flash-correct {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.015);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes motion-flash-wrong {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-0.12rem);
+  }
+  60% {
+    transform: translateX(0.1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-page,
+  .motion-page--fade,
+  .motion-page--pop,
+  .motion-page--slide-left,
+  .motion-page--slide-right,
+  .motion-sheet,
+  .motion-sheet__panel,
+  .motion-stagger > *,
+  .motion-flash-correct,
+  .motion-flash-wrong {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .motion-press,
+  .motion-press:not(:disabled):active,
+  .motion-press:not(:disabled):hover {
+    transition: none;
+    transform: none;
+    box-shadow: none;
+  }
+}
