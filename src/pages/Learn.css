@@ -181,7 +181,7 @@
 
 .learn__tile {
   width: 100%;
-  min-height: 6.85rem;
+  min-height: 5.9rem;
   appearance: none;
   border: 1px solid var(--block-border);
   border-radius: var(--radius);
@@ -191,9 +191,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.28rem;
-  padding: 0.72rem 0.3rem 0.52rem;
+  justify-content: center;
+  gap: 0.08rem;
+  padding: 0.55rem 0.25rem 0.48rem;
   overflow: hidden;
   /* Force WebKit to establish a clip/mask for button contents */
   -webkit-mask-image: -webkit-radial-gradient(white, black);
@@ -201,9 +201,9 @@
 }
 
 .learn__tile--compact {
-  min-height: 6.15rem;
-  padding-top: 0.6rem;
-  padding-bottom: 0.45rem;
+  min-height: 5.45rem;
+  padding-top: 0.48rem;
+  padding-bottom: 0.42rem;
 }
 
 .learn__tile-glyph {
@@ -212,17 +212,17 @@
   justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  /* Tall enough for enlarged Siddham/Devanagari + diacritics */
-  height: 3.35rem;
-  padding: 0.42rem 0.1rem 0.18rem;
+  /* Room for larger glyphs + diacritics; keep tight to IAST below */
+  height: 3.55rem;
+  padding: 0.4rem 0.08rem 0.08rem;
   overflow: hidden;
   line-height: 1;
   contain: paint;
 }
 
 .learn__tile--compact .learn__tile-glyph {
-  height: 3rem;
-  padding-top: 0.36rem;
+  height: 3.25rem;
+  padding-top: 0.34rem;
 }
 
 .learn__tile-char {
@@ -231,12 +231,12 @@
   line-height: 1;
   max-width: 100%;
   /* Padding nudge — avoid transform (breaks overflow clip on iOS). */
-  padding-top: 0.16em;
+  padding-top: 0.14em;
 }
 
 .learn__tile-char--deva,
 .learn__tile-char--siddham {
-  font-size: clamp(1.55rem, 6.8vw, 2rem);
+  font-size: clamp(1.85rem, 8.2vw, 2.4rem);
 }
 
 .learn__tile-char--deva {
@@ -249,11 +249,10 @@
 
 .learn__tile-iast {
   flex-shrink: 0;
-  margin-top: auto;
   font-size: clamp(0.82rem, 3.4vw, 0.92rem);
   font-weight: 600;
   color: var(--muted);
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .learn__tile:active,
