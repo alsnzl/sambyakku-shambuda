@@ -87,6 +87,100 @@
   color: var(--accent);
 }
 
+.write__grade {
+  margin: 0 0 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--block-border);
+  border-radius: var(--radius);
+  background: var(--block-bg);
+  box-shadow: var(--block-shadow);
+}
+
+.write__grade .write__flash {
+  margin: 0;
+}
+
+.write__grade-note {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.write__grade-metrics {
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.write__grade-metrics li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.3rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.write__grade-metrics strong {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.write__grade-metrics strong.is-good {
+  color: var(--correct);
+}
+
+.write__grade-metrics strong.is-warn {
+  color: var(--wrong);
+}
+
+.write__grade-strokes {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.write__grade-strokes li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  background: color-mix(in srgb, var(--ink) 2.5%, transparent);
+}
+
+.write__grade-strokes li > span:first-child {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.write__grade-strokes li > span:last-child {
+  color: var(--muted);
+}
+
+.write__grade-strokes li.is-ok {
+  border-left: 3px solid var(--correct);
+}
+
+.write__grade-strokes li.is-bad {
+  border-left: 3px solid var(--wrong);
+}
+
+.write__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .write__badge-link {
   appearance: none;
   border: none;
@@ -148,7 +242,7 @@
   margin: 0 auto;
   aspect-ratio: 1;
   display: block;
-  overflow: visible;
+  overflow: hidden;
   border-radius: var(--radius-lg);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
@@ -164,8 +258,16 @@
   transition: fill 0.4s var(--motion-ease, ease);
 }
 
+.write__glyph-ink--under-arrows {
+  opacity: 0.22;
+}
+
 .write__glyph-ink.is-done {
   fill: var(--ink);
+}
+
+.write__glyph-ink--under-arrows.is-done {
+  opacity: 0.18;
 }
 
 .write__settle {

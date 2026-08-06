@@ -189,7 +189,7 @@
   margin: 0 auto;
   aspect-ratio: 1;
   display: block;
-  overflow: visible;
+  overflow: hidden;
   border-radius: var(--radius-lg);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
@@ -208,6 +208,10 @@
 .teach__glyph-ink {
   fill: var(--accent);
   transition: fill 0.35s ease;
+}
+
+.teach__glyph-ink--under-arrows {
+  opacity: 0.22;
 }
 
 .teach__glyph-ink.is-done {

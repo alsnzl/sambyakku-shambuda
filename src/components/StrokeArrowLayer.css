@@ -1,0 +1,53 @@
+.stroke-arrows {
+  pointer-events: none;
+}
+
+.stroke-arrow__shaft {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 78%, #1a2330);
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+
+.stroke-arrow__head {
+  fill: color-mix(in srgb, var(--accent) 82%, #1a2330);
+  stroke: none;
+  opacity: 0.95;
+}
+
+.stroke-arrow__dot {
+  fill: color-mix(in srgb, var(--surface) 94%, white);
+  stroke: color-mix(in srgb, var(--accent) 72%, #1a2330);
+  stroke-width: 1.15;
+}
+
+.stroke-arrow__num {
+  fill: color-mix(in srgb, var(--accent) 88%, #1a2330);
+  font-size: 7px;
+  font-weight: 700;
+  font-family: var(--sans);
+}
+
+.stroke-arrow.is-past .stroke-arrow__shaft {
+  opacity: 0.55;
+}
+
+.stroke-arrow.is-past .stroke-arrow__head {
+  opacity: 0.5;
+}
+
+.stroke-arrow.is-past .stroke-arrow__dot,
+.stroke-arrow.is-past .stroke-arrow__num {
+  opacity: 0.6;
+}
+
+.stroke-arrow.is-latest .stroke-arrow__shaft {
+  stroke-width: 2.35;
+  opacity: 1;
+}
+
+.stroke-arrow.is-latest .stroke-arrow__head {
+  opacity: 1;
+}

@@ -80,18 +80,34 @@ function buildQuestion(
     choices: shuffle([answer, ...distractors]),
     choiceScript: script,
     answer,
-    modeLabel: `로마자 → ${scriptName}`,
+      modeLabel: `로마자·한글 → ${scriptName}`,
   }
 }
 
-export function createQuiz(track: ScriptTrack, count = 10): QuizQuestion[] {
+export type QuizDirection = 'glyph-to-iast' | 'iast-to-glyph' | 'mixed'
+
+/** 10 | 20 | all letters in the dataset. */
+export type QuizCountMode = 10 | 20 | 'all'
+
+export const QUIZ_LETTER_TOTAL = letters.length
+
+export function resolveQuizCount(mode: QuizCountMode): number {
+  return mode === 'all' ? letters.length : Math.min(mode, letters.length)
+}
+
+export function createQuiz(
+  track: ScriptTrack,
+  count = 10,
+  direction: QuizDirection = 'mixed',
+): QuizQuestion[] {
   const selected = shuffle(letters).slice(0, Math.min(count, letters.length))
-  return selected.map((letter, index) =>
-    buildQuestion(
-      letter,
-      index % 2 === 0 ? 'glyph-to-iast' : 'iast-to-glyph',
-      track,
-      index,
-    ),
-  )
+  return selected.map((letter, index) => {
+    const mode: QuizMode =
+      direction === 'mixed'
+        ? index % 2 === 0
+          ? 'glyph-to-iast'
+          : 'iast-to-glyph'
+        : direction
+    return buildQuestion(letter, mode, track, index)
+  })
 }

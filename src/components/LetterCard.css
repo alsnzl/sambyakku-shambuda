@@ -2,13 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.4rem;
-  padding: 1.25rem 0.85rem 1.35rem;
+  gap: 0.45rem;
+  padding: 1.15rem 0.9rem 1.25rem;
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--block-bg);
+  border: 1px solid var(--block-border);
   text-align: center;
-  box-shadow: 0 12px 32px var(--shadow);
+  box-shadow: var(--block-shadow);
   transform-origin: center bottom;
 }
 

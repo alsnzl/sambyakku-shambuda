@@ -7,14 +7,16 @@ import {
   clientToSvgPoint,
   defaultLabels,
   getEffectiveGlyphStrokes,
+  getStrokeSource,
 } from '../lib/strokeRecord'
 import {
   appendPoint,
   commitFreehandStroke,
   freehandPreviewPath,
 } from '../lib/freehandStroke'
-import { scoreLetterWriting } from '../lib/writingScore'
+import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
+import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './WritePractice.css'
 
 type Props = {
@@ -46,9 +48,15 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [drawn, setDrawn] = useState<GlyphStroke[]>([])
   const [drawing, setDrawing] = useState<[number, number][]>([])
   const [traceDone, setTraceDone] = useState(false)
-  const [writeScore, setWriteScore] = useState<number | null>(null)
+  const [grade, setGrade] = useState<WritingGrade | null>(null)
 
-  const steps = data?.strokes.map((s) => s.label) ?? defaultLabels(letterId, track)
+  const theoryStrokes = canvasData?.strokes ?? []
+  const theoryCount = theoryStrokes.length
+  const strokeSource = getStrokeSource(letterId, script)
+  const steps =
+    theoryStrokes.map((s) => s.label).filter(Boolean).length > 0
+      ? theoryStrokes.map((s) => s.label)
+      : defaultLabels(letterId, track)
 
   const maskId = `${useId()}-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -62,7 +70,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     setDrawing([])
     setActiveStep(0)
     setTraceDone(false)
-    setWriteScore(null)
+    setGrade(null)
     drawingRef.current = false
     pointsRef.current = []
   }, [])
@@ -179,6 +187,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !outlineD) return
+    if (theoryCount > 0 && drawn.length >= theoryCount) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -225,11 +234,11 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   }
 
   function gradeWriting() {
-    if (!canvasData?.strokes.length || drawn.length === 0) return
-    const { average } = scoreLetterWriting(drawn, canvasData.strokes)
-    setWriteScore(average)
+    if (!theoryStrokes.length || drawn.length === 0) return
+    const result = scoreLetterWriting(drawn, theoryStrokes)
+    setGrade(result)
     setTraceDone(true)
-    recordWriteScore(track, letterId, average)
+    recordWriteScore(track, letterId, result.average)
   }
 
   const previewPath = freehandPreviewPath(drawing)
@@ -281,21 +290,68 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
       {mode === 'trace' && !traceDone && (
         <p className="write__hint">
-          글자 안을 <strong>색칠하듯</strong> 그리면 글자가 채워집니다. 획을 다 쓴 뒤 「채점」을
-          누르세요.
+          이론값 순서대로 획을 쓰세요
+          {theoryCount > 0 ? ` (${drawn.length}/${theoryCount})` : ''}.
+          {strokeSource === 'generated'
+            ? ' 자동 획 기준입니다. 이론값을 가르치며 저장하면 더 정확한 채점이 됩니다.'
+            : ' 형태·순서·방향을 함께 채점합니다.'}{' '}
+          다 쓴 뒤 「채점」을 누르세요.
         </p>
       )}
-      {mode === 'trace' && writeScore !== null && (
-        <p className="write__flash">
-          쓰기 점수 <strong>{writeScore}점</strong>
-          {writeScore >= 80 ? ' · 훌륭해요!' : writeScore >= 60 ? ' · 좋아요. 한 번 더!' : ' · 궤적을 다시 따라 써 보세요.'}
-        </p>
+      {mode === 'trace' && grade && (
+        <div className="write__grade">
+          <p className="write__flash">
+            종합 <strong>{grade.average}점</strong>
+            <span className="write__grade-note"> · {grade.feedback}</span>
+          </p>
+          <ul className="write__grade-metrics">
+            <li>
+              <span>형태</span>
+              <strong>{grade.shapeScore}</strong>
+            </li>
+            <li>
+              <span>순서</span>
+              <strong className={grade.orderScore >= 70 ? 'is-good' : 'is-warn'}>
+                {grade.orderScore}
+              </strong>
+            </li>
+            <li>
+              <span>방향</span>
+              <strong className={grade.directionScore >= 70 ? 'is-good' : 'is-warn'}>
+                {grade.directionScore}
+              </strong>
+            </li>
+          </ul>
+          {grade.perStroke.length > 0 ? (
+            <ul className="write__grade-strokes">
+              {grade.perStroke.map((s) => (
+                <li key={`grade-${s.index}`} className={s.orderOk ? 'is-ok' : 'is-bad'}>
+                  <span>
+                    {s.index + 1}. {s.label}
+                  </span>
+                  <span>
+                    {s.orderOk ? '순서 맞음' : `이론 ${s.bestMatchIndex + 1}번과 유사`}
+                    {' · '}형태 {s.shape}
+                    {' · '}방향 {s.direction}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       )}
 
       {mode === 'trace' && !traceDone && drawn.length > 0 && (
         <div className="write__actions" style={{ justifyContent: 'center', marginBottom: '0.55rem' }}>
-          <button type="button" className="write__btn motion-press" onClick={gradeWriting}>
-            채점하기
+          <button
+            type="button"
+            className="write__btn motion-press"
+            onClick={gradeWriting}
+            disabled={theoryCount > 0 && drawn.length < theoryCount}
+          >
+            {theoryCount > 0 && drawn.length < theoryCount
+              ? `채점하기 (${drawn.length}/${theoryCount})`
+              : '채점하기'}
           </button>
         </div>
       )}
@@ -367,9 +423,14 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
               <path className="write__glyph-guide" d={canvasData.d} />
               <path
-                className={`write__glyph-ink ${watchDone ? 'is-done' : ''}`}
+                className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
                 d={canvasData.d}
                 mask={`url(#${maskId}-watch)`}
+              />
+              <StrokeArrowLayer
+                strokes={canvasData.strokes}
+                revealCount={watchDone ? canvasData.strokes.length : Math.max(activeStep + 1, 1)}
+                emphasizeLatest={!watchDone}
               />
               <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />
             </>

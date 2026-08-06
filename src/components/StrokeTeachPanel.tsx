@@ -24,6 +24,7 @@ import {
   commitFreehandStroke,
   freehandPreviewPath,
 } from '../lib/freehandStroke'
+import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './StrokeTeachPanel.css'
 
 type Props = {
@@ -636,6 +637,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
             </defs>
             <path className="teach__glyph-guide" d={outlineD} />
             <path className="teach__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
+            <StrokeArrowLayer strokes={recorded} emphasizeLatest />
           </svg>
 
           <ol className="teach__steps">
@@ -686,9 +688,14 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
             <path className="teach__glyph-guide" d={theoryData.d} />
             <path
-              className="teach__glyph-ink"
+              className="teach__glyph-ink teach__glyph-ink--under-arrows"
               d={theoryData.d}
               mask={`url(#${maskId}-preview)`}
+            />
+            <StrokeArrowLayer
+              strokes={theoryData.strokes}
+              revealCount={Math.max(activeStep + 1, 1)}
+              emphasizeLatest
             />
             <circle ref={tipRef} className="teach__tip" r={6} cx={-50} cy={-50} />
           </svg>

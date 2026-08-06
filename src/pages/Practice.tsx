@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
-import { createQuiz, type QuizQuestion } from '../lib/quiz'
+import {
+  createQuiz,
+  QUIZ_LETTER_TOTAL,
+  resolveQuizCount,
+  type QuizCountMode,
+  type QuizDirection,
+  type QuizQuestion,
+} from '../lib/quiz'
 import { recordQuizResult } from '../lib/learnerStore'
 import { MotionPage } from '../components/MotionPage'
 import type { ScriptTrack } from '../types/track'
@@ -27,14 +34,45 @@ function scriptClass(kind: 'deva' | 'siddham' | 'latin', role: 'prompt' | 'choic
     : 'practice__choice-script practice__choice-script--siddham'
 }
 
+const DIRECTION_OPTIONS: {
+  id: QuizDirection
+  title: string
+  body: (scriptLabel: string) => string
+}[] = [
+  {
+    id: 'glyph-to-iast',
+    title: '글자 → 로마자·한글',
+    body: (scriptLabel) => `${scriptLabel} 글자를 보고 로마자·한글을 고릅니다.`,
+  },
+  {
+    id: 'iast-to-glyph',
+    title: '로마자·한글 → 글자',
+    body: (scriptLabel) => `로마자·한글을 보고 ${scriptLabel} 글자를 고릅니다.`,
+  },
+  {
+    id: 'mixed',
+    title: '섞어서',
+    body: () => '두 방향을 번갈아 출제합니다.',
+  },
+]
+
+const COUNT_OPTIONS: { id: QuizCountMode; label: string }[] = [
+  { id: 10, label: '10문제' },
+  { id: 20, label: '20문제' },
+  { id: 'all', label: `전체 ${QUIZ_LETTER_TOTAL}자` },
+]
+
 export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
   const [phase, setPhase] = useState<Phase>('ready')
+  const [direction, setDirection] = useState<QuizDirection>('glyph-to-iast')
+  const [countMode, setCountMode] = useState<QuizCountMode>(10)
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
   const meta = trackMeta[track]
+  const quizSize = resolveQuizCount(countMode)
 
   const current = questions[index]
   const progress = useMemo(() => {
@@ -42,13 +80,26 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
     return Math.round((index / questions.length) * 100)
   }, [index, questions.length])
 
-  function start() {
-    setQuestions(createQuiz(track, 10))
+  function start(nextDirection = direction, nextCount = countMode) {
+    setDirection(nextDirection)
+    setCountMode(nextCount)
+    setQuestions(createQuiz(track, resolveQuizCount(nextCount), nextDirection))
     setIndex(0)
     setScore(0)
     setSelected(null)
     setLocked(false)
     setPhase('quiz')
+  }
+
+  /** Switch direction mid-quiz without resetting progress. */
+  function switchDirection(next: QuizDirection) {
+    if (next === direction) return
+    setDirection(next)
+    const nextQuestions = createQuiz(track, resolveQuizCount(countMode), next)
+    setQuestions(nextQuestions)
+    setIndex((i) => Math.min(i, nextQuestions.length - 1))
+    setSelected(null)
+    setLocked(false)
   }
 
   async function choose(choice: string) {
@@ -93,12 +144,44 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
           </header>
           <section className="practice__ready motion-sheet__panel">
             <h2>{meta.scriptLabel} 퀴즈</h2>
-            <p>
-              {meta.scriptLabel} 글자와 로마자(IAST)·한글 힌트를 맞춰 봅니다.
-              10문제로 구성됩니다.
-            </p>
-            <button type="button" className="practice__cta motion-press" onClick={start}>
-              시작하기
+            <p>문제 수와 출제 방향을 고른 뒤 시작하세요.</p>
+
+            <p className="practice__section-label">문제 수</p>
+            <div className="practice__switch practice__switch--ready" role="group" aria-label="문제 수">
+              {COUNT_OPTIONS.map((opt) => (
+                <button
+                  key={String(opt.id)}
+                  type="button"
+                  className={`practice__switch-btn motion-press ${countMode === opt.id ? 'is-active' : ''}`}
+                  onClick={() => setCountMode(opt.id)}
+                  aria-pressed={countMode === opt.id}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="practice__section-label">출제 방향</p>
+            <div className="practice__modes" role="group" aria-label="출제 방향">
+              {DIRECTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`practice__mode-card motion-press ${direction === opt.id ? 'is-active' : ''}`}
+                  onClick={() => setDirection(opt.id)}
+                  aria-pressed={direction === opt.id}
+                >
+                  <span className="practice__mode-card-title">{opt.title}</span>
+                  <span className="practice__mode-card-body">{opt.body(meta.scriptLabel)}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="practice__cta motion-press"
+              onClick={() => start(direction, countMode)}
+            >
+              {countMode === 'all' ? `전체 ${quizSize}자 시작` : `${quizSize}문제 시작`}
             </button>
           </section>
         </main>
@@ -131,15 +214,22 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
                   ? '좋아요. 틀린 글자를 학습에서 다시 확인해 보세요.'
                   : '괜찮아요. 모음·계열을 나눠 천천히 복습해 보세요.'}
             </p>
-            <button type="button" className="practice__cta motion-press" onClick={start}>
+            <button
+              type="button"
+              className="practice__cta motion-press"
+              onClick={() => start(direction, countMode)}
+            >
               다시 풀기
             </button>
             <button
               type="button"
               className="practice__secondary motion-press"
-              onClick={onBack}
+              onClick={() => setPhase('ready')}
             >
-              홈으로
+              방향 바꾸기
+            </button>
+            <button type="button" className="practice__secondary motion-press" onClick={onBack}>
+              돌아가기
             </button>
           </section>
         </main>
@@ -164,7 +254,27 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
         <span style={{ width: `${progress}%` }} />
       </div>
 
-      <MotionPage motionKey={current.id} variant="slide-left">
+      <div className="practice__switch" role="group" aria-label="출제 방향 전환">
+        {(
+          [
+            ['glyph-to-iast', '글자→로마'],
+            ['iast-to-glyph', '로마→글자'],
+            ['mixed', '섞기'],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            className={`practice__switch-btn motion-press ${direction === id ? 'is-active' : ''}`}
+            onClick={() => switchDirection(id)}
+            aria-pressed={direction === id}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <MotionPage motionKey={`${direction}-${current.id}`} variant="slide-left">
         <div className="practice__prompt-block">
           <p className="practice__mode">{current.modeLabel}</p>
           <p
