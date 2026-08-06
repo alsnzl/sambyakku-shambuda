@@ -6,7 +6,9 @@ import './Home.css'
 type Props = {
   onBack: () => void
   onOpen: (track: ScriptTrack, mode: OpenMode) => void
-  onOpenGlobal: (mode: 'convert' | 'mantras') => void
+  onOpenGlobal: (
+    mode: 'convert' | 'mantras' | 'correspondence' | 'conjuncts' | 'settings',
+  ) => void
 }
 
 const SANSKRIT_SETS = [
@@ -205,10 +207,24 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
           onClick={() => setExtraOpen((v) => !v)}
         >
           <span>{extraOpen ? '▾' : '▸'} 공통 도구</span>
-          <span>IAST · 짧은 구절</span>
+          <span>대응 · 합자 · 구절 · 변환</span>
         </button>
         {extraOpen ? (
           <div className="home__tools home__tools--shared">
+            <button
+              type="button"
+              className="home__tool motion-press"
+              onClick={() => onOpenGlobal('correspondence')}
+            >
+              실담 ↔ 데바나가리
+            </button>
+            <button
+              type="button"
+              className="home__tool motion-press"
+              onClick={() => onOpenGlobal('conjuncts')}
+            >
+              합자 맛보기
+            </button>
             <button
               type="button"
               className="home__tool motion-press"

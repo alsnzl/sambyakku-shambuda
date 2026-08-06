@@ -68,18 +68,15 @@
   transform: scale(0.98);
 }
 
-.home__glyph-size {
-  margin-top: 0.15rem;
-}
-
-.home__glyph-size-toggle {
+.home__settings-entry {
   appearance: none;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
   width: 100%;
-  margin: 0;
-  padding: 0.7rem 0.85rem;
+  margin-top: 0.15rem;
+  padding: 0.85rem 1rem;
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   background: var(--block-bg);
@@ -89,108 +86,17 @@
   color: inherit;
 }
 
-.home__glyph-size.is-open .home__glyph-size-toggle {
-  margin-bottom: 0;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  box-shadow: none;
-}
-
-.home__glyph-size-toggle-main {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.45rem;
-  min-width: 0;
-}
-
-.home__glyph-size-chevron {
-  flex-shrink: 0;
-  width: 0.9rem;
-  margin-top: 0.2rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1;
-}
-
-.home__glyph-size-toggle-title {
-  display: block;
+.home__settings-entry-title {
   font-family: var(--display);
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink);
-  line-height: 1.25;
 }
 
-.home__glyph-size-toggle-sub {
-  display: block;
-  margin-top: 0.18rem;
+.home__settings-entry-sub {
   font-size: 0.8rem;
   color: var(--muted);
-  line-height: 1.4;
-}
-
-.home__glyph-size-panel {
-  padding: 0.15rem 0.85rem 0.95rem;
-  border: 1px solid var(--block-border);
-  border-top: none;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  background: var(--block-bg);
-  box-shadow: var(--block-shadow);
-}
-
-.home__glyph-size-options {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
-  padding: 0.28rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 88%, white);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
-}
-
-.home__glyph-size-btn {
-  appearance: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.18rem;
-  min-height: 3.15rem;
-  padding: 0.35rem 0.2rem;
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius) - 0.2rem);
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.home__glyph-size-btn.is-active {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
-  background: var(--teal-wash);
-  color: var(--accent);
-  box-shadow: 0 2px 8px var(--shadow);
-}
-
-.home__glyph-size-preview {
-  font-family: var(--deva);
-  line-height: 1;
-  color: var(--ink);
-}
-
-.home__glyph-size-preview--sm {
-  font-size: 1.05rem;
-}
-
-.home__glyph-size-preview--md {
-  font-size: 1.3rem;
-}
-
-.home__glyph-size-preview--lg {
-  font-size: 1.55rem;
 }
 
 .home__card {

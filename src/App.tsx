@@ -12,6 +12,9 @@ import { ConvertPage } from './pages/ConvertPage'
 import { MantrasPage } from './pages/MantrasPage'
 import { SimilarPage } from './pages/SimilarPage'
 import { PathPage } from './pages/PathPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { CorrespondencePage } from './pages/CorrespondencePage'
+import { ConjunctsPage } from './pages/ConjunctsPage'
 import { MotionPage } from './components/MotionPage'
 import type { Letter } from './data/letters'
 import type { ScriptTrack } from './types/track'
@@ -33,8 +36,16 @@ type Screen =
   | 'mantras'
   | 'similar'
   | 'path'
+  | 'settings'
+  | 'correspondence'
+  | 'conjuncts'
 
 type BackTo = 'home' | 'tracks'
+
+type GlobalMode = Extract<
+  OpenMode,
+  'convert' | 'mantras' | 'about' | 'path' | 'tracks' | 'settings' | 'correspondence' | 'conjuncts'
+>
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home')
@@ -51,12 +62,10 @@ function App() {
   function open(nextTrack: ScriptTrack, mode: OpenMode) {
     setTrack(nextTrack)
     setOpenLetterId(null)
-    setScreen(mode === 'tracks' ? 'tracks' : mode)
+    setScreen(mode === 'tracks' ? 'tracks' : (mode as Screen))
   }
 
-  function openGlobal(
-    mode: Extract<OpenMode, 'convert' | 'mantras' | 'about' | 'path' | 'tracks'>,
-  ) {
+  function openGlobal(mode: GlobalMode) {
     setOpenLetterId(null)
     setScreen(mode)
   }
@@ -76,7 +85,8 @@ function App() {
     else goTracks()
   }
 
-  function openLetterFromTools(letter: Letter) {
+  function openLetterFromTools(letter: Letter, nextTrack: ScriptTrack = track) {
+    setTrack(nextTrack)
     setOpenLetterId(letter.id)
     setScreen('learn')
   }
@@ -89,7 +99,10 @@ function App() {
     screen === 'convert' ||
     screen === 'mantras' ||
     screen === 'path' ||
-    screen === 'tracks'
+    screen === 'tracks' ||
+    screen === 'settings' ||
+    screen === 'correspondence' ||
+    screen === 'conjuncts'
       ? screen
       : `${screen}-${track}${openLetterId ? `-${openLetterId}` : ''}`
 
@@ -136,6 +149,24 @@ function App() {
         ) : null}
         {screen === 'about' ? <About onBack={goHome} /> : null}
         {screen === 'path' ? <PathPage onBack={goHome} /> : null}
+        {screen === 'settings' ? <SettingsPage onBack={goHome} /> : null}
+        {screen === 'correspondence' ? (
+          <CorrespondencePage
+            onBack={goBack}
+            backLabel={backLabel}
+            onOpenLetter={(letter, nextTrack) => {
+              setBackTo(backTo)
+              openLetterFromTools(letter, nextTrack)
+            }}
+          />
+        ) : null}
+        {screen === 'conjuncts' ? (
+          <ConjunctsPage
+            onBack={goBack}
+            backLabel={backLabel}
+            onOpenLetter={(letter) => openLetterFromTools(letter, 'sanskrit')}
+          />
+        ) : null}
         {screen === 'learn' || screen === 'chart' ? (
           <Learn
             key={`${track}-${screen}-${openLetterId ?? 'none'}`}
@@ -185,7 +216,11 @@ function App() {
           <ConvertPage onBack={goBack} backLabel={backLabel} />
         ) : null}
         {screen === 'mantras' ? (
-          <MantrasPage onBack={goBack} backLabel={backLabel} />
+          <MantrasPage
+            onBack={goBack}
+            backLabel={backLabel}
+            onOpenLetter={(letter) => openLetterFromTools(letter, 'sanskrit')}
+          />
         ) : null}
         {screen === 'similar' ? (
           <SimilarPage track={track} onBack={goBack} backLabel={backLabel} />

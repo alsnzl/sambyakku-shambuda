@@ -89,6 +89,52 @@
   --glyph-scale: 1.2;
 }
 
+:root[data-theme='dark'] {
+  --paper: #12171e;
+  --paper-deep: #0e1218;
+  --ink: #e6ebf2;
+  --ink-soft: #c2ccd9;
+  --muted: #8b97a8;
+  --line: rgba(230, 235, 242, 0.1);
+  --line-strong: rgba(230, 235, 242, 0.16);
+
+  --teal: #5faca4;
+  --teal-soft: #7bc4bc;
+  --teal-wash: rgba(95, 172, 164, 0.16);
+  --clay: #d48474;
+  --clay-wash: rgba(212, 132, 116, 0.16);
+  --moss: #8fb584;
+  --moss-wash: rgba(143, 181, 132, 0.16);
+
+  --bg: var(--paper);
+  --surface: #1a222c;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #0e1514;
+  --shadow: rgba(0, 0, 0, 0.35);
+  --shadow-lift: rgba(0, 0, 0, 0.45);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 92%, #243040);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 22px var(--shadow);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 10% -8%, rgba(95, 172, 164, 0.14), transparent 58%),
+    radial-gradient(ellipse 62% 42% at 100% 4%, rgba(120, 140, 170, 0.08), transparent 52%),
+    linear-gradient(180deg, #161c24 0%, var(--paper) 42%, var(--paper-deep) 100%);
+}
+
 * {
   box-sizing: border-box;
 }

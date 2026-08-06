@@ -3,12 +3,6 @@ import type { ScriptTrack } from '../types/track'
 import { getPathSnapshot } from '../lib/pathProgress'
 import { getHomeFeed } from '../lib/homeFeed'
 import { PATH_STAGES } from '../data/pathStages'
-import {
-  GLYPH_SIZE_OPTIONS,
-  getGlyphSize,
-  setGlyphSize,
-  type GlyphSize,
-} from '../lib/prefsStore'
 import './Home.css'
 
 export type OpenMode =
@@ -22,14 +16,22 @@ export type OpenMode =
   | 'similar'
   | 'convert'
   | 'mantras'
+  | 'correspondence'
+  | 'conjuncts'
+  | 'settings'
   | 'about'
   | 'path'
   | 'tracks'
 
+type GlobalMode = Extract<
+  OpenMode,
+  'convert' | 'mantras' | 'about' | 'path' | 'tracks' | 'settings' | 'correspondence' | 'conjuncts'
+>
+
 type Props = {
   onOpen: (track: ScriptTrack, mode: OpenMode) => void
   onAbout: () => void
-  onOpenGlobal: (mode: 'convert' | 'mantras' | 'about' | 'path' | 'tracks') => void
+  onOpenGlobal: (mode: GlobalMode) => void
   onOpenLetter: (track: ScriptTrack, letterId: string) => void
 }
 
@@ -38,10 +40,6 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   const openPetals = path.petals.filter(Boolean).length
   const feed = getHomeFeed()
   const [feedOpen, setFeedOpen] = useState(true)
-  const [glyphSize, setGlyphSizeState] = useState<GlyphSize>(() => getGlyphSize())
-  const [glyphSizeOpen, setGlyphSizeOpen] = useState(false)
-  const glyphSizeLabel =
-    GLYPH_SIZE_OPTIONS.find((opt) => opt.id === glyphSize)?.label ?? '보통'
 
   function openFeedTarget(target: (typeof feed)[number]['target']) {
     if (target.type === 'global') {
@@ -54,10 +52,6 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
       return
     }
     onOpen(target.track, target.mode)
-  }
-
-  function onPickGlyphSize(size: GlyphSize) {
-    setGlyphSizeState(setGlyphSize(size))
   }
 
   return (
@@ -173,54 +167,14 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         ) : null}
       </section>
 
-      <section
-        className={`home__glyph-size ${glyphSizeOpen ? 'is-open' : 'is-collapsed'}`}
-        aria-label="학습 글자 크기"
+      <button
+        type="button"
+        className="home__settings-entry motion-press"
+        onClick={() => onOpenGlobal('settings')}
       >
-        <button
-          type="button"
-          className="home__glyph-size-toggle motion-press"
-          aria-expanded={glyphSizeOpen}
-          onClick={() => setGlyphSizeOpen((v) => !v)}
-        >
-          <span className="home__glyph-size-toggle-main">
-            <span className="home__glyph-size-chevron" aria-hidden="true">
-              {glyphSizeOpen ? '▾' : '▸'}
-            </span>
-            <span>
-              <span className="home__glyph-size-toggle-title">글자 크기</span>
-              <span className="home__glyph-size-toggle-sub">
-                {glyphSizeOpen
-                  ? '학습·퀴즈에 보이는 자모 크기입니다.'
-                  : `현재 ${glyphSizeLabel} · 눌러서 조절`}
-              </span>
-            </span>
-          </span>
-        </button>
-        {glyphSizeOpen ? (
-          <div className="home__glyph-size-panel" role="group" aria-label="글자 크기 선택">
-            <div className="home__glyph-size-options">
-              {GLYPH_SIZE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`home__glyph-size-btn motion-press ${glyphSize === opt.id ? 'is-active' : ''}`}
-                  aria-pressed={glyphSize === opt.id}
-                  onClick={() => onPickGlyphSize(opt.id)}
-                >
-                  <span
-                    className={`home__glyph-size-preview home__glyph-size-preview--${opt.id}`}
-                    aria-hidden="true"
-                  >
-                    अ
-                  </span>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
+        <span className="home__settings-entry-title">설정</span>
+        <span className="home__settings-entry-sub">글자 크기 · 다크 모드</span>
+      </button>
     </main>
   )
 }
