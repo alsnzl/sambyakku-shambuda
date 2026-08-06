@@ -107,6 +107,11 @@
   animation: motion-fade-up 0.4s var(--motion-ease) both;
 }
 
+/* Learn tiles: opacity-only stagger so transform does not break overflow clip. */
+.learn__grid.motion-stagger > * {
+  animation-name: motion-fade;
+}
+
 .motion-stagger > *:nth-child(1) {
   animation-delay: 0.02s;
 }

@@ -144,14 +144,16 @@ export function Learn({
           </header>
           <ul className="learn__grid motion-stagger">
             {activeGroup.letters.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="learn__cell">
                 <button
                   type="button"
                   className="learn__tile motion-press"
                   onClick={() => openLetter(item, 'group')}
                 >
-                  <span className={charClass} lang="sa">
-                    {isSanskrit ? item.dewa : item.siddham}
+                  <span className="learn__tile-glyph" aria-hidden="true">
+                    <span className={charClass} lang="sa">
+                      {isSanskrit ? item.dewa : item.siddham}
+                    </span>
                   </span>
                   <span className="learn__tile-iast">{item.iast}</span>
                 </button>
@@ -201,14 +203,16 @@ export function Learn({
                 </div>
                 <ul className="learn__grid learn__grid--chart motion-stagger">
                   {group.letters.map((item) => (
-                    <li key={item.id}>
+                    <li key={item.id} className="learn__cell">
                       <button
                         type="button"
                         className="learn__tile learn__tile--compact motion-press"
                         onClick={() => openLetter(item, 'chart')}
                       >
-                        <span className={charClass} lang="sa">
-                          {isSanskrit ? item.dewa : item.siddham}
+                        <span className="learn__tile-glyph" aria-hidden="true">
+                          <span className={charClass} lang="sa">
+                            {isSanskrit ? item.dewa : item.siddham}
+                          </span>
                         </span>
                         <span className="learn__tile-iast">{item.iast}</span>
                       </button>
