@@ -3,6 +3,12 @@ import type { ScriptTrack } from '../types/track'
 import { getPathSnapshot } from '../lib/pathProgress'
 import { getHomeFeed } from '../lib/homeFeed'
 import { PATH_STAGES } from '../data/pathStages'
+import {
+  GLYPH_SIZE_OPTIONS,
+  getGlyphSize,
+  setGlyphSize,
+  type GlyphSize,
+} from '../lib/prefsStore'
 import './Home.css'
 
 export type OpenMode =
@@ -32,6 +38,7 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   const openPetals = path.petals.filter(Boolean).length
   const feed = getHomeFeed()
   const [feedOpen, setFeedOpen] = useState(true)
+  const [glyphSize, setGlyphSizeState] = useState<GlyphSize>(() => getGlyphSize())
 
   function openFeedTarget(target: (typeof feed)[number]['target']) {
     if (target.type === 'global') {
@@ -46,6 +53,10 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
     onOpen(target.track, target.mode)
   }
 
+  function onPickGlyphSize(size: GlyphSize) {
+    setGlyphSizeState(setGlyphSize(size))
+  }
+
   return (
     <main className="home home--gate">
       <header className="home__hero home__hero--gate">
@@ -54,6 +65,26 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         <button type="button" className="home__about motion-press" onClick={onAbout}>
           산스크리트 · 실담이 뭔가요?
         </button>
+
+        <div className="home__glyph-size" role="group" aria-label="학습 글자 크기">
+          <p className="home__glyph-size-label">글자 크기</p>
+          <div className="home__glyph-size-options">
+            {GLYPH_SIZE_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`home__glyph-size-btn motion-press ${glyphSize === opt.id ? 'is-active' : ''}`}
+                aria-pressed={glyphSize === opt.id}
+                onClick={() => onPickGlyphSize(opt.id)}
+              >
+                <span className={`home__glyph-size-preview home__glyph-size-preview--${opt.id}`} aria-hidden="true">
+                  अ
+                </span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <button

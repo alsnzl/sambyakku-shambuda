@@ -68,6 +68,74 @@
   transform: scale(0.98);
 }
 
+.home__glyph-size {
+  margin: 1.05rem auto 0;
+  max-width: 18.5rem;
+  text-align: center;
+}
+
+.home__glyph-size-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.home__glyph-size-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  padding: 0.28rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--block-border);
+  background: color-mix(in srgb, var(--surface) 88%, white);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.home__glyph-size-btn {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 3.15rem;
+  padding: 0.35rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 0.2rem);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home__glyph-size-btn.is-active {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--teal-wash);
+  color: var(--accent);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.home__glyph-size-preview {
+  font-family: var(--deva);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.home__glyph-size-preview--sm {
+  font-size: 1.05rem;
+}
+
+.home__glyph-size-preview--md {
+  font-size: 1.3rem;
+}
+
+.home__glyph-size-preview--lg {
+  font-size: 1.55rem;
+}
+
 .home__card {
   appearance: none;
   display: block;
@@ -367,12 +435,12 @@
 
 .home__feed-glyph--deva {
   font-family: var(--deva);
-  font-size: 1.55rem;
+  font-size: calc(1.55rem * var(--glyph-scale));
 }
 
 .home__feed-glyph--siddham {
   font-family: var(--siddham);
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--glyph-scale));
 }
 
 .home__feed-dot {
@@ -457,13 +525,13 @@
 
 .home__card-glyphs-deva {
   font-family: var(--deva);
-  font-size: 1.85rem;
+  font-size: calc(1.85rem * var(--glyph-scale));
   color: var(--teal);
 }
 
 .home__card-glyphs-siddham {
   font-family: var(--siddham);
-  font-size: 1.7rem;
+  font-size: calc(1.7rem * var(--glyph-scale));
   color: var(--moss);
 }
 
@@ -623,7 +691,7 @@
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 3.5%, transparent);
   color: var(--teal) !important;
-  font-size: 1.5rem !important;
+  font-size: calc(1.5rem * var(--glyph-scale)) !important;
   line-height: 1;
   min-height: 1.7rem;
 }

@@ -282,7 +282,7 @@
 }
 
 .write__glyph-fallback {
-  font-size: 148px;
+  font-size: calc(148px * var(--glyph-scale));
   dominant-baseline: alphabetic;
   fill: var(--ink);
 }

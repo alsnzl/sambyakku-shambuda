@@ -132,7 +132,7 @@
   color: var(--ink);
   user-select: none;
   /* Matches write practice glyph (~148px in 240 viewBox at 280px) */
-  font-size: min(173px, 62cqw);
+  font-size: calc(min(173px, 62cqw) * var(--glyph-scale));
   /*
     Indic glyphs sit high in the em box (ascent-heavy).
     Asymmetric padding shifts the optical center down into the canvas.
@@ -239,13 +239,13 @@
 .letter-card__similar-glyph--deva,
 .letter-card__similar-btn .letter-card__similar-glyph--deva {
   font-family: var(--deva);
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--glyph-scale));
   color: var(--ink);
 }
 
 .letter-card__similar-glyph--siddham {
   font-family: var(--siddham);
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--glyph-scale));
   color: var(--ink);
 }
 
@@ -266,7 +266,7 @@
 .letter-card__iast {
   margin: 0;
   font-family: var(--display);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--glyph-scale));
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--ink);
@@ -274,7 +274,7 @@
 
 .letter-card__hangul {
   margin: 0.2rem 0 0;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--glyph-scale));
   font-weight: 600;
   color: var(--ink-soft);
 }

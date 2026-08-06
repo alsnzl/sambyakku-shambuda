@@ -4,7 +4,10 @@ import './uiFonts'
 import './loadFonts'
 import './index.css'
 import './styles/motion.css'
+import { initPrefs } from './lib/prefsStore'
 import App from './App.tsx'
+
+initPrefs()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

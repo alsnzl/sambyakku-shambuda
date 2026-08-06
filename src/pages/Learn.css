@@ -147,7 +147,7 @@
   overflow: hidden;
   letter-spacing: 0.08em;
   color: var(--teal);
-  font-size: clamp(1.12rem, 4.6vw, 1.32rem);
+  font-size: calc(clamp(1.12rem, 4.6vw, 1.32rem) * var(--glyph-scale));
   /* Devanagari shirorekha needs room above the em box on mobile. */
   line-height: 1.55;
   padding-top: 0.28em;
@@ -181,7 +181,7 @@
 
 .learn__tile {
   width: 100%;
-  min-height: 5.9rem;
+  min-height: calc(5.9rem * var(--glyph-scale));
   appearance: none;
   border: 1px solid var(--block-border);
   border-radius: var(--radius);
@@ -201,7 +201,7 @@
 }
 
 .learn__tile--compact {
-  min-height: 5.45rem;
+  min-height: calc(5.45rem * var(--glyph-scale));
   padding-top: 0.48rem;
   padding-bottom: 0.42rem;
 }
@@ -213,7 +213,7 @@
   box-sizing: border-box;
   width: 100%;
   /* Room for larger glyphs + diacritics; keep tight to IAST below */
-  height: 3.55rem;
+  height: calc(3.55rem * var(--glyph-scale));
   padding: 0.4rem 0.08rem 0.08rem;
   overflow: hidden;
   line-height: 1;
@@ -221,7 +221,7 @@
 }
 
 .learn__tile--compact .learn__tile-glyph {
-  height: 3.25rem;
+  height: calc(3.25rem * var(--glyph-scale));
   padding-top: 0.34rem;
 }
 
@@ -236,7 +236,7 @@
 
 .learn__tile-char--deva,
 .learn__tile-char--siddham {
-  font-size: clamp(1.85rem, 8.2vw, 2.4rem);
+  font-size: calc(clamp(1.85rem, 8.2vw, 2.4rem) * var(--glyph-scale));
 }
 
 .learn__tile-char--deva {
@@ -249,7 +249,7 @@
 
 .learn__tile-iast {
   flex-shrink: 0;
-  font-size: clamp(0.82rem, 3.4vw, 0.92rem);
+  font-size: calc(clamp(0.82rem, 3.4vw, 0.92rem) * var(--glyph-scale));
   font-weight: 600;
   color: var(--muted);
   line-height: 1.2;

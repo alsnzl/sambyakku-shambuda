@@ -76,7 +76,7 @@
   padding: 0.65rem 0.75rem;
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 3.5%, transparent);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--glyph-scale));
   line-height: 1.2;
   letter-spacing: 0.08em;
   color: var(--teal);

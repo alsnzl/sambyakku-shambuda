@@ -80,7 +80,7 @@
 
 .tool__chip-glyph {
   display: block;
-  font-size: 1.45rem;
+  font-size: calc(1.45rem * var(--glyph-scale));
   line-height: 1.1;
   color: var(--ink);
 }
@@ -167,7 +167,7 @@
   padding: 0.9rem 1rem;
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 3.5%, transparent);
-  font-size: 1.75rem;
+  font-size: calc(1.75rem * var(--glyph-scale));
   line-height: 1.3;
   word-break: break-word;
 }
@@ -192,7 +192,7 @@
   padding: 0.75rem;
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 3%, transparent);
-  font-size: 2rem;
+  font-size: calc(2rem * var(--glyph-scale));
   line-height: 1.2;
 }
 

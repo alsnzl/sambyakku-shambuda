@@ -133,7 +133,7 @@
 
 .practice__prompt--deva {
   font-family: var(--deva);
-  font-size: clamp(3.6rem, 18vw, 5.1rem);
+  font-size: calc(clamp(3.6rem, 18vw, 5.1rem) * var(--glyph-scale));
   font-weight: 400;
   line-height: 1.15;
   color: var(--ink);
@@ -141,7 +141,7 @@
 
 .practice__prompt--siddham {
   font-family: var(--siddham);
-  font-size: clamp(3.6rem, 18vw, 5.1rem);
+  font-size: calc(clamp(3.6rem, 18vw, 5.1rem) * var(--glyph-scale));
   font-weight: 400;
   line-height: 1.15;
   color: var(--ink);
@@ -175,13 +175,13 @@
 
 .practice__choice-script--deva {
   font-family: var(--deva);
-  font-size: 1.8rem;
+  font-size: calc(1.8rem * var(--glyph-scale));
   font-weight: 400;
 }
 
 .practice__choice-script--siddham {
   font-family: var(--siddham);
-  font-size: 1.8rem;
+  font-size: calc(1.8rem * var(--glyph-scale));
   font-weight: 400;
 }
 

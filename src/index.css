@@ -57,6 +57,9 @@
   --block-border: var(--line-strong);
   --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 6px 18px var(--shadow);
 
+  /* Script / learning glyph scale (Home 글자 크기). UI chrome stays fixed. */
+  --glyph-scale: 1;
+
   font-family: var(--sans);
   font-size: 16px;
   line-height: 1.65;
@@ -72,6 +75,18 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-glyph-size='sm'] {
+  --glyph-scale: 0.86;
+}
+
+:root[data-glyph-size='md'] {
+  --glyph-scale: 1;
+}
+
+:root[data-glyph-size='lg'] {
+  --glyph-scale: 1.2;
 }
 
 * {
