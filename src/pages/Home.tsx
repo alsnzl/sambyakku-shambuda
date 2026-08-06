@@ -39,6 +39,9 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   const feed = getHomeFeed()
   const [feedOpen, setFeedOpen] = useState(true)
   const [glyphSize, setGlyphSizeState] = useState<GlyphSize>(() => getGlyphSize())
+  const [glyphSizeOpen, setGlyphSizeOpen] = useState(false)
+  const glyphSizeLabel =
+    GLYPH_SIZE_OPTIONS.find((opt) => opt.id === glyphSize)?.label ?? '보통'
 
   function openFeedTarget(target: (typeof feed)[number]['target']) {
     if (target.type === 'global') {
@@ -65,26 +68,6 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         <button type="button" className="home__about motion-press" onClick={onAbout}>
           산스크리트 · 실담이 뭔가요?
         </button>
-
-        <div className="home__glyph-size" role="group" aria-label="학습 글자 크기">
-          <p className="home__glyph-size-label">글자 크기</p>
-          <div className="home__glyph-size-options">
-            {GLYPH_SIZE_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`home__glyph-size-btn motion-press ${glyphSize === opt.id ? 'is-active' : ''}`}
-                aria-pressed={glyphSize === opt.id}
-                onClick={() => onPickGlyphSize(opt.id)}
-              >
-                <span className={`home__glyph-size-preview home__glyph-size-preview--${opt.id}`} aria-hidden="true">
-                  अ
-                </span>
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </header>
 
       <button
@@ -187,6 +170,55 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
               </li>
             ))}
           </ul>
+        ) : null}
+      </section>
+
+      <section
+        className={`home__glyph-size ${glyphSizeOpen ? 'is-open' : 'is-collapsed'}`}
+        aria-label="학습 글자 크기"
+      >
+        <button
+          type="button"
+          className="home__glyph-size-toggle motion-press"
+          aria-expanded={glyphSizeOpen}
+          onClick={() => setGlyphSizeOpen((v) => !v)}
+        >
+          <span className="home__glyph-size-toggle-main">
+            <span className="home__glyph-size-chevron" aria-hidden="true">
+              {glyphSizeOpen ? '▾' : '▸'}
+            </span>
+            <span>
+              <span className="home__glyph-size-toggle-title">글자 크기</span>
+              <span className="home__glyph-size-toggle-sub">
+                {glyphSizeOpen
+                  ? '학습·퀴즈에 보이는 자모 크기입니다.'
+                  : `현재 ${glyphSizeLabel} · 눌러서 조절`}
+              </span>
+            </span>
+          </span>
+        </button>
+        {glyphSizeOpen ? (
+          <div className="home__glyph-size-panel" role="group" aria-label="글자 크기 선택">
+            <div className="home__glyph-size-options">
+              {GLYPH_SIZE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`home__glyph-size-btn motion-press ${glyphSize === opt.id ? 'is-active' : ''}`}
+                  aria-pressed={glyphSize === opt.id}
+                  onClick={() => onPickGlyphSize(opt.id)}
+                >
+                  <span
+                    className={`home__glyph-size-preview home__glyph-size-preview--${opt.id}`}
+                    aria-hidden="true"
+                  >
+                    अ
+                  </span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         ) : null}
       </section>
     </main>

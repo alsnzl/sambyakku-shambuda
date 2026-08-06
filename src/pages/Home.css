@@ -69,17 +69,74 @@
 }
 
 .home__glyph-size {
-  margin: 1.05rem auto 0;
-  max-width: 18.5rem;
-  text-align: center;
+  margin-top: 0.15rem;
 }
 
-.home__glyph-size-label {
-  margin: 0 0 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+.home__glyph-size-toggle {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--block-border);
+  border-radius: var(--radius-lg);
+  background: var(--block-bg);
+  box-shadow: var(--block-shadow);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.home__glyph-size.is-open .home__glyph-size-toggle {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none;
+}
+
+.home__glyph-size-toggle-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.home__glyph-size-chevron {
+  flex-shrink: 0;
+  width: 0.9rem;
+  margin-top: 0.2rem;
   color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.home__glyph-size-toggle-title {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.home__glyph-size-toggle-sub {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.home__glyph-size-panel {
+  padding: 0.15rem 0.85rem 0.95rem;
+  border: 1px solid var(--block-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--block-bg);
+  box-shadow: var(--block-shadow);
 }
 
 .home__glyph-size-options {
@@ -88,7 +145,7 @@
   gap: 0.35rem;
   padding: 0.28rem;
   border-radius: var(--radius);
-  border: 1px solid var(--block-border);
+  border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 88%, white);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
 }
