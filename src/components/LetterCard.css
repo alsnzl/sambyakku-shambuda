@@ -104,8 +104,10 @@
   max-width: 280px;
   aspect-ratio: 1;
   margin: 0 auto;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   border-radius: var(--radius-lg);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
@@ -120,11 +122,23 @@
 
 .letter-card__hero {
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   line-height: 1;
   color: var(--ink);
   user-select: none;
   /* Matches write practice glyph (~148px in 240 viewBox at 280px) */
   font-size: min(173px, 62cqw);
+  /*
+    Indic glyphs sit high in the em box (ascent-heavy).
+    Asymmetric padding shifts the optical center down into the canvas.
+  */
+  padding-top: 0.28em;
+  padding-bottom: 0.06em;
 }
 
 .letter-card__hero--deva {
