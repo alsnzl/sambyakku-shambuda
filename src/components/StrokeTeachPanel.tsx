@@ -205,7 +205,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     refresh()
 
     if (!hasCloudWriteToken()) {
-      setFlash(`${count}획을 이 기기에만 저장했어요. (토큰 없음)`)
+      setFlash(`${count}획을 이 기기에만 저장했어요. (설정에서 토큰을 저장하세요)`)
       return
     }
 

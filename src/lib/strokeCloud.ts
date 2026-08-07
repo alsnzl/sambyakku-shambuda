@@ -63,6 +63,81 @@ export function hasCloudWriteToken(): boolean {
   return Boolean(getCloudToken())
 }
 
+/** Token from localStorage only (ignores VITE_STROKE_CLOUD_TOKEN). */
+export function getLocalCloudToken(): string | null {
+  try {
+    const t = localStorage.getItem(TOKEN_KEY)
+    return t?.trim() || null
+  } catch {
+    return null
+  }
+}
+
+export function cloudTokenSource(): 'env' | 'local' | 'none' {
+  const fromEnv = (import.meta.env.VITE_STROKE_CLOUD_TOKEN as string | undefined)?.trim()
+  if (fromEnv) return 'env'
+  if (getLocalCloudToken()) return 'local'
+  return 'none'
+}
+
+export type CloudTokenProbe = {
+  ok: boolean
+  kind: 'ok' | 'missing' | 'unauthorized' | 'forbidden' | 'error'
+  detail: string
+  repo: string
+}
+
+/** Lightweight check: can this token read the cloud file path on GitHub? */
+export async function probeCloudToken(
+  token: string | null = getCloudToken(),
+): Promise<CloudTokenProbe> {
+  const cfg = getCloudConfig()
+  const repo = `${cfg.owner}/${cfg.repo}`
+  if (!token?.trim()) {
+    return { ok: false, kind: 'missing', detail: '토큰이 없습니다', repo }
+  }
+
+  const url = `${contentsApiUrl(cfg)}?ref=${encodeURIComponent(cfg.branch)}`
+  try {
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        Authorization: `Bearer ${token.trim()}`,
+      },
+    })
+    if (res.status === 401) {
+      return { ok: false, kind: 'unauthorized', detail: '토큰이 유효하지 않습니다', repo }
+    }
+    if (res.status === 403) {
+      return {
+        ok: false,
+        kind: 'forbidden',
+        detail: '저장소 접근 권한이 없습니다 (Contents 권한 확인)',
+        repo,
+      }
+    }
+    // 200 = file exists, 404 = path missing but token can see the repo
+    if (res.ok || res.status === 404) {
+      return { ok: true, kind: 'ok', detail: '활성화 · 저장소 접근 가능', repo }
+    }
+    const body = await res.text()
+    return {
+      ok: false,
+      kind: 'error',
+      detail: `확인 실패 (${res.status}): ${body.slice(0, 120)}`,
+      repo,
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      kind: 'error',
+      detail: err instanceof Error ? err.message : String(err),
+      repo,
+    }
+  }
+}
+
 function readMeta(): CacheMeta | null {
   try {
     const raw = localStorage.getItem(CACHE_META_KEY)
@@ -242,7 +317,7 @@ export async function publishLetterToCloud(
   const token = getCloudToken()
   if (!token) {
     throw new Error(
-      '클라우드 저장 토큰이 없습니다. 획 가르치기에서 GitHub 토큰을 먼저 저장하세요.',
+      '클라우드 저장 토큰이 없습니다. 설정에서 GitHub 토큰을 먼저 저장하세요.',
     )
   }
 
