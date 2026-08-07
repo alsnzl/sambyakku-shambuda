@@ -68,6 +68,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [traceDone, setTraceDone] = useState(false)
   const [grade, setGrade] = useState<WritingGrade | null>(null)
   const [watchBlocked, setWatchBlocked] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
@@ -467,52 +468,69 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           ) : null}
 
           {mode === 'trace' ? (
-            <details className="write__advanced">
-              <summary className="write__advanced-summary">그리기 설정</summary>
-              <div className="write__advanced-body">
-                <div className="write__brush" role="group" aria-label="붓·펜">
-                  {BRUSH_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
-                      title={opt.hint}
-                      onClick={() => setBrush(setBrushKind(opt.id))}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
-                    title="손바닥·손가락 입력 무시 (S Pen만)"
-                    onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
-                  >
-                    펜만
-                  </button>
+            <div className={`write__advanced ${advancedOpen ? 'is-open' : ''}`}>
+              <button
+                type="button"
+                className="write__advanced-summary motion-press"
+                aria-expanded={advancedOpen}
+                onClick={() => setAdvancedOpen((v) => !v)}
+              >
+                <span className={`fold-chevron ${advancedOpen ? 'is-open' : ''}`} aria-hidden="true">
+                  ▸
+                </span>
+                그리기 설정
+              </button>
+              <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>
+                <div className="fold-panel__inner">
+                  <div className="write__advanced-body">
+                    <div className="write__brush" role="group" aria-label="붓·펜">
+                      {BRUSH_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+                          title={opt.hint}
+                          tabIndex={advancedOpen ? 0 : -1}
+                          onClick={() => setBrush(setBrushKind(opt.id))}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
+                        title="손바닥·손가락 입력 무시 (S Pen만)"
+                        tabIndex={advancedOpen ? 0 : -1}
+                        onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+                      >
+                        펜만
+                      </button>
+                    </div>
+                    <label className="write__sens">
+                      <span className="write__sens-label">
+                        필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+                      </span>
+                      <input
+                        className="write__sens-range"
+                        type="range"
+                        min={PRESSURE_SENS_MIN}
+                        max={PRESSURE_SENS_MAX}
+                        step={0.05}
+                        value={pressureSens}
+                        tabIndex={advancedOpen ? 0 : -1}
+                        aria-label="필압 민감도"
+                        onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+                      />
+                      <span className="write__sens-ends" aria-hidden="true">
+                        <span>낮음</span>
+                        <span>기본 100%</span>
+                        <span>높음</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
-                <label className="write__sens">
-                  <span className="write__sens-label">
-                    필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-                  </span>
-                  <input
-                    className="write__sens-range"
-                    type="range"
-                    min={PRESSURE_SENS_MIN}
-                    max={PRESSURE_SENS_MAX}
-                    step={0.05}
-                    value={pressureSens}
-                    aria-label="필압 민감도"
-                    onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-                  />
-                  <span className="write__sens-ends" aria-hidden="true">
-                    <span>낮음</span>
-                    <span>기본 100%</span>
-                    <span>높음</span>
-                  </span>
-                </label>
               </div>
-            </details>
+            </div>
           ) : null}
 
           {watchBlocked ? (

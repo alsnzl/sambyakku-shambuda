@@ -10,6 +10,7 @@ import {
 } from '../lib/learnerStore'
 import { getSimilarLetters } from '../data/similarLetters'
 import { glyphForTrack } from '../lib/scriptDisplay'
+import { useHardwareBack } from '../lib/useHardwareBack'
 import { WritePractice } from './WritePractice'
 import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
@@ -48,6 +49,11 @@ export function LetterCard({
     setWriteOpen(false)
   }, [letter.id, track])
 
+  useHardwareBack(() => {
+    setWriteOpen(false)
+    return true
+  }, writeOpen)
+
   return (
     <article className={`letter-card ${writeOpen ? 'letter-card--writing' : ''}`}>
       <div className="letter-card__top">
@@ -85,7 +91,7 @@ export function LetterCard({
                 disabled={!hasPrev || !onPrev}
                 aria-label="이전 글자"
               >
-                ‹
+                ◀
               </button>
 
               <div className="letter-card__hero-frame">
@@ -101,7 +107,7 @@ export function LetterCard({
                 disabled={!hasNext || !onNext}
                 aria-label="다음 글자"
               >
-                ›
+                ▶
               </button>
             </div>
 

@@ -434,10 +434,27 @@
 .home__feed-list {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0.15rem;
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+}
+
+.home__feed .fold-panel {
+  margin-top: 0;
+}
+
+.home__feed.is-open .fold-panel {
+  margin-top: 0.15rem;
+}
+
+.home__feed-toggle {
+  transition:
+    margin var(--motion-fast) var(--motion-soft),
+    padding var(--motion-fast) var(--motion-soft),
+    background-color var(--motion-fast) var(--motion-soft),
+    border-color var(--motion-fast) var(--motion-soft),
+    box-shadow var(--motion-fast) var(--motion-soft);
 }
 
 .home__feed-item {
@@ -877,6 +894,10 @@
 
 .home__track-more.is-open .home__tools {
   margin-top: 0.35rem;
+}
+
+.home__track-more .fold-panel__inner .home__tools {
+  padding-bottom: 0.15rem;
 }
 
 .home__tools {

@@ -728,60 +728,73 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
             </ol>
           ) : null}
 
-          <details
-            className="teach__advanced"
-            open={advancedOpen}
-            onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}
-          >
-            <summary className="teach__advanced-summary">그리기 설정</summary>
-            <div className="teach__advanced-body">
-              <div className="teach__brush" role="group" aria-label="붓·펜">
-                {BRUSH_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
-                    title={opt.hint}
-                    disabled={saving}
-                    onClick={() => setBrush(setBrushKind(opt.id))}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
-                  title="손바닥·손가락 입력 무시 (S Pen만)"
-                  disabled={saving}
-                  onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
-                >
-                  펜만
-                </button>
-              </div>
+          <div className={`teach__advanced ${advancedOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className="teach__advanced-summary motion-press"
+              aria-expanded={advancedOpen}
+              onClick={() => setAdvancedOpen((v) => !v)}
+            >
+              <span className={`fold-chevron ${advancedOpen ? 'is-open' : ''}`} aria-hidden="true">
+                ▸
+              </span>
+              그리기 설정
+            </button>
+            <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>
+              <div className="fold-panel__inner">
+                <div className="teach__advanced-body">
+                  <div className="teach__brush" role="group" aria-label="붓·펜">
+                    {BRUSH_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
+                        title={opt.hint}
+                        disabled={saving}
+                        tabIndex={advancedOpen ? 0 : -1}
+                        onClick={() => setBrush(setBrushKind(opt.id))}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
+                      title="손바닥·손가락 입력 무시 (S Pen만)"
+                      disabled={saving}
+                      tabIndex={advancedOpen ? 0 : -1}
+                      onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+                    >
+                      펜만
+                    </button>
+                  </div>
 
-              <label className="teach__sens">
-                <span className="teach__sens-label">
-                  필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-                </span>
-                <input
-                  className="teach__sens-range"
-                  type="range"
-                  min={PRESSURE_SENS_MIN}
-                  max={PRESSURE_SENS_MAX}
-                  step={0.05}
-                  value={pressureSens}
-                  disabled={saving}
-                  aria-label="필압 민감도"
-                  onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-                />
-                <span className="teach__sens-ends" aria-hidden="true">
-                  <span>낮음</span>
-                  <span>기본 100%</span>
-                  <span>높음</span>
-                </span>
-              </label>
+                  <label className="teach__sens">
+                    <span className="teach__sens-label">
+                      필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+                    </span>
+                    <input
+                      className="teach__sens-range"
+                      type="range"
+                      min={PRESSURE_SENS_MIN}
+                      max={PRESSURE_SENS_MAX}
+                      step={0.05}
+                      value={pressureSens}
+                      disabled={saving}
+                      tabIndex={advancedOpen ? 0 : -1}
+                      aria-label="필압 민감도"
+                      onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+                    />
+                    <span className="teach__sens-ends" aria-hidden="true">
+                      <span>낮음</span>
+                      <span>기본 100%</span>
+                      <span>높음</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
-          </details>
+          </div>
         </div>
       </div>
     </section>

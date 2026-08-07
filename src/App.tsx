@@ -20,6 +20,7 @@ import { MotionPage } from './components/MotionPage'
 import type { Letter } from './data/letters'
 import type { ScriptTrack } from './types/track'
 import { refreshCloudStore } from './lib/strokeCloud'
+import { useHardwareBack } from './lib/useHardwareBack'
 import './App.css'
 
 type Screen =
@@ -68,6 +69,22 @@ function App() {
       // offline ok
     })
   }, [])
+
+  useHardwareBack(() => {
+    if (screen === 'home') return false
+    if (
+      screen === 'tracks' ||
+      screen === 'about' ||
+      screen === 'path' ||
+      screen === 'settings' ||
+      screen === 'teach'
+    ) {
+      goHome()
+      return true
+    }
+    goBack()
+    return true
+  }, screen !== 'home')
 
   function open(nextTrack: ScriptTrack, mode: OpenMode) {
     setTrack(nextTrack)

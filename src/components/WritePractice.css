@@ -301,29 +301,25 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
+  overflow: hidden;
 }
 
 .write__advanced-summary {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  list-style: none;
   padding: 0.65rem 0.85rem;
   font-size: 0.86rem;
   font-weight: 650;
   color: var(--ink-soft);
   user-select: none;
-}
-
-.write__advanced-summary::-webkit-details-marker {
-  display: none;
-}
-
-.write__advanced-summary::before {
-  content: '▸ ';
-  color: var(--muted);
-}
-
-.write__advanced[open] .write__advanced-summary::before {
-  content: '▾ ';
+  text-align: left;
 }
 
 .write__advanced-body {

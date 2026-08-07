@@ -278,29 +278,25 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
+  overflow: hidden;
 }
 
 .teach__advanced-summary {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  list-style: none;
   padding: 0.7rem 0.9rem;
   font-size: 0.88rem;
   font-weight: 650;
   color: var(--ink-soft);
   user-select: none;
-}
-
-.teach__advanced-summary::-webkit-details-marker {
-  display: none;
-}
-
-.teach__advanced-summary::before {
-  content: '▸ ';
-  color: var(--muted);
-}
-
-.teach__advanced[open] .teach__advanced-summary::before {
-  content: '▾ ';
+  text-align: left;
 }
 
 .teach__advanced-body {

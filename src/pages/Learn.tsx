@@ -5,6 +5,7 @@ import { MotionPage } from '../components/MotionPage'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { glyphForTrack } from '../lib/scriptDisplay'
+import { useHardwareBack } from '../lib/useHardwareBack'
 import './Learn.css'
 
 type Props = {
@@ -83,6 +84,24 @@ export function Learn({
     ? 'learn__tile-char learn__tile-char--deva'
     : 'learn__tile-char learn__tile-char--siddham'
 
+  useHardwareBack(() => {
+    if (view === 'letter') {
+      backFromLetter()
+      return true
+    }
+    if (view === 'group') {
+      backFromGroup()
+      return true
+    }
+    if (view === 'chart') {
+      if (startInChart) onBack()
+      else setView('menu')
+      return true
+    }
+    onBack()
+    return true
+  })
+
   if (view === 'letter' && letter) {
     const sequence =
       letterReturn === 'chart'
@@ -112,7 +131,11 @@ export function Learn({
           <MotionPage
             motionKey={letter.id}
             variant={slide}
-            className="learn__sheet-panel motion-sheet__panel"
+            className={
+              slide === 'pop'
+                ? 'learn__sheet-panel motion-sheet__panel'
+                : 'learn__sheet-panel learn__sheet-panel--slide'
+            }
           >
             <LetterCard
               letter={letter}

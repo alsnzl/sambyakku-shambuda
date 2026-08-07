@@ -263,6 +263,11 @@
 .learn__sheet {
   position: relative;
   margin-top: 0.2rem;
+  overflow-x: clip;
+}
+
+.learn__sheet-panel--slide {
+  will-change: transform, opacity;
 }
 
 .learn__sheet-backdrop {

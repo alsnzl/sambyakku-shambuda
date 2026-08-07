@@ -120,40 +120,60 @@ function TrackCard({
           aria-expanded={toolsOpen}
           onClick={() => setToolsOpen((v) => !v)}
         >
-          <span>{toolsOpen ? '▾' : '▸'} 더 보기</span>
+          <span>
+            <span className={`fold-chevron ${toolsOpen ? 'is-open' : ''}`} aria-hidden="true">
+              ▸
+            </span>{' '}
+            더 보기
+          </span>
           <span className="home__track-more-hint">복습 · 진도 · 즐겨찾기</span>
         </button>
-        {toolsOpen ? (
-          <div className="home__tools">
-            <button type="button" className="home__tool motion-press" onClick={() => onOpen(track, 'daily')}>
-              오늘 학습
-            </button>
-            <button type="button" className="home__tool motion-press" onClick={() => onOpen(track, 'review')}>
-              복습
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpen(track, 'progress')}
-            >
-              진도
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpen(track, 'favorites')}
-            >
-              즐겨찾기
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpen(track, 'similar')}
-            >
-              유사 글자
-            </button>
+        <div className={`fold-panel ${toolsOpen ? 'is-expanded' : ''}`}>
+          <div className="fold-panel__inner">
+            <div className="home__tools">
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpen(track, 'daily')}
+                tabIndex={toolsOpen ? 0 : -1}
+              >
+                오늘 학습
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpen(track, 'review')}
+                tabIndex={toolsOpen ? 0 : -1}
+              >
+                복습
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpen(track, 'progress')}
+                tabIndex={toolsOpen ? 0 : -1}
+              >
+                진도
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpen(track, 'favorites')}
+                tabIndex={toolsOpen ? 0 : -1}
+              >
+                즐겨찾기
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpen(track, 'similar')}
+                tabIndex={toolsOpen ? 0 : -1}
+              >
+                유사 글자
+              </button>
+            </div>
           </div>
-        ) : null}
+        </div>
       </div>
     </section>
   )
@@ -207,41 +227,52 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
           aria-expanded={extraOpen}
           onClick={() => setExtraOpen((v) => !v)}
         >
-          <span>{extraOpen ? '▾' : '▸'} 공통 도구</span>
+          <span>
+            <span className={`fold-chevron ${extraOpen ? 'is-open' : ''}`} aria-hidden="true">
+              ▸
+            </span>{' '}
+            공통 도구
+          </span>
           <span>대응 · 합자 · 구절 · 변환</span>
         </button>
-        {extraOpen ? (
-          <div className="home__tools home__tools--shared">
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpenGlobal('correspondence')}
-            >
-              실담 ↔ 데바나가리
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpenGlobal('conjuncts')}
-            >
-              합자 맛보기
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpenGlobal('convert')}
-            >
-              IAST 변환
-            </button>
-            <button
-              type="button"
-              className="home__tool motion-press"
-              onClick={() => onOpenGlobal('mantras')}
-            >
-              짧은 구절
-            </button>
+        <div className={`fold-panel ${extraOpen ? 'is-expanded' : ''}`}>
+          <div className="fold-panel__inner">
+            <div className="home__tools home__tools--shared">
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('correspondence')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                실담 ↔ 데바나가리
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('conjuncts')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                합자 맛보기
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('convert')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                IAST 변환
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('mantras')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                짧은 구절
+              </button>
+            </div>
           </div>
-        ) : null}
+        </div>
       </section>
     </main>
   )

@@ -6,6 +6,7 @@ import { TheoryTipPanel } from '../components/TheoryTipPanel'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { glyphForTrack } from '../lib/scriptDisplay'
+import { useHardwareBack } from '../lib/useHardwareBack'
 import './Learn.css'
 import './TeachPage.css'
 
@@ -56,6 +57,19 @@ export function TeachPage({ onBack }: Props) {
     setLetter(next)
   }
 
+  useHardwareBack(() => {
+    if (view === 'letter') {
+      backFromLetter()
+      return true
+    }
+    if (view === 'chart') {
+      setView('tracks')
+      return true
+    }
+    onBack()
+    return true
+  })
+
   if (view === 'letter' && letter) {
     const sequence = groups.flatMap((g) => g.letters)
     const index = sequence.findIndex((item) => item.id === letter.id)
@@ -80,7 +94,7 @@ export function TeachPage({ onBack }: Props) {
               onClick={prev ? () => goPrev(prev) : undefined}
               aria-label="이전 글자"
             >
-              ‹
+              ◀
             </button>
             <button
               type="button"
@@ -89,32 +103,38 @@ export function TeachPage({ onBack }: Props) {
               onClick={next ? () => goNext(next) : undefined}
               aria-label="다음 글자"
             >
-              ›
+              ▶
             </button>
           </div>
         </header>
 
-        <MotionPage motionKey={`${track}-${letter.id}`} variant={slide}>
-          <article className="teach-page__card">
-            <div className="teach-page__identity">
-              <p className="teach-page__script">{meta.scriptLabel}</p>
-              <div className="teach-page__identity-row">
-                <span className={`teach-page__glyph ${heroClass}`} lang="sa">
-                  {glyph}
-                </span>
-                <div>
-                  <p className="teach-page__iast">{letter.iast}</p>
-                  <p className="teach-page__hangul">{letter.hangulHint}</p>
+        <div className="teach-page__stage">
+          <MotionPage
+            motionKey={`${track}-${letter.id}`}
+            variant={slide}
+            className={slide === 'pop' ? '' : 'teach-page__stage-slide'}
+          >
+            <article className="teach-page__card">
+              <div className="teach-page__identity">
+                <p className="teach-page__script">{meta.scriptLabel}</p>
+                <div className="teach-page__identity-row">
+                  <span className={`teach-page__glyph ${heroClass}`} lang="sa">
+                    {glyph}
+                  </span>
+                  <div>
+                    <p className="teach-page__iast">{letter.iast}</p>
+                    <p className="teach-page__hangul">{letter.hangulHint}</p>
+                  </div>
                 </div>
+                <p className="teach-page__lead">
+                  글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
+                </p>
               </div>
-              <p className="teach-page__lead">
-                글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
-              </p>
-            </div>
-            <StrokeTeachPanel letterId={letter.id} glyph={glyph} track={track} />
-            <TheoryTipPanel letterId={letter.id} editable />
-          </article>
-        </MotionPage>
+              <StrokeTeachPanel letterId={letter.id} glyph={glyph} track={track} />
+              <TheoryTipPanel letterId={letter.id} editable />
+            </article>
+          </MotionPage>
+        </div>
       </main>
     )
   }

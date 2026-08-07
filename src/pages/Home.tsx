@@ -150,8 +150,11 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
           onClick={() => setFeedOpen((v) => !v)}
         >
           <span className="home__feed-toggle-main">
-            <span className="home__feed-chevron" aria-hidden="true">
-              {feedOpen ? '▾' : '▸'}
+            <span
+              className={`home__feed-chevron fold-chevron ${feedOpen ? 'is-open' : ''}`}
+              aria-hidden="true"
+            >
+              ▸
             </span>
             <span>
               <span className="home__feed-toggle-title">오늘의 추천</span>
@@ -163,36 +166,39 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
             </span>
           </span>
         </button>
-        {feedOpen ? (
-          <ul className="home__feed-list">
-            {feed.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className="home__feed-item motion-press"
-                  onClick={() => openFeedTarget(item.target)}
-                >
-                  {item.glyph ? (
-                    <span
-                      className={`home__feed-glyph home__feed-glyph--${item.script ?? 'deva'}`}
-                      lang="sa"
-                      aria-hidden="true"
-                    >
-                      {item.glyph}
+        <div className={`fold-panel ${feedOpen ? 'is-expanded' : ''}`}>
+          <div className="fold-panel__inner">
+            <ul className="home__feed-list">
+              {feed.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="home__feed-item motion-press"
+                    onClick={() => openFeedTarget(item.target)}
+                    tabIndex={feedOpen ? 0 : -1}
+                  >
+                    {item.glyph ? (
+                      <span
+                        className={`home__feed-glyph home__feed-glyph--${item.script ?? 'deva'}`}
+                        lang="sa"
+                        aria-hidden="true"
+                      >
+                        {item.glyph}
+                      </span>
+                    ) : (
+                      <span className="home__feed-dot" aria-hidden="true" />
+                    )}
+                    <span className="home__feed-body">
+                      <span className="home__feed-kicker">{item.kicker}</span>
+                      <span className="home__feed-title">{item.title}</span>
+                      <span className="home__feed-text">{item.body}</span>
                     </span>
-                  ) : (
-                    <span className="home__feed-dot" aria-hidden="true" />
-                  )}
-                  <span className="home__feed-body">
-                    <span className="home__feed-kicker">{item.kicker}</span>
-                    <span className="home__feed-title">{item.title}</span>
-                    <span className="home__feed-text">{item.body}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
 
       <button

@@ -24,7 +24,7 @@ export function MotionPage({
   children,
 }: Props) {
   return (
-    <div key={motionKey} className={`${variantClass[variant]} ${className}`.trim()}>
+    <div key={motionKey} className={`${variantClass[variant]} ${className ?? ''}`.trim()}>
       {children}
     </div>
   )

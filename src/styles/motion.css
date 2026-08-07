@@ -29,15 +29,11 @@
 }
 
 .motion-page--slide-left {
-  animation-name: motion-slide-left;
-  animation-duration: 0.38s;
-  animation-timing-function: var(--motion-ease);
+  animation: motion-slide-next 0.4s var(--motion-ease-out) both;
 }
 
 .motion-page--slide-right {
-  animation-name: motion-slide-right;
-  animation-duration: 0.38s;
-  animation-timing-function: var(--motion-ease);
+  animation: motion-slide-prev 0.4s var(--motion-ease-out) both;
 }
 
 @keyframes motion-fade-up {
@@ -71,10 +67,11 @@
   }
 }
 
-@keyframes motion-slide-left {
+/* Letter / quiz paging — enter from the swipe direction */
+@keyframes motion-slide-next {
   from {
     opacity: 0;
-    transform: translateX(0.75rem);
+    transform: translateX(22%);
   }
   to {
     opacity: 1;
@@ -82,15 +79,52 @@
   }
 }
 
-@keyframes motion-slide-right {
+@keyframes motion-slide-prev {
   from {
     opacity: 0;
-    transform: translateX(-0.75rem);
+    transform: translateX(-22%);
   }
   to {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* Shared expand / collapse — keep content mounted, animate height via grid rows */
+.fold-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-base) var(--motion-ease);
+}
+
+.fold-panel.is-expanded {
+  grid-template-rows: 1fr;
+}
+
+.fold-panel__inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transform: translateY(-0.2rem);
+  transition:
+    opacity var(--motion-fast) var(--motion-soft),
+    transform var(--motion-base) var(--motion-ease);
+}
+
+.fold-panel.is-expanded .fold-panel__inner {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 40ms;
+}
+
+.fold-chevron {
+  display: inline-block;
+  transform-origin: center;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.fold-chevron.is-open {
+  transform: rotate(90deg);
 }
 
 .motion-sheet {
@@ -221,5 +255,20 @@
     transition: none;
     transform: none;
     box-shadow: none;
+  }
+
+  .fold-panel,
+  .fold-panel__inner,
+  .fold-chevron {
+    transition: none !important;
+  }
+
+  .fold-panel:not(.is-expanded) .fold-panel__inner {
+    visibility: hidden;
+  }
+
+  .fold-panel.is-expanded .fold-panel__inner {
+    opacity: 1;
+    transform: none;
   }
 }
