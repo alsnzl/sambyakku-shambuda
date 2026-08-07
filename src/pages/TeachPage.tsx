@@ -158,6 +158,7 @@ export function TeachPage({ onBack }: Props) {
             </button>
             <h1>획 기록 · {meta.title}</h1>
           </header>
+          <ScriptFontQuickBar track={track} />
           <p className="learn__intro teach-page__intro">
             기록할 글자를 고르세요. 그린 획은 따라 쓰기 연습에 쓰입니다.
           </p>

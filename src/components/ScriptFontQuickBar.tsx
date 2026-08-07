@@ -24,7 +24,11 @@ function bundledForSlot(slot: ScriptFontSlot) {
   return slot === 'deva' ? DEVA_FONT_OPTIONS : SIDDHAM_FONT_OPTIONS
 }
 
-/** Collapsible bundled-font switcher for teach / write. No user-upload. */
+/**
+ * Collapsible bundled-font switcher for teach / write.
+ * Siddham: Muktamsiddham | Noto Sans Siddham. Deva: Noto (single). No user-upload.
+ * Always visible so the control is findable on every track.
+ */
 export function ScriptFontQuickBar({ track }: Props) {
   useScriptFontEpoch()
   const slot = slotForTrack(track)
@@ -32,8 +36,6 @@ export function ScriptFontQuickBar({ track }: Props) {
   const choice = getScriptFontChoice(slot)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
-
-  if (options.length < 2) return null
 
   const activeLabel =
     options.find((o) => o.id === choice)?.label ?? getActiveScriptFontLabel(slot)
