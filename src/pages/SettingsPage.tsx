@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import {
   GLYPH_SIZE_OPTIONS,
   THEME_OPTIONS,
@@ -18,6 +18,19 @@ import {
   setCloudToken,
   type CloudTokenProbe,
 } from '../lib/strokeCloud'
+import {
+  SCRIPT_FONT_MAX_BYTES,
+  SCRIPT_FONT_SAMPLE,
+  getActiveScriptFontLabel,
+  getBundledScriptFontFamily,
+  getDefaultScriptFontLabel,
+  getScriptFontMeta,
+  getUserScriptFontFamily,
+  installScriptFont,
+  resetScriptFont,
+  scriptFontErrorMessage,
+  type ScriptFontSlot,
+} from '../lib/customScriptFonts'
 import './tools.css'
 
 type Props = {
@@ -26,15 +39,40 @@ type Props = {
 
 type TokenUiPhase = 'idle' | 'checking' | 'ready'
 
+type FontSlotUi = {
+  label: string
+  busy: boolean
+  error: string | null
+  custom: boolean
+}
+
+function emptyFontUi(slot: ScriptFontSlot): FontSlotUi {
+  return {
+    label: getActiveScriptFontLabel(slot),
+    busy: false,
+    error: null,
+    custom: Boolean(getScriptFontMeta(slot)),
+  }
+}
+
 export function SettingsPage({ onBack }: Props) {
   const [glyphSize, setGlyphSizeState] = useState<GlyphSize>(() => getGlyphSize())
   const [theme, setThemeState] = useState<ThemePref>(() => getThemePref())
+  const [devaFont, setDevaFont] = useState<FontSlotUi>(() => emptyFontUi('deva'))
+  const [siddhamFont, setSiddhamFont] = useState<FontSlotUi>(() => emptyFontUi('siddham'))
+  const [previewTick, setPreviewTick] = useState(0)
+  const [labsOpen, setLabsOpen] = useState(false)
 
   const [tokenDraft, setTokenDraft] = useState('')
   const [editingToken, setEditingToken] = useState(() => !hasCloudWriteToken())
   const [tokenSource, setTokenSource] = useState(() => cloudTokenSource())
   const [probePhase, setProbePhase] = useState<TokenUiPhase>('idle')
   const [probe, setProbe] = useState<CloudTokenProbe | null>(null)
+
+  const devaInputRef = useRef<HTMLInputElement>(null)
+  const siddhamInputRef = useRef<HTMLInputElement>(null)
+  const devaInputId = useId()
+  const siddhamInputId = useId()
 
   async function runProbe() {
     if (!hasCloudWriteToken()) {
@@ -71,6 +109,60 @@ export function SettingsPage({ onBack }: Props) {
     setProbePhase('ready')
   }
 
+  function setFontUi(slot: ScriptFontSlot, next: FontSlotUi) {
+    if (slot === 'deva') setDevaFont(next)
+    else setSiddhamFont(next)
+  }
+
+  async function handleFontFile(slot: ScriptFontSlot, file: File | undefined) {
+    if (!file) return
+    setFontUi(slot, {
+      ...emptyFontUi(slot),
+      busy: true,
+      error: null,
+      label: file.name,
+      custom: Boolean(getScriptFontMeta(slot)),
+    })
+    try {
+      const meta = await installScriptFont(slot, file)
+      setFontUi(slot, {
+        label: meta.fileName,
+        busy: false,
+        error: null,
+        custom: true,
+      })
+      setPreviewTick((n) => n + 1)
+    } catch (err) {
+      setFontUi(slot, {
+        label: getActiveScriptFontLabel(slot),
+        busy: false,
+        error: scriptFontErrorMessage(err),
+        custom: Boolean(getScriptFontMeta(slot)),
+      })
+    }
+  }
+
+  async function handleFontReset(slot: ScriptFontSlot) {
+    setFontUi(slot, { ...emptyFontUi(slot), busy: true, error: null })
+    try {
+      await resetScriptFont(slot)
+      setFontUi(slot, {
+        label: getDefaultScriptFontLabel(slot),
+        busy: false,
+        error: null,
+        custom: false,
+      })
+      setPreviewTick((n) => n + 1)
+    } catch (err) {
+      setFontUi(slot, {
+        label: getActiveScriptFontLabel(slot),
+        busy: false,
+        error: scriptFontErrorMessage(err),
+        custom: Boolean(getScriptFontMeta(slot)),
+      })
+    }
+  }
+
   const statusClass = (() => {
     if (probePhase === 'checking') return 'tool__token-status--draft'
     if (!hasCloudWriteToken()) return 'tool__token-status--empty'
@@ -87,6 +179,107 @@ export function SettingsPage({ onBack }: Props) {
     return '확인 실패'
   })()
 
+  function renderFontSlot(
+    slot: ScriptFontSlot,
+    title: string,
+    ui: FontSlotUi,
+    inputId: string,
+    inputRef: RefObject<HTMLInputElement | null>,
+    note?: string,
+  ) {
+    const bundledFamily = getBundledScriptFontFamily(slot)
+    const userFamily = getUserScriptFontFamily(slot)
+    return (
+      <div className="tool__font-slot">
+        <div className="tool__font-slot-head">
+          <h3>{title}</h3>
+          <span className={`tool__font-badge ${ui.custom ? 'is-custom' : ''}`}>
+            {ui.custom ? '사용자 폰트' : '기본'}
+          </span>
+        </div>
+        {note ? <p className="tool__meta tool__font-note">{note}</p> : null}
+        <div
+          key={`${slot}-${previewTick}`}
+          className="tool__font-compare"
+          role="group"
+          aria-label={`${title} 기본·사용자 비교`}
+        >
+          <div className="tool__font-pane">
+            <p className="tool__font-pane-label">기본</p>
+            <p
+              className="tool__font-preview"
+              lang="sa"
+              style={{ fontFamily: `"${bundledFamily}", sans-serif` }}
+            >
+              {SCRIPT_FONT_SAMPLE}
+            </p>
+            <p className="tool__font-name" title={getDefaultScriptFontLabel(slot)}>
+              {getDefaultScriptFontLabel(slot)}
+            </p>
+          </div>
+          <div className={`tool__font-pane ${ui.custom ? '' : 'is-empty'}`}>
+            <p className="tool__font-pane-label">사용자</p>
+            {ui.custom ? (
+              <>
+                <p
+                  className="tool__font-preview"
+                  lang="sa"
+                  style={{ fontFamily: `"${userFamily}", sans-serif` }}
+                >
+                  {SCRIPT_FONT_SAMPLE}
+                </p>
+                <p className="tool__font-name" title={ui.label}>
+                  {ui.busy ? '적용 중…' : ui.label}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="tool__font-preview tool__font-preview--placeholder" aria-hidden="true">
+                  —
+                </p>
+                <p className="tool__font-name">
+                  {ui.busy ? '적용 중…' : '아직 올린 폰트 없음'}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+        {ui.error ? <p className="tool__font-error">{ui.error}</p> : null}
+        <div className="tool__row">
+          <input
+            id={inputId}
+            ref={inputRef}
+            className="tool__font-input"
+            type="file"
+            accept=".otf,.ttf,font/otf,font/ttf,application/x-font-ttf,application/x-font-opentype"
+            disabled={ui.busy}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              void handleFontFile(slot, file)
+            }}
+          />
+          <button
+            type="button"
+            className="tool__btn tool__btn--primary motion-press"
+            disabled={ui.busy}
+            onClick={() => inputRef.current?.click()}
+          >
+            파일 선택
+          </button>
+          <button
+            type="button"
+            className="tool__btn tool__btn--ghost motion-press"
+            disabled={ui.busy || !ui.custom}
+            onClick={() => void handleFontReset(slot)}
+          >
+            기본값으로
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <main className="tool">
       <header className="tool__bar">
@@ -95,7 +288,7 @@ export function SettingsPage({ onBack }: Props) {
         </button>
         <h1>설정</h1>
       </header>
-      <p className="tool__lead">학습 글자 크기와 화면 밝기를 조절합니다. 값은 이 기기에 저장됩니다.</p>
+      <p className="tool__lead">글자 크기와 화면 밝기를 조절합니다. 값은 이 기기에 저장됩니다.</p>
 
       <section className="tool__block" aria-label="글자 크기">
         <h2>글자 크기</h2>
@@ -141,6 +334,46 @@ export function SettingsPage({ onBack }: Props) {
         </div>
       </section>
 
+      <section className={`tool__block tool__labs ${labsOpen ? 'is-open' : ''}`} aria-label="실험용">
+        <button
+          type="button"
+          className="tool__labs-toggle motion-press"
+          aria-expanded={labsOpen}
+          onClick={() => setLabsOpen((v) => !v)}
+        >
+          <span className="tool__labs-toggle-main">
+            <span className={`fold-chevron ${labsOpen ? 'is-open' : ''}`} aria-hidden="true">
+              ▸
+            </span>
+            <span>
+              <span className="tool__labs-title">실험용</span>
+              <span className="tool__labs-hint">불안정할 수 있는 기능</span>
+            </span>
+          </span>
+          <span className="tool__labs-count">{labsOpen ? '접기' : '펼치기'}</span>
+        </button>
+        <div className={`fold-panel ${labsOpen ? 'is-expanded' : ''}`}>
+          <div className="fold-panel__inner">
+            <div className="tool__labs-body">
+              <h3 className="tool__labs-section-title">스크립트 폰트</h3>
+              <p className="tool__meta">
+                OTF·TTF 파일을 올리면 학습·퀴즈 등 해당 문자 표시에 적용됩니다. 최대{' '}
+                {SCRIPT_FONT_MAX_BYTES / (1024 * 1024)}MB. 사용권이 있는 파일만 올려 주세요.
+              </p>
+              {renderFontSlot('deva', '산스크리트 (데바나가리)', devaFont, devaInputId, devaInputRef)}
+              {renderFontSlot(
+                'siddham',
+                '실담',
+                siddhamFont,
+                siddhamInputId,
+                siddhamInputRef,
+                '이 앱 실담은 데바나가리 글자에 실담 모양을 얹는 폰트입니다. Muktamsiddham과 같은 방식의 폰트를 올려 주세요.',
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="tool__block" aria-label="클라우드 토큰">
         <div className="tool__token-head">
           <h2>클라우드 토큰</h2>
@@ -151,7 +384,8 @@ export function SettingsPage({ onBack }: Props) {
         </div>
         <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
           획 가르치기·이론/쓰기 팁을 GitHub({cloudRepoLabel()})에 올리는 데 씁니다. fine-grained
-          PAT에 Contents 읽기·쓰기 권한이 필요합니다.
+          PAT에 이 저장소 접근 + Contents 읽기·쓰기가 필요합니다. (읽기만 있으면 확인은 되고 저장은
+          실패합니다.)
         </p>
 
         {!editingToken && hasCloudWriteToken() ? (
