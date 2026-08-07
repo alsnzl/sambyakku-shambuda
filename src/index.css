@@ -42,7 +42,7 @@
   --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
   --sans: 'Noto Sans KR', sans-serif;
   --deva: 'Noto Sans Devanagari', sans-serif;
-  --siddham: 'Noto Sans Siddham', 'Noto Sans Devanagari', sans-serif;
+  --siddham: 'Muktam Siddham', 'Noto Sans Siddham', 'Noto Sans Devanagari', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   /* One shared corner radius for blocks, chips, and controls. */

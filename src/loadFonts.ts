@@ -16,11 +16,11 @@ style.textContent = `
     url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
 }
 @font-face {
-  font-family: 'Noto Sans Siddham';
+  font-family: 'Muktam Siddham';
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url('${base}fonts/NotoSansSiddham-Regular.ttf') format('truetype');
+  src: url('${base}fonts/Muktamsiddham.otf') format('opentype');
   unicode-range: U+11580-115FF;
 }
 `
