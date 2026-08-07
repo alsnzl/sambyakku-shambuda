@@ -150,8 +150,8 @@ export function SettingsPage({ onBack }: Props) {
           </span>
         </div>
         <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
-          획 가르치기 결과를 GitHub({cloudRepoLabel()})에 올리는 데 씁니다. fine-grained PAT에
-          Contents 읽기·쓰기 권한이 필요합니다.
+          획 가르치기·이론/쓰기 팁을 GitHub({cloudRepoLabel()})에 올리는 데 씁니다. fine-grained
+          PAT에 Contents 읽기·쓰기 권한이 필요합니다.
         </p>
 
         {!editingToken && hasCloudWriteToken() ? (

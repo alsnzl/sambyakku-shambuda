@@ -2,7 +2,8 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import { clientToSvgPoint, pointsToPathD } from './strokeRecord'
 
-export const FREEHAND_INK_WIDTH = 22
+/** Light / no-pressure freehand brush (SVG user units). */
+export const FREEHAND_INK_WIDTH = 7
 
 export type FreehandPoint = {
   x: number
@@ -50,11 +51,18 @@ export function readPointerPressure(e: PointerEvent): number | null {
   return null
 }
 
-/** Map pressure to brush width around a base size. */
+/**
+ * Map pressure → brush width.
+ * Light tip stays thin; firm press opens a wide range (high sensitivity).
+ */
 export function pressureToWidth(pressure: number | null, baseWidth: number): number {
   if (pressure == null) return baseWidth
   const t = Math.min(1, Math.max(0, pressure))
-  return r2(baseWidth * (0.48 + t * 1.25))
+  // Soft ≈ 0.65× base, hard ≈ 4.6× base; gamma < 1 reacts early when pressing harder
+  const minMul = 0.65
+  const maxMul = 4.6
+  const curved = t ** 0.62
+  return r2(baseWidth * (minMul + (maxMul - minMul) * curved))
 }
 
 export function averagePressureWidth(points: FreehandPoint[], baseWidth: number): number {

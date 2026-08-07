@@ -189,7 +189,6 @@
   transform: scale(0.975);
 }
 
-.letter-card__theory,
 .letter-card__similar {
   margin-top: 0.75rem;
   padding: 0.85rem 0.9rem;
@@ -199,19 +198,11 @@
   border: 1px solid var(--line);
 }
 
-.letter-card__theory h4,
 .letter-card__similar h4 {
   margin: 0 0 0.4rem;
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--accent);
-}
-
-.letter-card__theory p {
-  margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: var(--ink-soft);
 }
 
 .letter-card__similar-row {

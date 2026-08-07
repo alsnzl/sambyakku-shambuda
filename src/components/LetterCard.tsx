@@ -9,10 +9,10 @@ import {
   toggleFavorite,
 } from '../lib/learnerStore'
 import { getSimilarLetters } from '../data/similarLetters'
-import { getTheoryBlurb } from '../data/theoryTips'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { WritePractice } from './WritePractice'
 import { StrokeTeachPanel } from './StrokeTeachPanel'
+import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
 
 type Props = {
@@ -38,7 +38,6 @@ export function LetterCard({
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
   const similar = getSimilarLetters(letter.id)
-  const theory = getTheoryBlurb(letter.id)
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
   const heroClass =
@@ -134,12 +133,7 @@ export function LetterCard({
         {letter.note ? <p className="letter-card__note">{letter.note}</p> : null}
       </div>
 
-      {theory && theory !== letter.note ? (
-        <div className="letter-card__theory">
-          <h4>이론 · 쓰기 팁</h4>
-          <p>{theory}</p>
-        </div>
-      ) : null}
+      <TheoryTipPanel letterId={letter.id} />
 
       {similar.length > 0 && (
         <div className="letter-card__similar">

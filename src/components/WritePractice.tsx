@@ -3,13 +3,13 @@ import type { ScriptTrack } from '../types/track'
 import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import {
-  avgStrokeWidth,
   defaultLabels,
   getEffectiveGlyphStrokes,
   getStrokeSource,
   getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
+  FREEHAND_INK_WIDTH,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
@@ -42,7 +42,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const fallback = getGlyphStrokes(letterId, script)
   const canvasData = data ?? fallback
   const outlineD = canvasData?.d
-  const inkWidth = avgStrokeWidth(canvasData)
+  const inkWidth = FREEHAND_INK_WIDTH
   const canWatchStrokes = Boolean(taughtData?.strokes.length)
 
   const [mode, setMode] = useState<PracticeMode>('trace')

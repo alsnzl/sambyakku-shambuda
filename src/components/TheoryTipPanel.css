@@ -1,0 +1,143 @@
+.theory-tip {
+  margin-top: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  border: 1px solid var(--line);
+}
+
+.theory-tip__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.theory-tip__head h4 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.theory-tip__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.theory-tip__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.theory-tip__badge--cloud {
+  background: var(--moss-wash);
+  border-color: color-mix(in srgb, var(--moss) 28%, transparent);
+  color: var(--ink-soft);
+}
+
+.theory-tip__badge--local {
+  background: var(--teal-wash);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--ink-soft);
+}
+
+.theory-tip__badge--default,
+.theory-tip__badge--empty {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.theory-tip__edit {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.theory-tip__edit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.theory-tip__body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+
+.theory-tip__body--empty {
+  color: var(--muted);
+}
+
+.theory-tip__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 6.5rem;
+}
+
+.theory-tip__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  justify-content: flex-end;
+}
+
+.theory-tip__btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.7rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.theory-tip__btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.theory-tip__btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.theory-tip__flash {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+}

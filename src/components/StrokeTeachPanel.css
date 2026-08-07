@@ -156,6 +156,20 @@
   cursor: not-allowed;
 }
 
+.teach__btn.is-active {
+  background: var(--teal-wash);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  color: var(--ink);
+}
+
+.teach__svg--watch {
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .teach__token {
   margin: 0 0 0.75rem;
   padding: 0.85rem 0.9rem;
