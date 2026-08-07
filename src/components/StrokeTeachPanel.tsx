@@ -639,25 +639,40 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                         ))}
                       </mask>
                     </defs>
-                    <text
-                      className="teach__glyph-guide"
-                      x={glyphX}
-                      y={glyphY}
-                      textAnchor="middle"
-                      style={{ fontFamily }}
-                    >
-                      {glyph}
-                    </text>
-                    <text
-                      className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                      x={glyphX}
-                      y={glyphY}
-                      textAnchor="middle"
-                      style={{ fontFamily }}
-                      mask={`url(#${maskId}-watch)`}
-                    >
-                      {glyph}
-                    </text>
+                    {outlineD ? (
+                      <>
+                        <path className="teach__glyph-guide" d={outlineD} />
+                        <path
+                          className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                          d={outlineD}
+                          mask={`url(#${maskId}-watch)`}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <text
+                          className="teach__glyph-guide"
+                          x={glyphX}
+                          y={glyphY}
+                          textAnchor="middle"
+                          lang="sa"
+                          style={{ fontFamily }}
+                        >
+                          {glyph}
+                        </text>
+                        <text
+                          className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                          x={glyphX}
+                          y={glyphY}
+                          textAnchor="middle"
+                          lang="sa"
+                          style={{ fontFamily }}
+                          mask={`url(#${maskId}-watch)`}
+                        >
+                          {glyph}
+                        </text>
+                      </>
+                    )}
                     <StrokeArrowLayer
                       strokes={previewStrokes}
                       revealCount={watchDone ? previewStrokes.length : Math.max(activeStep + 1, 1)}
@@ -698,25 +713,40 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                         ))}
                       </mask>
                     </defs>
-                    <text
-                      className="teach__glyph-guide"
-                      x={glyphX}
-                      y={glyphY}
-                      textAnchor="middle"
-                      style={{ fontFamily }}
-                    >
-                      {glyph}
-                    </text>
-                    <text
-                      className="teach__glyph-ink"
-                      x={glyphX}
-                      y={glyphY}
-                      textAnchor="middle"
-                      style={{ fontFamily }}
-                      mask={`url(#${maskId})`}
-                    >
-                      {glyph}
-                    </text>
+                    {outlineD ? (
+                      <>
+                        <path className="teach__glyph-guide" d={outlineD} />
+                        <path
+                          className="teach__glyph-ink"
+                          d={outlineD}
+                          mask={`url(#${maskId})`}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <text
+                          className="teach__glyph-guide"
+                          x={glyphX}
+                          y={glyphY}
+                          textAnchor="middle"
+                          lang="sa"
+                          style={{ fontFamily }}
+                        >
+                          {glyph}
+                        </text>
+                        <text
+                          className="teach__glyph-ink"
+                          x={glyphX}
+                          y={glyphY}
+                          textAnchor="middle"
+                          lang="sa"
+                          style={{ fontFamily }}
+                          mask={`url(#${maskId})`}
+                        >
+                          {glyph}
+                        </text>
+                      </>
+                    )}
                     <StrokeArrowLayer strokes={recorded} emphasizeLatest />
                   </>
                 )}

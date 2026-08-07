@@ -71,12 +71,141 @@ const FALLBACK = {
   siddham: ['주요 기둥', '가로·곡선 연결', '마무리 획'],
 }
 
+/** Combining bindu / visarga — need manual attach (opentype.js has no Indic GPOS). */
+const ANUSVARA = new Set(['ं', 'ँ', '𑖽'])
+const VISARGA = new Set(['ः', '𑖾'])
+
+function translateCommands(commands, dx, dy) {
+  return commands.map((c) => {
+    if (c.type === 'Z') return { ...c }
+    if (c.type === 'M' || c.type === 'L') {
+      return { ...c, x: c.x + dx, y: c.y + dy }
+    }
+    if (c.type === 'Q') {
+      return { ...c, x: c.x + dx, y: c.y + dy, x1: c.x1 + dx, y1: c.y1 + dy }
+    }
+    if (c.type === 'C') {
+      return {
+        ...c,
+        x: c.x + dx,
+        y: c.y + dy,
+        x1: c.x1 + dx,
+        y1: c.y1 + dy,
+        x2: c.x2 + dx,
+        y2: c.y2 + dy,
+      }
+    }
+    return { ...c }
+  })
+}
+
+/** Visarga glyphs often include a shirorekha stub; keep only the two dot contours. */
+function visargaDotsCommands(markGlyph) {
+  const raw = markGlyph.getPath(0, 0, FONT_SIZE)
+  const contours = []
+  let cur = null
+  for (const c of raw.commands) {
+    if (c.type === 'M') {
+      if (cur?.length) contours.push(cur)
+      cur = [c]
+    } else if (cur) {
+      cur.push(c)
+      if (c.type === 'Z') {
+        contours.push(cur)
+        cur = null
+      }
+    }
+  }
+  if (cur?.length) contours.push(cur)
+
+  const dots = contours.filter((cmds) => {
+    let x1 = Infinity
+    let y1 = Infinity
+    let x2 = -Infinity
+    let y2 = -Infinity
+    for (const c of cmds) {
+      for (const k of ['x', 'x1', 'x2']) {
+        if (typeof c[k] === 'number') {
+          x1 = Math.min(x1, c[k])
+          x2 = Math.max(x2, c[k])
+        }
+      }
+      for (const k of ['y', 'y1', 'y2']) {
+        if (typeof c[k] === 'number') {
+          y1 = Math.min(y1, c[k])
+          y2 = Math.max(y2, c[k])
+        }
+      }
+    }
+    const w = x2 - x1
+    const h = y2 - y1
+    if (!(w > 0 && h > 0)) return false
+    const aspect = w / h
+    // Dots are roughly round; the orphan shirorekha bar is wide and flat.
+    return aspect < 2.2 && aspect > 0.45 && w < FONT_SIZE * 0.22
+  })
+
+  return dots.flat()
+}
+
+function composeBaseWithMark(font, baseText, markCh) {
+  const combined = new opentype.Path()
+  let penX = 0
+  for (const ch of Array.from(baseText)) {
+    const g = font.charToGlyph(ch)
+    if (!g) continue
+    combined.extend(g.getPath(penX, 0, FONT_SIZE))
+    penX += (g.advanceWidth ?? 0) * (FONT_SIZE / font.unitsPerEm)
+  }
+  const baseBox = combined.getBoundingBox()
+  const markGlyph = font.charToGlyph(markCh)
+  if (!markGlyph) return combined
+
+  if (ANUSVARA.has(markCh)) {
+    const mb = markGlyph.getPath(0, 0, FONT_SIZE).getBoundingBox()
+    const x = (baseBox.x1 + baseBox.x2) / 2 - (mb.x1 + mb.x2) / 2
+    combined.extend(markGlyph.getPath(x, 0, FONT_SIZE))
+    return combined
+  }
+
+  // Visarga: attach two dots to the right of the base — no floating bar.
+  const dotCmds = visargaDotsCommands(markGlyph)
+  if (dotCmds.length === 0) {
+    const mb = markGlyph.getPath(0, 0, FONT_SIZE).getBoundingBox()
+    const x = baseBox.x2 + FONT_SIZE * 0.03 - mb.x1
+    combined.extend(markGlyph.getPath(x, 0, FONT_SIZE))
+    return combined
+  }
+  let dx1 = Infinity
+  let dx2 = -Infinity
+  for (const c of dotCmds) {
+    for (const k of ['x', 'x1', 'x2']) {
+      if (typeof c[k] === 'number') {
+        dx1 = Math.min(dx1, c[k])
+        dx2 = Math.max(dx2, c[k])
+      }
+    }
+  }
+  const x = baseBox.x2 + FONT_SIZE * 0.04 - dx1
+  const shifted = translateCommands(dotCmds, x, 0)
+  for (const c of shifted) combined.commands.push(c)
+  return combined
+}
+
 function textPath(font, text) {
+  const chars = Array.from(text)
+  if (chars.length >= 2) {
+    const mark = chars[chars.length - 1]
+    if (ANUSVARA.has(mark) || VISARGA.has(mark)) {
+      return composeBaseWithMark(font, chars.slice(0, -1).join(''), mark)
+    }
+  }
+
   const combined = new opentype.Path()
   let penX = 0
   let baseX = 0
   let baseAdv = 0
-  for (const ch of Array.from(text)) {
+  for (const ch of chars) {
     const glyph = font.charToGlyph(ch)
     if (!glyph) continue
     const adv = (glyph.advanceWidth ?? 0) * (FONT_SIZE / font.unitsPerEm)
