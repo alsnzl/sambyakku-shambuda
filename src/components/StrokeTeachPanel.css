@@ -237,6 +237,9 @@
 .teach__svg--trace {
   touch-action: none;
   cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .teach__glyph-guide,

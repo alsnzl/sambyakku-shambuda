@@ -197,6 +197,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     if (mode !== 'trace' || traceDone || !outlineD) return
     if (theoryCount > 0 && drawn.length >= theoryCount) return
     if (e.pointerType === 'pen' && e.buttons === 0) return
+    // Tip only — block S Pen button / right-click / eraser side
+    if (e.pointerType !== 'touch' && e.button !== 0) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -438,6 +440,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           onPointerMove={pointerMove}
           onPointerUp={endStroke}
           onPointerCancel={endStroke}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {mode === 'trace' && outlineD ? (
             <>

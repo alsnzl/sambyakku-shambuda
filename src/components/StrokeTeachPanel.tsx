@@ -123,6 +123,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     if (!glyph || saving) return
     // Ignore pure hover from S Pen until tip contacts the screen
     if (e.pointerType === 'pen' && e.buttons === 0) return
+    // Tip only — block S Pen button / right-click / eraser side
+    if (e.pointerType !== 'touch' && e.button !== 0) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -339,6 +341,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
             onPointerMove={pointerMove}
             onPointerUp={endStroke}
             onPointerCancel={endStroke}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <defs>
               <mask id={maskId} maskUnits="userSpaceOnUse">
