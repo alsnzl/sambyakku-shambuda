@@ -9,15 +9,17 @@ import {
   getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
+  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
   freehandPressureSegments,
   glyphStrokeMaskSegments,
+  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
-import { getPenOnly, setPenOnly } from '../lib/prefsStore'
+import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
@@ -57,6 +59,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [traceDone, setTraceDone] = useState(false)
   const [grade, setGrade] = useState<WritingGrade | null>(null)
   const [watchBlocked, setWatchBlocked] = useState(false)
+  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
 
   const theoryStrokes = canvasData?.strokes ?? []
@@ -278,8 +281,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     recordWriteScore(track, letterId, result.average)
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth)
-  const drawnMaskSegs = drawn.flatMap((s, i) => glyphStrokeMaskSegments(s, i * 1000))
+  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
+  const drawnMaskSegs = drawn.flatMap((s, i) => glyphStrokeMaskSegments(s, brush, i * 1000))
 
   return (
     <section className="write" aria-label="쓰기 연습">
@@ -361,7 +364,18 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
       </div>
 
       {mode === 'trace' ? (
-        <div className="write__brush" role="group" aria-label="입력">
+        <div className="write__brush" role="group" aria-label="브러시">
+          {BRUSH_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+              title={opt.hint}
+              onClick={() => setBrush(setBrushKind(opt.id))}
+            >
+              {opt.label}
+            </button>
+          ))}
           <button
             type="button"
             className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
@@ -475,7 +489,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                       y2={seg.y2}
                       stroke="white"
                       strokeWidth={seg.width}
-                      strokeLinecap="round"
+                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                       strokeLinejoin="round"
                     />
                   ))}
@@ -488,7 +502,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                       y2={seg.y2}
                       stroke="white"
                       strokeWidth={seg.width}
-                      strokeLinecap="round"
+                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                       strokeLinejoin="round"
                     />
                   ))}

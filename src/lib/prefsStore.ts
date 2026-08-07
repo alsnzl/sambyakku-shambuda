@@ -1,13 +1,17 @@
-const STORAGE_KEY = 'sambyakku-prefs-v1'
-const SIZES: GlyphSize[] = ['sm', 'md', 'lg']
+import type { BrushKind } from './freehandStroke'
 
 export type GlyphSize = 'sm' | 'md' | 'lg'
 export type ThemePref = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
+export type { BrushKind }
+
+const STORAGE_KEY = 'sambyakku-prefs-v1'
+const SIZES: GlyphSize[] = ['sm', 'md', 'lg']
 
 type Prefs = {
   glyphSize: GlyphSize
   theme: ThemePref
+  brush: BrushKind
   /** Reject finger/palm on teach & write canvases (S Pen / mouse only). */
   penOnly: boolean
 }
@@ -15,6 +19,7 @@ type Prefs = {
 const DEFAULTS: Prefs = {
   glyphSize: 'md',
   theme: 'system',
+  brush: 'brush',
   penOnly: true,
 }
 
@@ -28,6 +33,10 @@ function isThemePref(value: unknown): value is ThemePref {
   return value === 'light' || value === 'dark' || value === 'system'
 }
 
+function isBrushKind(value: unknown): value is BrushKind {
+  return value === 'pen' || value === 'brush'
+}
+
 function load(): Prefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -36,6 +45,7 @@ function load(): Prefs {
     return {
       glyphSize: isGlyphSize(parsed.glyphSize) ? parsed.glyphSize : DEFAULTS.glyphSize,
       theme: isThemePref(parsed.theme) ? parsed.theme : DEFAULTS.theme,
+      brush: isBrushKind(parsed.brush) ? parsed.brush : DEFAULTS.brush,
       penOnly: typeof parsed.penOnly === 'boolean' ? parsed.penOnly : DEFAULTS.penOnly,
     }
   } catch {
@@ -98,6 +108,16 @@ export function setThemePref(theme: ThemePref): ThemePref {
   save({ ...load(), theme: next })
   applyTheme(next)
   bindSystemThemeListener(next)
+  return next
+}
+
+export function getBrushKind(): BrushKind {
+  return load().brush
+}
+
+export function setBrushKind(brush: BrushKind): BrushKind {
+  const next = isBrushKind(brush) ? brush : DEFAULTS.brush
+  save({ ...load(), brush: next })
   return next
 }
 
