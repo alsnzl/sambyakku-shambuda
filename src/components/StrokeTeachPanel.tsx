@@ -439,7 +439,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       const msg = err instanceof Error ? err.message : String(err)
       setCloudPhase('error')
       setCloudError(msg)
-      setFlash(`클라우드 저장 실패 · 기기에만 보관됨`)
+      setFlash(`클라우드 저장 실패 · 기기에만 보관됨 — ${msg}`)
       refresh()
     } finally {
       setSaving(false)

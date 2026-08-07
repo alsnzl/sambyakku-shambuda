@@ -1,5 +1,5 @@
 import { getTheoryBlurb } from '../data/theoryTips'
-import { getCloudToken, hasCloudWriteToken } from './strokeCloud'
+import { formatCloudWriteError, getCloudToken, hasCloudWriteToken } from './strokeCloud'
 
 const LOCAL_KEY = 'sambyakku-theory-overrides'
 const CACHE_KEY = 'sambyakku-theory-cloud-cache'
@@ -195,13 +195,20 @@ async function fetchViaContentsApi(
   token: string | null,
 ): Promise<{ store: TheoryTipsStore; sha: string } | null> {
   const url = `${contentsApiUrl(cfg)}?ref=${encodeURIComponent(cfg.branch)}`
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-  }
-  if (token) headers.Authorization = `Bearer ${token}`
 
-  const res = await fetch(url, { headers })
+  async function once(auth: string | null) {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    }
+    if (auth) headers.Authorization = `Bearer ${auth}`
+    return fetch(url, { headers, cache: 'no-store' })
+  }
+
+  let res = await once(token)
+  if (res.status === 404 && token) {
+    res = await once(null)
+  }
   if (res.status === 404) return null
   if (!res.ok) {
     const body = await res.text()
@@ -274,49 +281,55 @@ export async function publishTheoryTipToCloud(
   }
 
   const cfg = getTheoryCloudConfig()
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  }
-
-  let sha: string | null = null
-  let store = emptyStore()
-  const latest = await fetchViaContentsApi(cfg, token)
-  if (latest) {
-    store = latest.store
-    sha = latest.sha
-  }
-
   const entry: TheoryTipEntry = {
     text: text.trim(),
     updatedAt: new Date().toISOString(),
   }
-  store.tips[letterId] = entry
-  store.meta.updatedAt = entry.updatedAt
 
-  const body: Record<string, string> = {
-    message: `theory: ${letterId}`,
-    content: encodeBase64Utf8(`${JSON.stringify(store, null, 2)}\n`),
-    branch: cfg.branch,
-  }
-  if (sha) body.sha = sha
+  let lastFail: { status: number; body: string } | null = null
 
-  const res = await fetch(contentsApiUrl(cfg), {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify(body),
-  })
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let sha: string | null = null
+    let store = emptyStore()
+    const latest = await fetchViaContentsApi(cfg, token)
+    if (latest) {
+      store = latest.store
+      sha = latest.sha
+    }
 
-  if (!res.ok) {
+    store.tips[letterId] = entry
+    store.meta.updatedAt = entry.updatedAt
+
+    const body: Record<string, string> = {
+      message: `theory: ${letterId}`,
+      content: encodeBase64Utf8(`${JSON.stringify(store, null, 2)}\n`),
+      branch: cfg.branch,
+    }
+    if (sha) body.sha = sha
+
+    const res = await fetch(contentsApiUrl(cfg), {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (res.ok) {
+      const result = (await res.json()) as { content?: { sha?: string } }
+      writeTheoryCloudCache(store, result.content?.sha ?? sha)
+      return entry
+    }
+
     const errText = await res.text()
-    throw new Error(`이론 팁 클라우드 저장 실패 (${res.status}): ${errText.slice(0, 240)}`)
+    lastFail = { status: res.status, body: errText }
+    if (res.status !== 409) break
   }
 
-  const result = (await res.json()) as { content?: { sha?: string } }
-  writeTheoryCloudCache(store, result.content?.sha ?? sha)
-  return entry
+  throw new Error(formatCloudWriteError(lastFail?.status ?? 0, lastFail?.body ?? ''))
 }
 
 export { hasCloudWriteToken }
