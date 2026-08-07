@@ -3,6 +3,7 @@
 ## Fonts (`public/fonts/`)
 
 - `NotoSansDevanagari.ttf` — Noto Sans Devanagari, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/notosansdevanagari) (SIL OFL 1.1)
+- `TiroDevanagariSanskrit-Regular.ttf` — Tiro Devanagari Sanskrit, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/tirodevanagarisanskrit) / [TiroTypeworks/Indigo](https://github.com/TiroTypeworks/Indigo) (SIL OFL 1.1)
 - `NotoSansSiddham-Regular.ttf` — Noto Sans Siddham, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/notosanssiddham) (SIL OFL 1.1; kept as fallback / stroke generation source)
 - `Muktamsiddham.otf` — Muktamsiddham by MihailJP (Siddhaṃ shapes on Devanagari codepoints; Reserved Font Name Muktamsiddham)
 
