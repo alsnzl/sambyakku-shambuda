@@ -1,0 +1,177 @@
+.teach-page__intro {
+  border-color: color-mix(in srgb, var(--clay) 28%, var(--block-border));
+  background: color-mix(in srgb, var(--clay-wash) 55%, var(--block-bg));
+}
+
+.teach-page__tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.teach-page__track {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 1.15rem 1.15rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--clay) 32%, var(--block-border));
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--clay) 14%, var(--block-bg)),
+      var(--block-bg) 48%
+    );
+  box-shadow: var(--block-shadow);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.teach-page__track--siddham {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--clay) 10%, var(--block-bg)),
+      color-mix(in srgb, var(--teal) 5%, var(--block-bg)) 55%
+    );
+}
+
+.teach-page__track:active {
+  transform: scale(0.985);
+}
+
+.teach-page__track-kicker {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--clay);
+  letter-spacing: 0.02em;
+}
+
+.teach-page__track-title {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.teach-page__track-sample {
+  margin-top: 0.55rem;
+  font-family: var(--deva);
+  font-size: calc(1.45rem * var(--glyph-scale));
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.teach-page__track-sample--siddham {
+  font-family: var(--siddham);
+}
+
+.teach-page__track-cta {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--clay);
+}
+
+.teach-page__nav {
+  margin-left: auto;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.teach-page__nav-btn {
+  appearance: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.teach-page__nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.teach-page__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.05rem 0.95rem 1.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--block-bg);
+  border: 1px solid color-mix(in srgb, var(--clay) 22%, var(--block-border));
+  box-shadow: var(--block-shadow);
+}
+
+.teach-page__identity {
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.teach-page__script {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--clay);
+  letter-spacing: 0.03em;
+}
+
+.teach-page__identity-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.teach-page__glyph {
+  font-size: calc(2.55rem * var(--glyph-scale));
+  line-height: 1;
+  color: var(--ink);
+}
+
+.teach-page__glyph--deva {
+  font-family: var(--deva);
+}
+
+.teach-page__glyph--siddham {
+  font-family: var(--siddham);
+}
+
+.teach-page__iast {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.teach-page__hangul {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.teach-page__lead {
+  margin: 0.65rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.teach-page .teach {
+  margin-top: 0.55rem;
+}

@@ -242,6 +242,53 @@
     0 16px 32px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
+.home__card--teach {
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--clay) 82%, #5a241c),
+      color-mix(in srgb, #c45a48 88%, #6b2e24) 55%,
+      color-mix(in srgb, var(--clay) 72%, #3d1c16)
+    );
+  border-color: color-mix(in srgb, var(--clay) 48%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.16) inset,
+    0 12px 28px color-mix(in srgb, var(--clay) 30%, transparent);
+}
+
+.home__card--teach .home__card-kicker,
+.home__card--teach .home__card-cta {
+  color: color-mix(in srgb, #fff5f2 88%, white);
+}
+
+.home__card--teach .home__card-title,
+.home__card--teach .home__card-verse {
+  color: #fff8f6;
+}
+
+.home__card--teach .home__card-verse {
+  color: color-mix(in srgb, #fff8f6 82%, transparent);
+}
+
+.home__card--teach .home__card-glyphs--teach {
+  background: color-mix(in srgb, white 14%, transparent);
+}
+
+.home__card--teach .home__card-glyphs-mark {
+  color: #fff8f6;
+  font-family: var(--display);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.home__card--teach:hover {
+  border-color: color-mix(in srgb, #fff8f6 35%, var(--clay));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 16px 32px color-mix(in srgb, var(--clay) 38%, transparent);
+}
+
 .home__card-top {
   display: flex;
   align-items: center;

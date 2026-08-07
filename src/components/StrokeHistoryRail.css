@@ -1,0 +1,47 @@
+.stroke-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding-top: 0.15rem;
+}
+
+.stroke-history__btn {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.stroke-history__btn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.stroke-history__btn:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.write__canvas-row,
+.teach__canvas-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.write__canvas-row .write__svg,
+.teach__canvas-row .teach__svg {
+  margin: 0;
+  flex: 0 1 var(--canvas-max);
+}

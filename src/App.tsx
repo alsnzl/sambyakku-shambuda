@@ -15,6 +15,7 @@ import { PathPage } from './pages/PathPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { CorrespondencePage } from './pages/CorrespondencePage'
 import { ConjunctsPage } from './pages/ConjunctsPage'
+import { TeachPage } from './pages/TeachPage'
 import { MotionPage } from './components/MotionPage'
 import type { Letter } from './data/letters'
 import type { ScriptTrack } from './types/track'
@@ -39,12 +40,21 @@ type Screen =
   | 'settings'
   | 'correspondence'
   | 'conjuncts'
+  | 'teach'
 
 type BackTo = 'home' | 'tracks'
 
 type GlobalMode = Extract<
   OpenMode,
-  'convert' | 'mantras' | 'about' | 'path' | 'tracks' | 'settings' | 'correspondence' | 'conjuncts'
+  | 'convert'
+  | 'mantras'
+  | 'about'
+  | 'path'
+  | 'tracks'
+  | 'settings'
+  | 'correspondence'
+  | 'conjuncts'
+  | 'teach'
 >
 
 function App() {
@@ -102,7 +112,8 @@ function App() {
     screen === 'tracks' ||
     screen === 'settings' ||
     screen === 'correspondence' ||
-    screen === 'conjuncts'
+    screen === 'conjuncts' ||
+    screen === 'teach'
       ? screen
       : `${screen}-${track}${openLetterId ? `-${openLetterId}` : ''}`
 
@@ -150,6 +161,7 @@ function App() {
         {screen === 'about' ? <About onBack={goHome} /> : null}
         {screen === 'path' ? <PathPage onBack={goHome} /> : null}
         {screen === 'settings' ? <SettingsPage onBack={goHome} /> : null}
+        {screen === 'teach' ? <TeachPage onBack={goHome} /> : null}
         {screen === 'correspondence' ? (
           <CorrespondencePage
             onBack={goBack}

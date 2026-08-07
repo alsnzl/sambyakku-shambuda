@@ -22,10 +22,19 @@ export type OpenMode =
   | 'about'
   | 'path'
   | 'tracks'
+  | 'teach'
 
 type GlobalMode = Extract<
   OpenMode,
-  'convert' | 'mantras' | 'about' | 'path' | 'tracks' | 'settings' | 'correspondence' | 'conjuncts'
+  | 'convert'
+  | 'mantras'
+  | 'about'
+  | 'path'
+  | 'tracks'
+  | 'settings'
+  | 'correspondence'
+  | 'conjuncts'
+  | 'teach'
 >
 
 type Props = {
@@ -82,6 +91,26 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         </div>
         <p className="home__card-verse">산스크리트와 실담 글자를 고르고 학습합니다.</p>
         <p className="home__card-cta">글자 고르기 →</p>
+      </button>
+
+      <button
+        type="button"
+        className="home__card home__card--teach motion-press"
+        onClick={() => onOpenGlobal('teach')}
+      >
+        <div className="home__card-top">
+          <div>
+            <p className="home__card-kicker">기록하기</p>
+            <p className="home__card-title">획 기록하기</p>
+          </div>
+          <span className="home__card-glyphs home__card-glyphs--teach" aria-hidden="true">
+            <span className="home__card-glyphs-mark">획</span>
+          </span>
+        </div>
+        <p className="home__card-verse">
+          글자 획과 이론·쓰기 팁을 그려 저장합니다. 따라 쓰기에서 쓰입니다.
+        </p>
+        <p className="home__card-cta">기록하러 가기 →</p>
       </button>
 
       <button

@@ -37,6 +37,7 @@ import {
 } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
+import { StrokeHistoryRail } from './StrokeHistoryRail'
 import './StrokeTeachPanel.css'
 
 type Props = {
@@ -485,300 +486,303 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
   return (
     <section className="teach is-open" aria-label="획 가르치기">
-      <div className="teach__head">
-        <h3>획 그리기</h3>
-        <span
-          className={`teach__status ${statusClass[cloudStatus]}`}
-          title={cloudError ?? cloudRepoLabel()}
-        >
-          <span className="teach__status-dot" aria-hidden="true" />
-          {statusText[cloudStatus]}
-        </span>
-      </div>
-
-      <p className="teach__meta">
-        {mode === 'watch'
-          ? watchDone
-            ? '재생 끝 · 화면을 누르면 다시 그릴 수 있어요'
-            : `${previewStrokes.length}획 재생 중`
-          : recorded.length > 0
-            ? `${recorded.length}획 · 이름을 고쳐도 돼요`
-            : info.strokeCount > 0
-              ? `저장된 획 ${info.strokeCount}개 · 불러오기로 수정`
-              : '글자 위에 손가락이 아닌 펜으로 그려 주세요'}
-      </p>
-
-      <div className="teach__bar teach__bar--primary">
-        <button
-          type="button"
-          className="teach__btn teach__btn--primary"
-          disabled={recorded.length === 0 || saving}
-          onClick={() => void handleSave()}
-        >
-          {saving ? '저장 중…' : saveAckLow ? '그래도 저장' : '저장'}
-        </button>
-        <button
-          type="button"
-          className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
-          disabled={!canWatch || saving}
-          onClick={handleWatch}
-        >
-          {mode === 'watch' ? '다시 보기' : '보기'}
-        </button>
-        <button
-          type="button"
-          className="teach__btn"
-          disabled={recorded.length === 0 || saving}
-          onClick={undoStroke}
-          aria-label="이전 획 취소"
-        >
-          취소
-        </button>
-        <button
-          type="button"
-          className="teach__btn"
-          disabled={redoStack.length === 0 || saving}
-          onClick={redoStroke}
-          aria-label="취소한 획 다시"
-        >
-          되돌리기
-        </button>
-      </div>
-
-      <div className="teach__bar teach__bar--secondary">
-        <button
-          type="button"
-          className="teach__btn"
-          disabled={!canLoadSaved || saving}
-          onClick={handleLoad}
-          title="저장된 획을 캔버스로 불러와 수정"
-        >
-          불러오기
-        </button>
-        <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
-          비우기
-        </button>
-      </div>
-
-      {flash ? <p className="teach__message">{flash}</p> : null}
-      {cloudStatus === 'error' && cloudError ? (
-        <p className="teach__message teach__message--warn">{cloudError}</p>
-      ) : null}
-
-      {glyph ? (
-        <div className="teach__stage">
-          <svg
-            ref={svgRef}
-            className={`teach__svg ${mode === 'draw' ? 'teach__svg--trace' : 'teach__svg--watch'}`}
-            viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-            role="img"
-            aria-label={`${glyph} ${mode === 'watch' ? '획 보기' : '획 기록'}`}
-            onPointerDown={pointerDown}
-            onPointerMove={pointerMove}
-            onPointerUp={endStroke}
-            onPointerCancel={endStroke}
-            onContextMenu={(e) => e.preventDefault()}
+      <div className="teach__chrome">
+        <div className="teach__head">
+          <h3>획 그리기</h3>
+          <span
+            className={`teach__status ${statusClass[cloudStatus]}`}
+            title={cloudError ?? cloudRepoLabel()}
           >
-            {mode === 'watch' ? (
-              <>
-                <defs>
-                  <mask id={`${maskId}-watch`} maskUnits="userSpaceOnUse">
-                    <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                    {previewStrokes.map((s, i) => (
-                      <path
-                        key={`watch-${letterId}-${playId}-${i}`}
-                        ref={(el) => {
-                          revealRefs.current[i] = el
-                        }}
-                        d={s.d}
-                        stroke="white"
-                        strokeWidth={s.width}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        fill="none"
-                      />
-                    ))}
-                  </mask>
-                </defs>
-                <text
-                  className="teach__glyph-guide"
-                  x={glyphX}
-                  y={glyphY}
-                  textAnchor="middle"
-                  style={{ fontFamily }}
-                >
-                  {glyph}
-                </text>
-                <text
-                  className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                  x={glyphX}
-                  y={glyphY}
-                  textAnchor="middle"
-                  style={{ fontFamily }}
-                  mask={`url(#${maskId}-watch)`}
-                >
-                  {glyph}
-                </text>
-                <StrokeArrowLayer
-                  strokes={previewStrokes}
-                  revealCount={watchDone ? previewStrokes.length : Math.max(activeStep + 1, 1)}
-                  emphasizeLatest={!watchDone}
-                />
-                <circle ref={tipRef} className="teach__tip" r={6} cx={-50} cy={-50} />
-              </>
-            ) : (
-              <>
-                <defs>
-                  <mask id={maskId} maskUnits="userSpaceOnUse">
-                    <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                    {recordedMaskSegs.map((seg) => (
-                      <line
-                        key={`mask-rec-${seg.i}`}
-                        x1={seg.x1}
-                        y1={seg.y1}
-                        x2={seg.x2}
-                        y2={seg.y2}
-                        stroke="white"
-                        strokeWidth={seg.width}
-                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
-                        strokeLinejoin="round"
-                      />
-                    ))}
-                    {liveSegments.map((seg) => (
-                      <line
-                        key={`mask-live-${seg.i}`}
-                        x1={seg.x1}
-                        y1={seg.y1}
-                        x2={seg.x2}
-                        y2={seg.y2}
-                        stroke="white"
-                        strokeWidth={seg.width}
-                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
-                        strokeLinejoin="round"
-                      />
-                    ))}
-                  </mask>
-                </defs>
-                <text
-                  className="teach__glyph-guide"
-                  x={glyphX}
-                  y={glyphY}
-                  textAnchor="middle"
-                  style={{ fontFamily }}
-                >
-                  {glyph}
-                </text>
-                <text
-                  className="teach__glyph-ink"
-                  x={glyphX}
-                  y={glyphY}
-                  textAnchor="middle"
-                  style={{ fontFamily }}
-                  mask={`url(#${maskId})`}
-                >
-                  {glyph}
-                </text>
-                <StrokeArrowLayer strokes={recorded} emphasizeLatest />
-              </>
-            )}
-          </svg>
-
-          <ol className="teach__steps">
-            {mode === 'watch'
-              ? previewStrokes.map((s, i) => {
-                  const state =
-                    activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
-                  return (
-                    <li key={`teach-watch-${letterId}-${i}`} className={`teach__step ${state}`}>
-                      <span className="teach__step-num">{i + 1}</span>
-                      <span className="teach__step-label">{s.label}</span>
-                    </li>
-                  )
-                })
-              : (
-                <>
-                  {recorded.map((s, i) => (
-                    <li key={`teach-${letterId}-${i}`} className="teach__step is-done">
-                      <span className="teach__step-num">{i + 1}</span>
-                      <input
-                        className="teach__step-input"
-                        type="text"
-                        value={s.label}
-                        disabled={saving}
-                        aria-label={`${i + 1}번 획 이름`}
-                        onChange={(e) => renameStroke(i, e.target.value)}
-                        onBlur={() => commitStrokeLabel(i)}
-                      />
-                    </li>
-                  ))}
-                  <li className="teach__step is-active">
-                    <span className="teach__step-num">{recorded.length + 1}</span>
-                    <span className="teach__step-label">
-                      {labels[recorded.length] ?? `획 ${recorded.length + 1}`} (그리는 중)
-                    </span>
-                  </li>
-                </>
-              )}
-          </ol>
+            <span className="teach__status-dot" aria-hidden="true" />
+            {statusText[cloudStatus]}
+          </span>
         </div>
-      ) : (
-        <p className="teach__message teach__message--warn">이 글자는 그리기 윤곽을 불러올 수 없습니다.</p>
-      )}
 
-      <details
-        className="teach__advanced"
-        open={advancedOpen}
-        onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}
-      >
-        <summary className="teach__advanced-summary">그리기 설정</summary>
-        <div className="teach__advanced-body">
-          <div className="teach__brush" role="group" aria-label="붓·펜">
-            {BRUSH_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
-                title={opt.hint}
-                disabled={saving}
-                onClick={() => setBrush(setBrushKind(opt.id))}
+        <p className="teach__meta">
+          {mode === 'watch'
+            ? watchDone
+              ? '재생 끝 · 화면을 누르면 다시 그릴 수 있어요'
+              : `${previewStrokes.length}획 재생 중`
+            : recorded.length > 0
+              ? `${recorded.length}획 · 이름을 고쳐도 돼요`
+              : info.strokeCount > 0
+                ? `저장된 획 ${info.strokeCount}개 · 불러오기로 수정`
+                : '글자 위에 손가락이 아닌 펜으로 그려 주세요'}
+        </p>
+      </div>
+
+      <div className="teach__workspace">
+        <div className="teach__main">
+          {glyph ? (
+            <div className="teach__canvas-row">
+              <svg
+                ref={svgRef}
+                className={`teach__svg ${mode === 'draw' ? 'teach__svg--trace' : 'teach__svg--watch'}`}
+                viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
+                role="img"
+                aria-label={`${glyph} ${mode === 'watch' ? '획 보기' : '획 기록'}`}
+                onPointerDown={pointerDown}
+                onPointerMove={pointerMove}
+                onPointerUp={endStroke}
+                onPointerCancel={endStroke}
+                onContextMenu={(e) => e.preventDefault()}
               >
-                {opt.label}
-              </button>
-            ))}
+                {mode === 'watch' ? (
+                  <>
+                    <defs>
+                      <mask id={`${maskId}-watch`} maskUnits="userSpaceOnUse">
+                        <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                        {previewStrokes.map((s, i) => (
+                          <path
+                            key={`watch-${letterId}-${playId}-${i}`}
+                            ref={(el) => {
+                              revealRefs.current[i] = el
+                            }}
+                            d={s.d}
+                            stroke="white"
+                            strokeWidth={s.width}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        ))}
+                      </mask>
+                    </defs>
+                    <text
+                      className="teach__glyph-guide"
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      style={{ fontFamily }}
+                    >
+                      {glyph}
+                    </text>
+                    <text
+                      className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      style={{ fontFamily }}
+                      mask={`url(#${maskId}-watch)`}
+                    >
+                      {glyph}
+                    </text>
+                    <StrokeArrowLayer
+                      strokes={previewStrokes}
+                      revealCount={watchDone ? previewStrokes.length : Math.max(activeStep + 1, 1)}
+                      emphasizeLatest={!watchDone}
+                    />
+                    <circle ref={tipRef} className="teach__tip" r={6} cx={-50} cy={-50} />
+                  </>
+                ) : (
+                  <>
+                    <defs>
+                      <mask id={maskId} maskUnits="userSpaceOnUse">
+                        <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                        {recordedMaskSegs.map((seg) => (
+                          <line
+                            key={`mask-rec-${seg.i}`}
+                            x1={seg.x1}
+                            y1={seg.y1}
+                            x2={seg.x2}
+                            y2={seg.y2}
+                            stroke="white"
+                            strokeWidth={seg.width}
+                            strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                            strokeLinejoin="round"
+                          />
+                        ))}
+                        {liveSegments.map((seg) => (
+                          <line
+                            key={`mask-live-${seg.i}`}
+                            x1={seg.x1}
+                            y1={seg.y1}
+                            x2={seg.x2}
+                            y2={seg.y2}
+                            stroke="white"
+                            strokeWidth={seg.width}
+                            strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                            strokeLinejoin="round"
+                          />
+                        ))}
+                      </mask>
+                    </defs>
+                    <text
+                      className="teach__glyph-guide"
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      style={{ fontFamily }}
+                    >
+                      {glyph}
+                    </text>
+                    <text
+                      className="teach__glyph-ink"
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      style={{ fontFamily }}
+                      mask={`url(#${maskId})`}
+                    >
+                      {glyph}
+                    </text>
+                    <StrokeArrowLayer strokes={recorded} emphasizeLatest />
+                  </>
+                )}
+              </svg>
+
+              {mode === 'draw' ? (
+                <StrokeHistoryRail
+                  undoDisabled={recorded.length === 0 || saving}
+                  redoDisabled={redoStack.length === 0 || saving}
+                  onUndo={undoStroke}
+                  onRedo={redoStroke}
+                />
+              ) : null}
+            </div>
+          ) : (
+            <p className="teach__message teach__message--warn">
+              이 글자는 그리기 윤곽을 불러올 수 없습니다.
+            </p>
+          )}
+        </div>
+
+        <div className="teach__rail">
+          <div className="teach__bar teach__bar--primary">
             <button
               type="button"
-              className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
-              title="손바닥·손가락 입력 무시 (S Pen만)"
-              disabled={saving}
-              onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+              className="teach__btn teach__btn--primary"
+              disabled={recorded.length === 0 || saving}
+              onClick={() => void handleSave()}
             >
-              펜만
+              {saving ? '저장 중…' : saveAckLow ? '그래도 저장' : '저장'}
+            </button>
+            <button
+              type="button"
+              className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
+              disabled={!canWatch || saving}
+              onClick={handleWatch}
+            >
+              {mode === 'watch' ? '다시 보기' : '보기'}
             </button>
           </div>
 
-          <label className="teach__sens">
-            <span className="teach__sens-label">
-              필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-            </span>
-            <input
-              className="teach__sens-range"
-              type="range"
-              min={PRESSURE_SENS_MIN}
-              max={PRESSURE_SENS_MAX}
-              step={0.05}
-              value={pressureSens}
-              disabled={saving}
-              aria-label="필압 민감도"
-              onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-            />
-            <span className="teach__sens-ends" aria-hidden="true">
-              <span>낮음</span>
-              <span>기본 100%</span>
-              <span>높음</span>
-            </span>
-          </label>
+          <div className="teach__bar teach__bar--secondary">
+            <button
+              type="button"
+              className="teach__btn"
+              disabled={!canLoadSaved || saving}
+              onClick={handleLoad}
+              title="저장된 획을 캔버스로 불러와 수정"
+            >
+              불러오기
+            </button>
+            <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
+              비우기
+            </button>
+          </div>
+
+          {flash ? <p className="teach__message">{flash}</p> : null}
+          {cloudStatus === 'error' && cloudError ? (
+            <p className="teach__message teach__message--warn">{cloudError}</p>
+          ) : null}
+
+          {glyph ? (
+            <ol className="teach__steps">
+              {mode === 'watch'
+                ? previewStrokes.map((s, i) => {
+                    const state =
+                      activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
+                    return (
+                      <li key={`teach-watch-${letterId}-${i}`} className={`teach__step ${state}`}>
+                        <span className="teach__step-num">{i + 1}</span>
+                        <span className="teach__step-label">{s.label}</span>
+                      </li>
+                    )
+                  })
+                : (
+                  <>
+                    {recorded.map((s, i) => (
+                      <li key={`teach-${letterId}-${i}`} className="teach__step is-done">
+                        <span className="teach__step-num">{i + 1}</span>
+                        <input
+                          className="teach__step-input"
+                          type="text"
+                          value={s.label}
+                          disabled={saving}
+                          aria-label={`${i + 1}번 획 이름`}
+                          onChange={(e) => renameStroke(i, e.target.value)}
+                          onBlur={() => commitStrokeLabel(i)}
+                        />
+                      </li>
+                    ))}
+                    <li className="teach__step is-active">
+                      <span className="teach__step-num">{recorded.length + 1}</span>
+                      <span className="teach__step-label">
+                        {labels[recorded.length] ?? `획 ${recorded.length + 1}`} (그리는 중)
+                      </span>
+                    </li>
+                  </>
+                )}
+            </ol>
+          ) : null}
+
+          <details
+            className="teach__advanced"
+            open={advancedOpen}
+            onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}
+          >
+            <summary className="teach__advanced-summary">그리기 설정</summary>
+            <div className="teach__advanced-body">
+              <div className="teach__brush" role="group" aria-label="붓·펜">
+                {BRUSH_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
+                    title={opt.hint}
+                    disabled={saving}
+                    onClick={() => setBrush(setBrushKind(opt.id))}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
+                  title="손바닥·손가락 입력 무시 (S Pen만)"
+                  disabled={saving}
+                  onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+                >
+                  펜만
+                </button>
+              </div>
+
+              <label className="teach__sens">
+                <span className="teach__sens-label">
+                  필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+                </span>
+                <input
+                  className="teach__sens-range"
+                  type="range"
+                  min={PRESSURE_SENS_MIN}
+                  max={PRESSURE_SENS_MAX}
+                  step={0.05}
+                  value={pressureSens}
+                  disabled={saving}
+                  aria-label="필압 민감도"
+                  onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+                />
+                <span className="teach__sens-ends" aria-hidden="true">
+                  <span>낮음</span>
+                  <span>기본 100%</span>
+                  <span>높음</span>
+                </span>
+              </label>
+            </div>
+          </details>
         </div>
-      </details>
+      </div>
     </section>
   )
 }

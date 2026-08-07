@@ -12,6 +12,23 @@
   margin-bottom: 0.7rem;
 }
 
+.write__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.write__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.write__chrome .write__head {
+  margin-bottom: 0;
+}
+
 .write__title-row {
   display: flex;
   align-items: center;

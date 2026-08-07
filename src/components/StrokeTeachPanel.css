@@ -127,6 +127,23 @@
   color: var(--muted);
 }
 
+.teach__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.teach__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.teach__chrome .teach__meta {
+  margin: 0.2rem 0 0;
+}
+
 .teach__bar--simple {
   margin-bottom: 0.55rem;
 }

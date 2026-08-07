@@ -31,6 +31,7 @@ import {
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
+import { StrokeHistoryRail } from './StrokeHistoryRail'
 import './WritePractice.css'
 
 type Props = {
@@ -295,327 +296,324 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
   return (
     <section className="write" aria-label="쓰기 연습">
-      <div className="write__head">
-        <div className="write__title-row">
-          {onClose ? (
-            <button type="button" className="write__back motion-press" onClick={onClose}>
-              ← 글자 보기
-            </button>
-          ) : null}
-          <h3>쓰기 연습</h3>
-        </div>
-        <div className="write__actions">
-          <button
-            type="button"
-            className={`write__btn write__btn--ghost motion-press ${mode === 'trace' ? 'is-active' : ''}`}
-            onClick={() => {
-              setWatchBlocked(false)
-              setMode('trace')
-            }}
-          >
-            따라 쓰기
-          </button>
-          <button
-            type="button"
-            className={`write__btn write__btn--ghost motion-press ${mode === 'watch' ? 'is-active' : ''}`}
-            onClick={() => {
-              if (!canWatchStrokes) {
-                setWatchBlocked(true)
-                setMode('trace')
-                return
-              }
-              setWatchBlocked(false)
-              setMode('watch')
-              setPlayId((n) => n + 1)
-            }}
-          >
-            보기
-          </button>
-          {mode === 'trace' ? (
-            <>
-              <button
-                type="button"
-                className="write__btn write__btn--ghost motion-press"
-                disabled={drawn.length === 0 || traceDone}
-                onClick={undoStroke}
-                aria-label="이전 획 취소"
-              >
-                ← 취소
+      <div className="write__chrome">
+        <div className="write__head">
+          <div className="write__title-row">
+            {onClose ? (
+              <button type="button" className="write__back motion-press" onClick={onClose}>
+                ← 글자 보기
               </button>
+            ) : null}
+            <h3>쓰기 연습</h3>
+          </div>
+          <div className="write__actions">
+            <button
+              type="button"
+              className={`write__btn write__btn--ghost motion-press ${mode === 'trace' ? 'is-active' : ''}`}
+              onClick={() => {
+                setWatchBlocked(false)
+                setMode('trace')
+              }}
+            >
+              따라 쓰기
+            </button>
+            <button
+              type="button"
+              className={`write__btn write__btn--ghost motion-press ${mode === 'watch' ? 'is-active' : ''}`}
+              onClick={() => {
+                if (!canWatchStrokes) {
+                  setWatchBlocked(true)
+                  setMode('trace')
+                  return
+                }
+                setWatchBlocked(false)
+                setMode('watch')
+                setPlayId((n) => n + 1)
+              }}
+            >
+              보기
+            </button>
+            {mode === 'trace' ? (
+              <button type="button" className="write__replay motion-press" onClick={resetTrace}>
+                다시
+              </button>
+            ) : (
               <button
                 type="button"
-                className="write__btn write__btn--ghost motion-press"
-                disabled={
+                className="write__replay motion-press"
+                disabled={!canWatchStrokes}
+                onClick={() => setPlayId((n) => n + 1)}
+              >
+                다시 보기
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="write__workspace">
+        <div className="write__main">
+          <div className="write__canvas-row">
+            <svg
+              ref={svgRef}
+              className={`write__svg ${mode === 'trace' ? 'write__svg--trace' : ''}`}
+              viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
+              role="img"
+              aria-label={`${glyph} ${mode === 'trace' ? '따라 쓰기' : '쓰기 순서 보기'}`}
+              onPointerDown={pointerDown}
+              onPointerMove={pointerMove}
+              onPointerUp={endStroke}
+              onPointerCancel={endStroke}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              {mode === 'trace' && outlineD ? (
+                <>
+                  <defs>
+                    <mask id={maskId} maskUnits="userSpaceOnUse">
+                      <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                      {drawnMaskSegs.map((seg) => (
+                        <line
+                          key={`mask-${seg.i}`}
+                          x1={seg.x1}
+                          y1={seg.y1}
+                          x2={seg.x2}
+                          y2={seg.y2}
+                          stroke="white"
+                          strokeWidth={seg.width}
+                          strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                      {liveSegments.map((seg) => (
+                        <line
+                          key={`mask-live-${seg.i}`}
+                          x1={seg.x1}
+                          y1={seg.y1}
+                          x2={seg.x2}
+                          y2={seg.y2}
+                          stroke="white"
+                          strokeWidth={seg.width}
+                          strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                          strokeLinejoin="round"
+                        />
+                      ))}
+                    </mask>
+                  </defs>
+                  <path className="write__glyph-guide" d={outlineD} />
+                  <path className="write__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
+                </>
+              ) : mode === 'watch' && taughtData ? (
+                <>
+                  <defs>
+                    <mask id={`${maskId}-watch`} maskUnits="userSpaceOnUse">
+                      <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                      {taughtData.strokes.map((s, i) => (
+                        <path
+                          key={`${letterId}-${playId}-${i}`}
+                          ref={(el) => {
+                            revealRefs.current[i] = el
+                          }}
+                          d={s.d}
+                          stroke="white"
+                          strokeWidth={s.width}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                      ))}
+                    </mask>
+                  </defs>
+
+                  <path className="write__glyph-guide" d={taughtData.d} />
+                  <path
+                    className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                    d={taughtData.d}
+                    mask={`url(#${maskId}-watch)`}
+                  />
+                  <StrokeArrowLayer
+                    strokes={taughtData.strokes}
+                    revealCount={watchDone ? taughtData.strokes.length : Math.max(activeStep + 1, 1)}
+                    emphasizeLatest={!watchDone}
+                  />
+                  <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />
+                </>
+              ) : (
+                <text
+                  className="write__glyph-fallback"
+                  x={STROKE_VIEWBOX / 2}
+                  y={STROKE_VIEWBOX * 0.7}
+                  textAnchor="middle"
+                  style={{ fontFamily }}
+                >
+                  {glyph}
+                </text>
+              )}
+            </svg>
+
+            {mode === 'trace' ? (
+              <StrokeHistoryRail
+                undoDisabled={drawn.length === 0 || traceDone}
+                redoDisabled={
                   redoStack.length === 0 ||
                   traceDone ||
                   (theoryCount > 0 && drawn.length >= theoryCount)
                 }
-                onClick={redoStroke}
-                aria-label="취소한 획 다시"
-              >
-                되돌리기
-              </button>
-              <button type="button" className="write__replay motion-press" onClick={resetTrace}>
-                다시
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="write__replay motion-press"
-              disabled={!canWatchStrokes}
-              onClick={() => setPlayId((n) => n + 1)}
-            >
-              다시 보기
-            </button>
-          )}
+                onUndo={undoStroke}
+                onRedo={redoStroke}
+              />
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      {mode === 'trace' ? (
-        <details className="write__advanced">
-          <summary className="write__advanced-summary">그리기 설정</summary>
-          <div className="write__advanced-body">
-            <div className="write__brush" role="group" aria-label="붓·펜">
-              {BRUSH_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
-                  title={opt.hint}
-                  onClick={() => setBrush(setBrushKind(opt.id))}
-                >
-                  {opt.label}
-                </button>
-              ))}
+        <div className="write__rail">
+          {mode === 'trace' ? (
+            <details className="write__advanced">
+              <summary className="write__advanced-summary">그리기 설정</summary>
+              <div className="write__advanced-body">
+                <div className="write__brush" role="group" aria-label="붓·펜">
+                  {BRUSH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+                      title={opt.hint}
+                      onClick={() => setBrush(setBrushKind(opt.id))}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
+                    title="손바닥·손가락 입력 무시 (S Pen만)"
+                    onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+                  >
+                    펜만
+                  </button>
+                </div>
+                <label className="write__sens">
+                  <span className="write__sens-label">
+                    필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+                  </span>
+                  <input
+                    className="write__sens-range"
+                    type="range"
+                    min={PRESSURE_SENS_MIN}
+                    max={PRESSURE_SENS_MAX}
+                    step={0.05}
+                    value={pressureSens}
+                    aria-label="필압 민감도"
+                    onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+                  />
+                  <span className="write__sens-ends" aria-hidden="true">
+                    <span>낮음</span>
+                    <span>기본 100%</span>
+                    <span>높음</span>
+                  </span>
+                </label>
+              </div>
+            </details>
+          ) : null}
+
+          {watchBlocked ? (
+            <p className="write__hint write__hint--warn" role="alert">
+              이 글자의 획이 아직 없습니다. 홈의 「획 기록하기」에서 먼저 획을 그려 저장해 주세요.
+            </p>
+          ) : null}
+
+          {mode === 'trace' && !traceDone && (
+            <p className="write__hint">
+              순서대로 따라 쓰세요
+              {theoryCount > 0 ? ` (${drawn.length}/${theoryCount})` : ''}.
+              다 쓴 뒤 「채점」을 누르세요.
+            </p>
+          )}
+          {mode === 'trace' && grade && (
+            <div className="write__grade">
+              <p className="write__flash">
+                종합 <strong>{grade.average}점</strong>
+                <span className="write__grade-note"> · {grade.feedback}</span>
+              </p>
+              <ul className="write__grade-metrics">
+                <li>
+                  <span>형태</span>
+                  <strong>{grade.shapeScore}</strong>
+                </li>
+                <li>
+                  <span>순서</span>
+                  <strong className={grade.orderScore >= 70 ? 'is-good' : 'is-warn'}>
+                    {grade.orderScore}
+                  </strong>
+                </li>
+                <li>
+                  <span>방향</span>
+                  <strong className={grade.directionScore >= 70 ? 'is-good' : 'is-warn'}>
+                    {grade.directionScore}
+                  </strong>
+                </li>
+              </ul>
+              {grade.perStroke.length > 0 ? (
+                <ul className="write__grade-strokes">
+                  {grade.perStroke.map((s) => (
+                    <li key={`grade-${s.index}`} className={s.orderOk ? 'is-ok' : 'is-bad'}>
+                      <span>
+                        {s.index + 1}. {s.label}
+                      </span>
+                      <span>
+                        {s.orderOk ? '순서 맞음' : `이론 ${s.bestMatchIndex + 1}번과 유사`}
+                        {' · '}형태 {s.shape}
+                        {' · '}방향 {s.direction}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          )}
+
+          {mode === 'trace' && !traceDone && drawn.length > 0 && (
+            <div className="write__actions" style={{ justifyContent: 'center', marginBottom: '0.55rem' }}>
               <button
                 type="button"
-                className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
-                title="손바닥·손가락 입력 무시 (S Pen만)"
-                onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+                className="write__btn motion-press"
+                onClick={gradeWriting}
+                disabled={theoryCount > 0 && drawn.length < theoryCount}
               >
-                펜만
+                {theoryCount > 0 && drawn.length < theoryCount
+                  ? `채점하기 (${drawn.length}/${theoryCount})`
+                  : '채점하기'}
               </button>
             </div>
-            <label className="write__sens">
-              <span className="write__sens-label">
-                필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-              </span>
-              <input
-                className="write__sens-range"
-                type="range"
-                min={PRESSURE_SENS_MIN}
-                max={PRESSURE_SENS_MAX}
-                step={0.05}
-                value={pressureSens}
-                aria-label="필압 민감도"
-                onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-              />
-              <span className="write__sens-ends" aria-hidden="true">
-                <span>낮음</span>
-                <span>기본 100%</span>
-                <span>높음</span>
-              </span>
-            </label>
-          </div>
-        </details>
-      ) : null}
-
-      {watchBlocked ? (
-        <p className="write__hint write__hint--warn" role="alert">
-          이 글자의 획이 아직 없습니다. 위쪽 「가르치기」 탭에서 먼저 획을 그려 저장해 주세요.
-        </p>
-      ) : null}
-
-      {mode === 'trace' && !traceDone && (
-        <p className="write__hint">
-          순서대로 따라 쓰세요
-          {theoryCount > 0 ? ` (${drawn.length}/${theoryCount})` : ''}.
-          다 쓴 뒤 「채점」을 누르세요.
-        </p>
-      )}
-      {mode === 'trace' && grade && (
-        <div className="write__grade">
-          <p className="write__flash">
-            종합 <strong>{grade.average}점</strong>
-            <span className="write__grade-note"> · {grade.feedback}</span>
-          </p>
-          <ul className="write__grade-metrics">
-            <li>
-              <span>형태</span>
-              <strong>{grade.shapeScore}</strong>
-            </li>
-            <li>
-              <span>순서</span>
-              <strong className={grade.orderScore >= 70 ? 'is-good' : 'is-warn'}>
-                {grade.orderScore}
-              </strong>
-            </li>
-            <li>
-              <span>방향</span>
-              <strong className={grade.directionScore >= 70 ? 'is-good' : 'is-warn'}>
-                {grade.directionScore}
-              </strong>
-            </li>
-          </ul>
-          {grade.perStroke.length > 0 ? (
-            <ul className="write__grade-strokes">
-              {grade.perStroke.map((s) => (
-                <li key={`grade-${s.index}`} className={s.orderOk ? 'is-ok' : 'is-bad'}>
-                  <span>
-                    {s.index + 1}. {s.label}
-                  </span>
-                  <span>
-                    {s.orderOk ? '순서 맞음' : `이론 ${s.bestMatchIndex + 1}번과 유사`}
-                    {' · '}형태 {s.shape}
-                    {' · '}방향 {s.direction}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      )}
-
-      {mode === 'trace' && !traceDone && drawn.length > 0 && (
-        <div className="write__actions" style={{ justifyContent: 'center', marginBottom: '0.55rem' }}>
-          <button
-            type="button"
-            className="write__btn motion-press"
-            onClick={gradeWriting}
-            disabled={theoryCount > 0 && drawn.length < theoryCount}
-          >
-            {theoryCount > 0 && drawn.length < theoryCount
-              ? `채점하기 (${drawn.length}/${theoryCount})`
-              : '채점하기'}
-          </button>
-        </div>
-      )}
-
-      <div className="write__stage">
-        <svg
-          ref={svgRef}
-          className={`write__svg ${mode === 'trace' ? 'write__svg--trace' : ''}`}
-          viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-          role="img"
-          aria-label={`${glyph} ${mode === 'trace' ? '따라 쓰기' : '쓰기 순서 보기'}`}
-          onPointerDown={pointerDown}
-          onPointerMove={pointerMove}
-          onPointerUp={endStroke}
-          onPointerCancel={endStroke}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {mode === 'trace' && outlineD ? (
-            <>
-              <defs>
-                <mask id={maskId} maskUnits="userSpaceOnUse">
-                  <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                  {drawnMaskSegs.map((seg) => (
-                    <line
-                      key={`mask-${seg.i}`}
-                      x1={seg.x1}
-                      y1={seg.y1}
-                      x2={seg.x2}
-                      y2={seg.y2}
-                      stroke="white"
-                      strokeWidth={seg.width}
-                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
-                      strokeLinejoin="round"
-                    />
-                  ))}
-                  {liveSegments.map((seg) => (
-                    <line
-                      key={`mask-live-${seg.i}`}
-                      x1={seg.x1}
-                      y1={seg.y1}
-                      x2={seg.x2}
-                      y2={seg.y2}
-                      stroke="white"
-                      strokeWidth={seg.width}
-                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
-                      strokeLinejoin="round"
-                    />
-                  ))}
-                </mask>
-              </defs>
-              <path className="write__glyph-guide" d={outlineD} />
-              <path className="write__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
-            </>
-          ) : mode === 'watch' && taughtData ? (
-            <>
-              <defs>
-                <mask id={`${maskId}-watch`} maskUnits="userSpaceOnUse">
-                  <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                  {taughtData.strokes.map((s, i) => (
-                    <path
-                      key={`${letterId}-${playId}-${i}`}
-                      ref={(el) => {
-                        revealRefs.current[i] = el
-                      }}
-                      d={s.d}
-                      stroke="white"
-                      strokeWidth={s.width}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                  ))}
-                </mask>
-              </defs>
-
-              <path className="write__glyph-guide" d={taughtData.d} />
-              <path
-                className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                d={taughtData.d}
-                mask={`url(#${maskId}-watch)`}
-              />
-              <StrokeArrowLayer
-                strokes={taughtData.strokes}
-                revealCount={watchDone ? taughtData.strokes.length : Math.max(activeStep + 1, 1)}
-                emphasizeLatest={!watchDone}
-              />
-              <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />
-            </>
-          ) : (
-            <text
-              className="write__glyph-fallback"
-              x={STROKE_VIEWBOX / 2}
-              y={STROKE_VIEWBOX * 0.7}
-              textAnchor="middle"
-              style={{ fontFamily }}
-            >
-              {glyph}
-            </text>
           )}
-        </svg>
 
-        <ol className="write__steps">
-          {(mode === 'trace'
-            ? [
-                ...drawn.map((s) => s.label),
-                ...(traceDone ? [] : [steps[drawn.length] ?? `획 ${drawn.length + 1}`]),
-              ]
-            : steps
-          ).map((label, i) => {
-            let state = ''
-            if (mode === 'trace') {
-              state =
-                i < drawn.length
-                  ? 'is-done'
-                  : i === drawn.length && !traceDone
-                    ? 'is-active'
-                    : ''
-            } else {
-              state = activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
-            }
-            return (
-              <li key={`${letterId}-${i}-${label}`} className={`write__step ${state}`}>
-                <span className="write__step-num">{i + 1}</span>
-                <span className="write__step-label">{label}</span>
-              </li>
-            )
-          })}
-        </ol>
+          <ol className="write__steps">
+            {(mode === 'trace'
+              ? [
+                  ...drawn.map((s) => s.label),
+                  ...(traceDone ? [] : [steps[drawn.length] ?? `획 ${drawn.length + 1}`]),
+                ]
+              : steps
+            ).map((label, i) => {
+              let state = ''
+              if (mode === 'trace') {
+                state =
+                  i < drawn.length
+                    ? 'is-done'
+                    : i === drawn.length && !traceDone
+                      ? 'is-active'
+                      : ''
+              } else {
+                state = activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
+              }
+              return (
+                <li key={`${letterId}-${i}-${label}`} className={`write__step ${state}`}>
+                  <span className="write__step-num">{i + 1}</span>
+                  <span className="write__step-label">{label}</span>
+                </li>
+              )
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   )
