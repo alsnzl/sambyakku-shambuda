@@ -2,7 +2,7 @@
  * Tablet / wide landscape: same DOM, denser 2-column reflow.
  * Phones keep the portrait column (narrow width or portrait orientation).
  */
-@media (orientation: landscape) and (min-width: 700px) {
+@media (orientation: landscape) and (min-width: 600px) {
   :root {
     --shell-max: min(64rem, 100%);
     --canvas-max: min(42vh, 46vmin, 360px);
@@ -194,16 +194,17 @@
     font-size: 0.78rem;
   }
 
-  /* Canvas stays visually centered; rail floats on the right and does not push it left. */
-  .write__workspace,
-  .teach__workspace {
+  /* Canvas stays visually centered; rail floats on the right and does not push it left.
+     Higher specificity (.teach.is-open / .write) beats later component `display:flex` rules. */
+  .write .write__workspace,
+  .teach.is-open .teach__workspace {
     position: relative;
     display: block;
     min-height: var(--canvas-max);
   }
 
-  .write__main,
-  .teach__main {
+  .write .write__main,
+  .teach.is-open .teach__main {
     display: flex;
     justify-content: center;
     width: 100%;
@@ -213,19 +214,19 @@
     min-width: 0;
   }
 
-  .write__canvas-row,
-  .teach__canvas-row {
+  .write .write__canvas-row,
+  .teach.is-open .teach__canvas-row {
     justify-content: center;
   }
 
-  .write__canvas-row .write__svg,
-  .teach__canvas-row .teach__svg {
+  .write .write__canvas-row .write__svg,
+  .teach.is-open .teach__canvas-row .teach__svg {
     margin: 0;
     width: min(100%, var(--canvas-max));
   }
 
-  .write__rail,
-  .teach__rail {
+  .write .write__rail,
+  .teach.is-open .teach__rail {
     position: absolute;
     top: 0;
     right: 0;
@@ -350,7 +351,7 @@
 }
 
 /* Short landscape: shrink chrome & canvas, keep workbench usable */
-@media (orientation: landscape) and (min-width: 700px) and (max-height: 560px) {
+@media (orientation: landscape) and (min-width: 600px) and (max-height: 560px) {
   :root {
     --canvas-max: min(36vh, 48vmin, 280px);
     --page-pad-y: 0.55rem;
@@ -388,7 +389,7 @@
 }
 
 /* Phone landscape: compact chrome only — do not widen to tablet layout */
-@media (orientation: landscape) and (max-width: 699px) {
+@media (orientation: landscape) and (max-width: 599px) {
   :root {
     --page-pad-y: 0.55rem;
     --page-pad-bottom: 1rem;
