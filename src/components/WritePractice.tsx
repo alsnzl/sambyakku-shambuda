@@ -441,7 +441,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 <text
                   className="write__glyph-fallback"
                   x={STROKE_VIEWBOX / 2}
-                  y={STROKE_VIEWBOX * 0.7}
+                  y={STROKE_VIEWBOX * 0.72}
                   textAnchor="middle"
                   style={{ fontFamily }}
                 >

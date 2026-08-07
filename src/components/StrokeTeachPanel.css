@@ -390,7 +390,7 @@
 
 .teach__glyph-guide,
 .teach__glyph-ink {
-  font-size: 148px;
+  font-size: calc(210px * var(--glyph-scale));
   dominant-baseline: alphabetic;
   pointer-events: none;
 }

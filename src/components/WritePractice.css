@@ -404,7 +404,7 @@
 }
 
 .write__glyph-fallback {
-  font-size: calc(148px * var(--glyph-scale));
+  font-size: calc(210px * var(--glyph-scale));
   dominant-baseline: alphabetic;
   fill: var(--ink);
 }

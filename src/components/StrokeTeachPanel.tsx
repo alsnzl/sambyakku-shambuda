@@ -72,7 +72,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   /** UI glyph face — Muktamsiddham for Siddhaṃ (Devanagari codepoints in `glyph`). */
   const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
   const glyphX = STROKE_VIEWBOX / 2
-  const glyphY = STROKE_VIEWBOX * 0.7
+  /** Optical vertical center for large Indic faces in the square viewBox. */
+  const glyphY = STROKE_VIEWBOX * 0.72
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)
