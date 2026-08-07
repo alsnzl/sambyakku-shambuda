@@ -47,7 +47,6 @@ type Props = {
 
 export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   const path = getPathSnapshot()
-  const openPetals = path.petals.filter(Boolean).length
   const feed = getHomeFeed()
   const [feedOpen, setFeedOpen] = useState(false)
 
@@ -139,24 +138,29 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
           </div>
         </div>
         <p className="home__card-verse">{path.stage.verseKo}</p>
-        <div className="home__card-foot home__card-foot--center">
-          <span>공덕 {path.path.merit}</span>
-          <span>{path.path.streak}일째</span>
-          <span>연꽃 {openPetals}/7</span>
+        <div className="home__card-foot home__card-foot--center home__path-stats">
+          <span className="home__path-stat">
+            <svg className="home__path-stat-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <ellipse cx="8" cy="8.2" rx="3.4" ry="4.2" fill="currentColor" opacity="0.88" />
+              <ellipse cx="6.8" cy="6.4" rx="1.15" ry="1.55" fill="var(--paper)" opacity="0.55" />
+            </svg>
+            <span>공덕 {path.path.merit}</span>
+          </span>
+          <span className="home__path-stat">
+            <svg className="home__path-stat-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="2.6" fill="currentColor" />
+              <g stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" opacity="0.9">
+                <path d="M8 2.2v1.4M8 12.4v1.4M2.2 8h1.4M12.4 8h1.4" />
+                <path d="M3.9 3.9l1 1M11.1 11.1l1 1M12.1 3.9l-1 1M4.9 11.1l-1 1" />
+              </g>
+            </svg>
+            <span>{path.path.streak}일째</span>
+          </span>
         </div>
         {path.dueHint ? <p className="home__card-hint">{path.dueHint}</p> : null}
       </button>
 
       <div className="home__side">
-        <button
-          type="button"
-          className="home__settings-entry motion-press"
-          onClick={() => onOpenGlobal('settings')}
-        >
-          <span className="home__settings-entry-title">설정</span>
-          <span className="home__settings-entry-sub">글자 크기 · 화면 밝기 · 색감 · 클라우드 토큰</span>
-        </button>
-
         <section
           className={`home__feed ${feedOpen ? 'is-open' : 'is-collapsed'}`}
           aria-label="오늘의 추천"
@@ -168,14 +172,12 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
             onClick={() => setFeedOpen((v) => !v)}
           >
             <span className="home__feed-toggle-main">
-              <FoldChevron open={feedOpen} className="home__feed-chevron" />
-              <span>
-                <span className="home__feed-toggle-title">오늘의 추천</span>
-                <span className="home__feed-toggle-sub">
-                  {feedOpen ? '원하는 것만 눌러 보세요.' : `${feed.length}개`}
-                </span>
+              <span className="home__feed-toggle-title">오늘의 추천</span>
+              <span className="home__feed-toggle-sub">
+                {feedOpen ? '원하는 것만 눌러 보세요' : `추천 글자 ${feed.length}개`}
               </span>
             </span>
+            <FoldChevron open={feedOpen} className="home__feed-chevron" />
           </button>
           <div className={`fold-panel ${feedOpen ? 'is-expanded' : ''}`}>
             <div className="fold-panel__inner">
@@ -211,6 +213,15 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
             </div>
           </div>
         </section>
+
+        <button
+          type="button"
+          className="home__settings-entry motion-press"
+          onClick={() => onOpenGlobal('settings')}
+        >
+          <span className="home__settings-entry-title">설정</span>
+          <span className="home__settings-entry-sub">글자 크기 · 화면 밝기 · 색감 · 클라우드 토큰</span>
+        </button>
       </div>
     </main>
   )

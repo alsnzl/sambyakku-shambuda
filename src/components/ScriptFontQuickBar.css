@@ -4,6 +4,8 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface) 55%, transparent);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .script-font-bar__toggle {
@@ -82,9 +84,10 @@
 }
 
 .script-font-bar__opt.is-active {
-  border-color: color-mix(in srgb, var(--teal) 45%, var(--line));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 22%, transparent);
-  background: color-mix(in srgb, var(--teal-wash) 55%, var(--paper));
+  border-color: var(--control-on-border);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 28%, transparent);
+  background: var(--control-on-bg);
+  color: var(--control-on-fg);
 }
 
 .script-font-bar__opt:disabled {
@@ -126,7 +129,7 @@
 }
 
 .script-font-bar__opt.is-active .script-font-bar__opt-label {
-  color: var(--ink);
+  color: var(--control-on-fg);
   font-weight: 700;
 }
 

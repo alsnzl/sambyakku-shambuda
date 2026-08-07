@@ -122,8 +122,70 @@
 }
 
 .teach__meta {
-  margin: 0.35rem 0 0.65rem;
+  margin: 0.35rem 0 1.2rem;
   font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.teach__meta-font {
+  color: var(--ink-soft, var(--muted));
+}
+
+.teach__font-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--block-border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  overflow: hidden;
+}
+
+.teach__font-badge-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.teach__font-badge-name {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.teach__font-badge-state {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+
+.teach__font-badge-state.is-saved {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.teach__font-badge-state.is-empty {
+  color: var(--clay);
+  border-color: color-mix(in srgb, var(--clay) 30%, var(--line));
+  background: color-mix(in srgb, var(--clay) 8%, transparent);
+}
+
+.teach__font-other {
+  margin: -0.25rem 0 0.85rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--muted);
 }
 
@@ -159,32 +221,57 @@
 }
 
 .teach__chrome .teach__meta {
-  margin: 0.2rem 0 0;
+  margin: 0.2rem 0 1.65rem;
 }
 
 .teach__bar--simple {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   margin-bottom: 0;
 }
 
-.teach__bar--primary {
-  margin-bottom: 0;
+/* One row: width follows label, then shares leftover space */
+.teach__actions-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
 }
 
-.teach__bar--primary .teach__btn {
+.teach__actions-row .teach__btn {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   min-height: 2.5rem;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.88rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.teach__bar--secondary {
-  margin-bottom: 0;
-}
-
-.teach__bar--secondary .teach__btn {
-  min-height: 2.5rem;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.85rem;
+.teach__actions-row .teach__btn:not(.teach__btn--primary):not(.is-active) {
   color: var(--ink-soft);
+}
+
+.teach__actions-row .teach__btn--primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.teach__actions-row .teach__btn.is-active {
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
 }
 
 .teach__actions,
@@ -214,9 +301,9 @@
 }
 
 .teach__btn.is-active {
-  background: var(--teal-wash);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
-  color: var(--ink);
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
 }
 
 .teach__brush {
@@ -239,8 +326,9 @@
 }
 
 .teach__brush-btn.is-active {
-  background: var(--teal-wash);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
 }
 
 .teach__brush-btn:disabled {
@@ -283,6 +371,8 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .teach__advanced-summary {
@@ -372,6 +462,8 @@
   background: var(--teal-wash);
   border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--ink-soft);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .teach__message--warn {
@@ -387,12 +479,12 @@
 
 .teach__svg {
   width: 100%;
-  max-width: var(--canvas-max);
+  max-width: var(--canvas-draw-max);
   margin: 0 auto;
   aspect-ratio: 1;
   display: block;
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
@@ -408,8 +500,7 @@
 
 .teach__glyph-guide,
 .teach__glyph-ink {
-  /* Fixed to viewBox — do not use --glyph-scale (lg would clip matras). */
-  font-size: 158px;
+  /* fontSize set in SVG user units on <text>; paths ignore this */
   dominant-baseline: alphabetic;
   pointer-events: none;
 }

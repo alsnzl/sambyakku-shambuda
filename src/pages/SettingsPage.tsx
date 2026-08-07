@@ -346,7 +346,7 @@ export function SettingsPage({ onBack }: Props) {
       <section className="tool__block" aria-label="글자 크기">
         <h2>글자 크기</h2>
         <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
-          학습 타일·상세·퀴즈 등 자모와 발음 표기에 적용됩니다. 메뉴 글씨는 그대로입니다.
+          설명·타일·퀴즈 등 일반 글씨에 적용됩니다. 획 기록·따라쓰기 캔버스와 화살표는 중간 크기로 고정됩니다.
         </p>
         <div className="tool__seg" role="group" aria-label="글자 크기 선택">
           {GLYPH_SIZE_OPTIONS.map((opt) => (

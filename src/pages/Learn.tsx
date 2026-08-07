@@ -42,6 +42,7 @@ export function Learn({
   )
   const [fromTools] = useState(() => Boolean(initialLetterId))
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
+  const [letterWriting, setLetterWriting] = useState(false)
   const fontEpoch = useScriptFontEpoch()
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
@@ -61,6 +62,7 @@ export function Learn({
   }
 
   function backFromLetter() {
+    setLetterWriting(false)
     if (fromTools) {
       onBack()
       return
@@ -133,27 +135,21 @@ export function Learn({
 
         <div className="learn__focus">
           <div className="learn__focus-backdrop" aria-hidden="true" />
-          <ScriptFontQuickBar track={track} />
-          <div className="learn__sheet motion-sheet" role="dialog" aria-modal="true">
-            <MotionPage
-              motionKey={letter.id}
-              variant={slide}
-              className={
-                slide === 'pop'
-                  ? 'learn__sheet-panel motion-sheet__panel'
-                  : 'learn__sheet-panel learn__sheet-panel--slide'
-              }
-            >
+          {letterWriting ? null : <ScriptFontQuickBar track={track} />}
+          <div className="learn__sheet" role="dialog" aria-modal="true">
+            <div className="learn__sheet-panel">
               <LetterCard
                 letter={letter}
                 track={track}
+                navMotion={slide}
+                onWritingChange={setLetterWriting}
                 onOpenLetter={(item) => openLetter(item, letterReturn)}
                 hasPrev={Boolean(prev)}
                 hasNext={Boolean(next)}
                 onPrev={prev ? () => goPrev(prev) : undefined}
                 onNext={next ? () => goNext(next) : undefined}
               />
-            </MotionPage>
+            </div>
           </div>
         </div>
       </main>

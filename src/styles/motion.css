@@ -1,24 +1,23 @@
 /**
- * App-wide motion — tuned to feel like UIKit / SwiftUI.
- * Curves approximate iOS spring (response ≈ 0.35, damping ≈ 0.86)
- * and default CAMediaTiming ease-out.
+ * App-wide motion — UIKit / SwiftUI / iOS 26 control timing.
+ * Springs approximate response ≈ 0.32–0.4, damping ≈ 0.82–0.9.
  */
 :root {
-  /* Durations (iOS control / navigation / sheet) */
-  --motion-fast: 220ms;
-  --motion-base: 350ms;
+  --motion-fast: 200ms;
+  --motion-base: 320ms;
   --motion-slow: 480ms;
-  --motion-press: 180ms;
+  --motion-press: 160ms;
+  --motion-sheet: 520ms;
 
-  /* iOS-like easing */
-  --motion-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Apple-like curves (HIG + WWDC control morph) */
+  --motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --motion-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --motion-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
-  --motion-in: cubic-bezier(0.36, 0, 0.66, -0.56);
+  --motion-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --motion-interactive: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --motion-in: cubic-bezier(0.36, 0, 1, 1);
 
-  /* Aliases used across pages */
-  --motion-ios: var(--motion-ease);
+  --motion-ios: var(--motion-ease-out);
   --motion-ios-in: var(--motion-soft);
   --motion-ios-soft: var(--motion-soft);
 }
@@ -45,7 +44,7 @@
 /* —— Page enter (UINavigationController push feel) —— */
 .motion-page {
   min-height: 100%;
-  animation: motion-ios-push-in var(--motion-slow) var(--motion-ease) both;
+  animation: motion-ios-push-in var(--motion-slow) var(--motion-ease-out) both;
 }
 
 .motion-page--fade {
@@ -56,16 +55,16 @@
 
 .motion-page--pop {
   animation-name: motion-ios-sheet;
-  animation-duration: var(--motion-slow);
-  animation-timing-function: var(--motion-ease);
+  animation-duration: var(--motion-sheet);
+  animation-timing-function: var(--motion-spring);
 }
 
 .motion-page--slide-left {
-  animation: motion-slide-next var(--motion-slow) var(--motion-ease) both;
+  animation: motion-slide-next var(--motion-slow) var(--motion-ease-out) both;
 }
 
 .motion-page--slide-right {
-  animation: motion-slide-prev var(--motion-slow) var(--motion-ease) both;
+  animation: motion-slide-prev var(--motion-slow) var(--motion-ease-out) both;
 }
 
 @keyframes motion-fade-up {
@@ -81,8 +80,8 @@
 
 @keyframes motion-ios-push-in {
   from {
-    opacity: 0.4;
-    transform: translate3d(28%, 0, 0);
+    opacity: 0.55;
+    transform: translate3d(18%, 0, 0);
   }
   to {
     opacity: 1;
@@ -102,7 +101,7 @@
 @keyframes motion-pop {
   from {
     opacity: 0;
-    transform: translate3d(0, 18px, 0) scale(0.96);
+    transform: translate3d(0, 14px, 0) scale(0.97);
   }
   to {
     opacity: 1;
@@ -110,11 +109,11 @@
   }
 }
 
-/* Sheet / modal present */
+/* Sheet / modal present — iOS sheet spring */
 @keyframes motion-ios-sheet {
   from {
     opacity: 0;
-    transform: translate3d(0, 24%, 0) scale(0.98);
+    transform: translate3d(0, 18%, 0) scale(0.985);
   }
   to {
     opacity: 1;
@@ -122,11 +121,11 @@
   }
 }
 
-/* Letter / quiz paging — UINavigation swipe */
+/* Letter / quiz paging — softer push than classic UINavigation */
 @keyframes motion-slide-next {
   from {
-    opacity: 0.35;
-    transform: translate3d(30%, 0, 0);
+    opacity: 0.45;
+    transform: translate3d(22%, 0, 0);
   }
   to {
     opacity: 1;
@@ -136,12 +135,63 @@
 
 @keyframes motion-slide-prev {
   from {
-    opacity: 0.35;
-    transform: translate3d(-30%, 0, 0);
+    opacity: 0.45;
+    transform: translate3d(-22%, 0, 0);
   }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Letter card / teach: canvas slides; copy blurs in */
+@keyframes letter-hero-slide-next {
+  from {
+    opacity: 0;
+    transform: translate3d(18%, 0, 0);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes letter-hero-slide-prev {
+  from {
+    opacity: 0;
+    transform: translate3d(-18%, 0, 0);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes letter-hero-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes letter-blur-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
   }
 }
 
@@ -311,10 +361,19 @@
   .motion-sheet__panel,
   .motion-stagger > *,
   .motion-flash-correct,
-  .motion-flash-wrong {
+  .motion-flash-wrong,
+  .letter-card__hero--slide-next,
+  .letter-card__hero--slide-prev,
+  .letter-card__hero--pop,
+  .letter-card__blur-swap,
+  .teach-page__canvas-motion--next,
+  .teach-page__canvas-motion--prev,
+  .teach-page__canvas-motion--pop,
+  .teach-page__blur-swap {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    filter: none !important;
   }
 
   .motion-press,

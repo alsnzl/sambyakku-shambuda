@@ -10,6 +10,8 @@
   text-align: center;
   box-shadow: var(--block-shadow);
   transform-origin: center bottom;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .letter-card__top {
@@ -48,9 +50,9 @@
 }
 
 .letter-card__fav.is-on {
-  color: #c4922a;
-  border-color: color-mix(in srgb, #c4922a 35%, var(--line));
-  background: color-mix(in srgb, #c4922a 12%, white);
+  color: var(--control-on-fg);
+  border-color: var(--control-on-border);
+  background: var(--control-on-bg);
 }
 
 .letter-card__view {
@@ -98,26 +100,24 @@
   transform: scale(0.96);
 }
 
+.letter-card__side-nav-icon {
+  display: block;
+}
+
 .letter-card__hero-frame {
   container-type: inline-size;
   width: 100%;
-  max-width: var(--canvas-max);
+  max-width: var(--canvas-draw-max);
   aspect-ratio: 1;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
-}
-
-.letter-card__stage .write {
-  width: 100%;
-  max-width: var(--canvas-max);
-  margin: 0 auto;
 }
 
 .letter-card__hero {
@@ -131,8 +131,8 @@
   line-height: 1;
   color: var(--ink);
   user-select: none;
-  /* Matches write practice glyph (~148px in 240 viewBox at 280px) */
-  font-size: calc(min(173px, 62cqw) * var(--glyph-scale));
+  /* Tracks fixed canvas frame (cqw); canvas ignores --glyph-scale */
+  font-size: min(173px, 62cqw);
   /*
     Indic glyphs sit high in the em box (ascent-heavy).
     Asymmetric padding shifts the optical center down into the canvas.
@@ -159,12 +159,12 @@
 
 .letter-card__write-btn {
   appearance: none;
-  border: 1px solid transparent;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 0.8rem 1.45rem;
+  padding: 0.8rem 1.35rem;
   min-height: 2.7rem;
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--chip);
+  color: var(--ink);
   font-weight: 600;
   font-size: 0.98rem;
   cursor: pointer;
@@ -248,8 +248,43 @@
   gap: 0.45rem;
 }
 
+/* Canvas-only slide; copy uses blur dissolve */
+.letter-card__hero--slide-next {
+  animation: letter-hero-slide-next 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.letter-card__hero--slide-prev {
+  animation: letter-hero-slide-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.letter-card__hero--pop {
+  animation: letter-hero-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.letter-card__blur-swap {
+  animation: letter-blur-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letter-card__hero--slide-next,
+  .letter-card__hero--slide-prev,
+  .letter-card__hero--pop,
+  .letter-card__blur-swap {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
 .letter-card__write-wrap {
   width: 100%;
+  margin-top: 0.15rem;
+}
+
+.letter-card--writing {
+  gap: 0.35rem;
+  padding-top: 0.95rem;
 }
 
 .letter-card__meta {

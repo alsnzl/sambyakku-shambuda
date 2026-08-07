@@ -1,5 +1,14 @@
 import type { GlyphStrokeData, StrokeScript } from '../data/glyphStrokes'
 import type { TaughtEntry, TaughtStore } from '../data/taughtStrokes'
+import { setTaughtFontEntry } from '../data/taughtStrokes'
+import { getScriptFontChoice } from './customScriptFonts'
+import {
+  countFontMapLetters,
+  getFontMapEntry,
+  normalizeTaughtFontMap,
+  resolveStrokeFontFace,
+  strokeFontLabel,
+} from './strokeFontScope'
 
 const CACHE_KEY = 'sambyakku-stroke-cloud-cache'
 const TOKEN_KEY = 'sambyakku-stroke-cloud-token'
@@ -195,24 +204,35 @@ export function getCloudCacheMeta(): CacheMeta | null {
 export function getCloudTaughtEntry(
   letterId: string,
   script: StrokeScript,
+  fontFace: string = getScriptFontChoice(script),
 ): TaughtEntry | null {
   const store = readCloudCache()
-  return store?.[script]?.[letterId] ?? null
+  return getFontMapEntry(script, store?.[script]?.[letterId], fontFace)
+}
+
+export function listCloudTaughtFontsForLetter(
+  letterId: string,
+  script: StrokeScript,
+): { face: string; entry: TaughtEntry }[] {
+  const store = readCloudCache()
+  const map = normalizeTaughtFontMap(script, store?.[script]?.[letterId])
+  return Object.entries(map).map(([face, entry]) => ({ face, entry }))
 }
 
 export function getCloudTaughtStrokes(
   letterId: string,
   script: StrokeScript,
+  fontFace: string = getScriptFontChoice(script),
 ): GlyphStrokeData | null {
-  const entry = getCloudTaughtEntry(letterId, script)
+  const entry = getCloudTaughtEntry(letterId, script, fontFace)
   if (!entry) return null
   return { d: entry.d, strokes: entry.strokes }
 }
 
 function recount(store: TaughtStore) {
   store.meta.taughtCount = {
-    deva: Object.keys(store.deva).length,
-    siddham: Object.keys(store.siddham).length,
+    deva: countFontMapLetters(store.deva as Record<string, unknown>, 'deva'),
+    siddham: countFontMapLetters(store.siddham as Record<string, unknown>, 'siddham'),
   }
   store.meta.updatedAt = new Date().toISOString()
 }
@@ -397,6 +417,7 @@ export async function publishLetterToCloud(
   letterId: string,
   data: GlyphStrokeData,
   note?: string,
+  font?: { fontFace?: string | null; fontLabel?: string | null } | null,
 ): Promise<TaughtEntry> {
   const token = getCloudToken()
   if (!token) {
@@ -406,13 +427,17 @@ export async function publishLetterToCloud(
   }
 
   const cfg = getCloudConfig()
+  const face = resolveStrokeFontFace(script, font?.fontFace)
+  const label = strokeFontLabel(script, face, font?.fontLabel)
   const entry: TaughtEntry = {
     d: data.d,
     strokes: data.strokes,
     taughtAt: new Date().toISOString(),
+    fontFace: face,
+    fontLabel: label,
     ...(note ? { note } : {}),
   }
-  const message = `teach: ${script}/${letterId} (${entry.strokes.length} strokes)`
+  const message = `teach: ${script}/${letterId}@${face} (${entry.strokes.length} strokes, ${label})`
 
   let lastFail: { status: number; body: string } | null = null
 
@@ -425,7 +450,7 @@ export async function publishLetterToCloud(
       sha = latest.sha
     }
 
-    store[script][letterId] = entry
+    setTaughtFontEntry(store[script], letterId, script, entry)
     recount(store)
 
     const result = await putTaughtStore(cfg, token, store, sha, message)

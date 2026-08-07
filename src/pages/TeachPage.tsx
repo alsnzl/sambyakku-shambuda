@@ -116,32 +116,40 @@ export function TeachPage({ onBack }: Props) {
         <ScriptFontQuickBar track={track} />
 
         <div className="teach-page__stage">
-          <MotionPage
-            motionKey={`${track}-${letter.id}`}
-            variant={slide}
-            className={slide === 'pop' ? '' : 'teach-page__stage-slide'}
-          >
-            <article className="teach-page__card">
-              <div className="teach-page__identity">
-                <p className="teach-page__script">{meta.scriptLabel}</p>
-                <div className="teach-page__identity-row">
-                  <span
-                    key={`glyph-${fontEpoch}`}
-                    className={`teach-page__glyph ${heroClass}`}
-                    lang="sa"
-                    style={{ fontFamily: scriptStack }}
-                  >
-                    {glyph}
-                  </span>
-                  <div>
-                    <p className="teach-page__iast">{letter.iast}</p>
-                    <p className="teach-page__hangul">{letter.hangulHint}</p>
-                  </div>
+          <article className="teach-page__card">
+            <div
+              key={`id-${letter.id}`}
+              className="teach-page__identity teach-page__blur-swap"
+            >
+              <p className="teach-page__script">{meta.scriptLabel}</p>
+              <div className="teach-page__identity-row">
+                <span
+                  key={`glyph-${fontEpoch}`}
+                  className={`teach-page__glyph ${heroClass}`}
+                  lang="sa"
+                  style={{ fontFamily: scriptStack }}
+                >
+                  {glyph}
+                </span>
+                <div>
+                  <p className="teach-page__iast">{letter.iast}</p>
+                  <p className="teach-page__hangul">{letter.hangulHint}</p>
                 </div>
-                <p className="teach-page__lead">
-                  글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
-                </p>
               </div>
+              <p className="teach-page__lead">
+                글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
+              </p>
+            </div>
+            <div
+              key={`canvas-${letter.id}`}
+              className={
+                slide === 'slide-left'
+                  ? 'teach-page__canvas-motion teach-page__canvas-motion--next'
+                  : slide === 'slide-right'
+                    ? 'teach-page__canvas-motion teach-page__canvas-motion--prev'
+                    : 'teach-page__canvas-motion teach-page__canvas-motion--pop'
+              }
+            >
               <StrokeTeachPanel
                 letterId={letter.id}
                 glyph={glyph}
@@ -149,9 +157,11 @@ export function TeachPage({ onBack }: Props) {
                 iast={letter.iast}
                 hangulHint={letter.hangulHint}
               />
+            </div>
+            <div key={`tip-${letter.id}`} className="teach-page__blur-swap">
               <TheoryTipPanel letterId={letter.id} editable />
-            </article>
-          </MotionPage>
+            </div>
+          </article>
         </div>
       </main>
     )

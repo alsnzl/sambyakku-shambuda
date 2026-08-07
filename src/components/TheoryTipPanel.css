@@ -5,6 +5,8 @@
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 3.5%, transparent);
   border: 1px solid var(--line);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .theory-tip__head {

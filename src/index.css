@@ -70,20 +70,43 @@ html[data-siddham-face='user'] {
 }
 
 :root {
-  /* One shared corner radius for blocks, chips, and controls. */
-  --radius-block: 1rem;
-  --radius-sm: var(--radius-block);
-  --radius: var(--radius-block);
-  --radius-lg: var(--radius-block);
-  --space: 1.2rem;
-  --page-pad-y: 1.15rem;
-  --page-pad-bottom: 2.35rem;
+  /*
+   * Layout tokens — iOS 26 / HIG aligned
+   * Concentric radii (larger containers → larger corners),
+   * 8pt spacing grid, 44pt minimum touch.
+   */
+  --radius-xs: 0.5rem; /* 8 */
+  --radius-sm: 0.75rem; /* 12 — chips, small controls */
+  --radius: 1.125rem; /* 18 — buttons, fields */
+  --radius-md: 1.375rem; /* 22 */
+  --radius-lg: 1.75rem; /* 28 — cards, sheets, blocks */
+  --radius-xl: 2.25rem; /* 36 — hero panels */
+  --radius-capsule: 999px;
+  --radius-block: var(--radius-lg);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space: var(--space-4);
+  --gap-tight: var(--space-2);
+  --gap-group: var(--space-3);
+  --gap-section: var(--space-6);
+  --page-pad-y: var(--space-5);
+  --page-pad-bottom: calc(var(--space-8) + 0.35rem);
+  --touch-min: 2.75rem; /* 44×44pt */
+  /* Nested control inside a padded card (parent − inset) */
+  --radius-nested: max(var(--radius-sm), calc(var(--radius-lg) - var(--space-3)));
+
   --block-bg: color-mix(in srgb, var(--surface) 94%, white);
   --block-border: var(--line-strong);
-  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 6px 18px var(--shadow);
-  --glass-blur: 22px;
-  --glass-blur-soft: 14px;
-  --glass-saturate: 1.85;
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 8px 28px var(--shadow);
+  --glass-blur: 28px;
+  --glass-blur-soft: 18px;
+  --glass-saturate: 1.9;
   --block-blur: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   --block-blur-soft: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
   --press-shadow:
@@ -92,7 +115,17 @@ html[data-siddham-face='user'] {
   --press-shadow-active:
     0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
 
-  /* Script / learning glyph scale (Home 글자 크기). UI chrome stays fixed. */
+  /* Toggle / segment “on” — accent glass (not solid) so on/off stays clear */
+  --control-on-bg: color-mix(in srgb, var(--accent) 70%, transparent);
+  --control-on-fg: var(--on-accent);
+  --control-on-border: color-mix(in srgb, var(--accent) 55%, white);
+  --control-on-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 48%, transparent),
+    inset 0 -0.5px 0 color-mix(in srgb, white 14%, transparent),
+    0 4px 16px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 0 0 0.5px color-mix(in srgb, white 30%, transparent);
+
+  /* Script / learning glyph scale (설정 글자 크기). Does not affect draw canvases. */
   --glyph-scale: 1;
   /* Top matras (ई ऐ ओ …) extend above the em box when line-height is tight. */
   --deva-matra-clearance: 0.3em;
@@ -100,11 +133,16 @@ html[data-siddham-face='user'] {
   /* Phone-first shell; landscape tablet overrides in styles/landscape.css */
   --shell-max: 28rem;
   --canvas-max: 280px;
+  /*
+   * Draw canvases (teach / write / letter hero) stay at medium size.
+   * --glyph-scale only affects UI / script text outside the canvas.
+   */
+  --canvas-draw-max: var(--canvas-max);
   --stage-max: 22.5rem;
 
   font-family: var(--sans);
   font-size: 16px;
-  line-height: 1.65;
+  line-height: 1.47;
   letter-spacing: -0.01em;
   color: var(--ink);
   background-color: var(--bg);
@@ -118,6 +156,14 @@ html[data-siddham-face='user'] {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Freehand on canvas — keep the page from scrolling under the stroke */
+html.is-drawing-lock,
+html.is-drawing-lock body {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
 }
 
 :root[data-glyph-size='sm'] {
@@ -176,6 +222,14 @@ html[data-siddham-face='user'] {
     0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
   --press-shadow-active:
     0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+  --control-on-bg: color-mix(in srgb, var(--accent) 62%, transparent);
+  --control-on-fg: var(--on-accent);
+  --control-on-border: color-mix(in srgb, var(--accent) 45%, white);
+  --control-on-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 30%, transparent),
+    inset 0 -0.5px 0 color-mix(in srgb, white 8%, transparent),
+    0 6px 18px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 0 0 0.5px color-mix(in srgb, white 14%, transparent);
 
   background-image:
     radial-gradient(ellipse 88% 58% at 10% -8%, rgba(95, 172, 164, 0.14), transparent 58%),
@@ -748,6 +802,8 @@ textarea {
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ui-block--soft {

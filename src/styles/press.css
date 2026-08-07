@@ -1,8 +1,20 @@
 /**
- * Soft rounded press shadows — loaded last so page/landscape
- * box-shadow rules (esp. fold toggles) do not override hover/active.
- * Transforms follow iOS UIControl scale (see motion.css).
+ * Soft press — iOS UIControl scale + Liquid Glass specular.
+ * Loaded last so page/landscape box-shadow rules do not override hover/active.
  */
+
+.motion-press {
+  transition:
+    transform var(--motion-press) var(--motion-interactive),
+    box-shadow var(--motion-fast) var(--motion-soft),
+    background-color var(--motion-fast) var(--motion-soft),
+    border-color var(--motion-fast) var(--motion-soft),
+    color var(--motion-fast) var(--motion-soft),
+    opacity var(--motion-fast) var(--motion-soft);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .motion-press:not(:disabled):hover {
     transform: translate3d(0, -1px, 0);
@@ -24,14 +36,26 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+
+  /* Nested headers inside glass shells — no second blur layer on hover */
+  :is(
+    .script-font-bar__toggle,
+    .write__advanced-summary,
+    .teach__advanced-summary,
+    .teach__toggle
+  ).motion-press:not(:disabled):hover {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
 }
 
 .motion-press:not(:disabled):active {
-  transform: translate3d(0, 0, 0) scale(0.97);
+  transform: scale(0.96);
   box-shadow: var(--press-shadow-active);
 }
 
-/* Text back links (← 홈): give a rounded hit area so press shadow is visible */
+/* Text back links — HIG ~44pt hit area */
 .learn__back,
 .tool__back,
 .practice__back,
@@ -39,13 +63,19 @@
 .home__tracks-back,
 .write__back {
   border-radius: var(--radius);
-  padding: 0.4rem 0.75rem;
+  min-height: var(--touch-min);
+  padding: 0.55rem 0.85rem;
   margin-inline: -0.35rem 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 .home__link {
   border-radius: var(--radius);
-  padding: 0.35rem 0.55rem;
+  min-height: var(--touch-min);
+  padding: 0.45rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
 }
 
 .learn__back.motion-press:not(:disabled):hover,
@@ -137,10 +167,51 @@
   z-index: 1;
 }
 
+/* Primary / toolbar controls — HIG minimum touch */
+:is(
+  .home__btn,
+  .teach__btn,
+  .write__btn,
+  .write__replay,
+  .tool__btn,
+  .practice__cta,
+  .practice__secondary,
+  .practice__switch-btn,
+  .letter-card__write-btn,
+  .letter-card__audio,
+  .letter-card__side-nav,
+  .about__cta,
+  .teach-page__nav-btn,
+  .teach__brush-btn,
+  .write__brush-btn,
+  .stroke-history__btn
+) {
+  min-height: var(--touch-min);
+}
+
+.letter-card__side-nav,
+.teach-page__nav-btn,
+.stroke-history__btn,
+.app-home-fab {
+  min-width: var(--touch-min);
+}
+
+.fold-chevron {
+  transition: transform var(--motion-base) var(--motion-spring);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .motion-press {
+    transition: none;
+  }
+
   .motion-press:not(:disabled):hover,
   .motion-press:not(:disabled):active {
     box-shadow: none;
     transform: none;
+  }
+
+  .fold-chevron {
+    transition: none;
   }
 }

@@ -29,6 +29,8 @@
   cursor: pointer;
   text-align: left;
   color: inherit;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .teach-page__track--siddham {
@@ -113,8 +115,37 @@
   overflow-x: clip;
 }
 
-.teach-page__stage-slide {
-  will-change: transform, opacity;
+.teach-page__canvas-motion {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.teach-page__canvas-motion--next {
+  animation: letter-hero-slide-next 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.teach-page__canvas-motion--prev {
+  animation: letter-hero-slide-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.teach-page__canvas-motion--pop {
+  animation: letter-hero-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.teach-page__blur-swap {
+  animation: letter-blur-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teach-page__canvas-motion--next,
+  .teach-page__canvas-motion--prev,
+  .teach-page__canvas-motion--pop,
+  .teach-page__blur-swap {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
 }
 
 .teach-page__card {
@@ -123,9 +154,13 @@
   gap: 0.35rem;
   padding: 1.05rem 0.95rem 1.2rem;
   border-radius: var(--radius-lg);
-  background: var(--block-bg);
+  background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--clay) 22%, var(--block-border));
   box-shadow: var(--block-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .teach-page__identity {

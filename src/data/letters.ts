@@ -87,7 +87,7 @@ export const vowels: Letter[] = [
 
 const ka = '카 계열 · 연구개'
 const ca = '차 계열 · 경구개'
-const taRetro = '타 계열 · 권설(혀를 말아)'
+const taRetro = '타 계열 · 권설'
 const taDental = '타 계열 · 치음'
 const pa = '파 계열 · 순음'
 const semi = '반모음'

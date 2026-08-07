@@ -38,10 +38,11 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
+  touch-action: none;
 }
 
 .write__canvas-row .write__svg,
 .teach__canvas-row .teach__svg {
   margin: 0;
-  flex: 0 1 var(--canvas-max);
+  flex: 0 1 var(--canvas-draw-max);
 }

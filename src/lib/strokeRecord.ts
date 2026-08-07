@@ -1,14 +1,28 @@
 import type { GlyphStroke, GlyphStrokeData, StrokeScript } from '../data/glyphStrokes'
 import { getGlyphStrokes } from '../data/glyphStrokes'
-import { getTaughtStrokes, getTaughtEntry, isTaughtLetter } from '../data/taughtStrokes'
+import {
+  getTaughtStrokes,
+  getTaughtEntry,
+  getTaughtFontMap,
+  isTaughtLetter,
+  type TaughtEntry,
+} from '../data/taughtStrokes'
 import { getStrokeSteps } from '../data/strokes'
 import type { ScriptTrack } from '../types/track'
+import { getScriptFontChoice } from './customScriptFonts'
 import {
   getCloudTaughtEntry,
   getCloudTaughtStrokes,
+  listCloudTaughtFontsForLetter,
 } from './strokeCloud'
+import {
+  resolveStrokeFontFace,
+  strokeFontLabel,
+  type TaughtFontMap,
+} from './strokeFontScope'
 
 const STORAGE_KEY = 'sambyakku-stroke-overrides'
+const STORAGE_VERSION_KEY = 'sambyakku-stroke-overrides-v'
 
 export type StrokeSource = 'cloud' | 'taught' | 'local' | 'generated'
 
@@ -17,44 +31,148 @@ export type RecordedStroke = {
   points: [number, number][]
 }
 
-type StoredEntry = GlyphStrokeData & { savedAt: string; note?: string }
+type StoredEntry = GlyphStrokeData & {
+  savedAt: string
+  note?: string
+  fontFace?: string
+  fontLabel?: string
+}
 
 export const DEFAULT_TEACH_GUIDE_TIP = '펜으로 · 획 순서대로 · 윤곽을 충분히 덮기'
 
-type Store = Partial<Record<StrokeScript, Record<string, StoredEntry>>>
+/** script → letterId → fontFace → entry */
+type Store = Partial<Record<StrokeScript, Record<string, TaughtFontMap>>>
 
 function readStore(): Store {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Store) : {}
+    if (!raw) return {}
+    return migrateStore(JSON.parse(raw) as Record<string, unknown>)
   } catch {
     return {}
   }
 }
 
+function normalizeLocalLetter(script: StrokeScript, raw: unknown): TaughtFontMap {
+  if (!raw || typeof raw !== 'object') return {}
+
+  const asFlat = raw as StoredEntry & TaughtEntry
+  if (typeof asFlat.d === 'string' && Array.isArray(asFlat.strokes)) {
+    const face = resolveStrokeFontFace(script, asFlat.fontFace)
+    return {
+      [face]: {
+        d: asFlat.d,
+        strokes: asFlat.strokes,
+        taughtAt: asFlat.taughtAt || asFlat.savedAt || new Date().toISOString(),
+        note: asFlat.note,
+        fontFace: face,
+        fontLabel: strokeFontLabel(script, face, asFlat.fontLabel),
+      },
+    }
+  }
+
+  const out: TaughtFontMap = {}
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!value || typeof value !== 'object') continue
+    const e = value as StoredEntry & TaughtEntry
+    if (typeof e.d !== 'string' || !Array.isArray(e.strokes)) continue
+    const face = resolveStrokeFontFace(script, e.fontFace ?? key)
+    out[face] = {
+      d: e.d,
+      strokes: e.strokes,
+      taughtAt: e.taughtAt || e.savedAt || new Date().toISOString(),
+      note: e.note,
+      fontFace: face,
+      fontLabel: strokeFontLabel(script, face, e.fontLabel),
+    }
+  }
+  return out
+}
+
+function migrateStore(parsed: Record<string, unknown>): Store {
+  const out: Store = {}
+  for (const script of ['deva', 'siddham'] as StrokeScript[]) {
+    const bucket = parsed[script]
+    if (!bucket || typeof bucket !== 'object') continue
+    out[script] = {}
+    for (const [letterId, raw] of Object.entries(bucket as Record<string, unknown>)) {
+      const map = normalizeLocalLetter(script, raw)
+      if (Object.keys(map).length > 0) out[script]![letterId] = map
+    }
+  }
+  return out
+}
+
 function writeStore(store: Store) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+  const serializable: Partial<
+    Record<StrokeScript, Record<string, Record<string, StoredEntry>>>
+  > = {}
+  for (const script of ['deva', 'siddham'] as StrokeScript[]) {
+    const bucket = store[script]
+    if (!bucket) continue
+    serializable[script] = {}
+    for (const [letterId, fontMap] of Object.entries(bucket)) {
+      const slot: Record<string, StoredEntry> = {}
+      for (const [face, entry] of Object.entries(fontMap)) {
+        slot[face] = {
+          d: entry.d,
+          strokes: entry.strokes,
+          savedAt: entry.taughtAt,
+          note: entry.note,
+          fontFace: face,
+          fontLabel: entry.fontLabel,
+        }
+      }
+      serializable[script]![letterId] = slot
+    }
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable))
+  try {
+    localStorage.setItem(STORAGE_VERSION_KEY, '2')
+  } catch {
+    /* ignore */
+  }
+}
+
+function activeFace(script: StrokeScript, fontFace?: string | null): string {
+  return resolveStrokeFontFace(script, fontFace ?? getScriptFontChoice(script))
 }
 
 export function getStrokeSource(
   letterId: string,
   script: StrokeScript,
+  fontFace?: string | null,
 ): StrokeSource {
-  if (getCloudTaughtStrokes(letterId, script)) return 'cloud'
-  if (isTaughtLetter(letterId, script)) return 'taught'
-  if (readStore()[script]?.[letterId]) return 'local'
+  const face = activeFace(script, fontFace)
+  if (getCloudTaughtStrokes(letterId, script, face)) return 'cloud'
+  if (isTaughtLetter(letterId, script, face)) return 'taught'
+  if (loadUserStrokes(script, letterId, face)) return 'local'
   return 'generated'
 }
 
-export function hasUserStrokes(script: StrokeScript, letterId: string): boolean {
-  return getStrokeSource(letterId, script) !== 'generated'
+export function hasUserStrokes(
+  script: StrokeScript,
+  letterId: string,
+  fontFace?: string | null,
+): boolean {
+  return getStrokeSource(letterId, script, fontFace) !== 'generated'
+}
+
+function loadUserEntry(
+  script: StrokeScript,
+  letterId: string,
+  fontFace?: string | null,
+): TaughtEntry | null {
+  const face = activeFace(script, fontFace)
+  return readStore()[script]?.[letterId]?.[face] ?? null
 }
 
 export function loadUserStrokes(
   script: StrokeScript,
   letterId: string,
+  fontFace?: string | null,
 ): GlyphStrokeData | null {
-  const entry = readStore()[script]?.[letterId]
+  const entry = loadUserEntry(script, letterId, fontFace)
   if (!entry) return null
   return { d: entry.d, strokes: entry.strokes }
 }
@@ -62,18 +180,91 @@ export function loadUserStrokes(
 export function loadUserStrokesNote(
   script: StrokeScript,
   letterId: string,
+  fontFace?: string | null,
 ): string | null {
-  const note = readStore()[script]?.[letterId]?.note
+  const note = loadUserEntry(script, letterId, fontFace)?.note
   return typeof note === 'string' && note.trim() ? note : null
 }
 
 export function loadUserStrokesMeta(
   script: StrokeScript,
   letterId: string,
+  fontFace?: string | null,
 ): { savedAt: string; strokeCount: number } | null {
-  const entry = readStore()[script]?.[letterId]
+  const entry = loadUserEntry(script, letterId, fontFace)
   if (!entry) return null
-  return { savedAt: entry.savedAt, strokeCount: entry.strokes.length }
+  return { savedAt: entry.taughtAt, strokeCount: entry.strokes.length }
+}
+
+export function loadUserStrokesFont(
+  script: StrokeScript,
+  letterId: string,
+  fontFace?: string | null,
+): { fontFace: string | null; fontLabel: string | null } {
+  const entry = loadUserEntry(script, letterId, fontFace)
+  if (!entry) return { fontFace: null, fontLabel: null }
+  return {
+    fontFace: entry.fontFace?.trim() || null,
+    fontLabel: entry.fontLabel?.trim() || null,
+  }
+}
+
+export type FontStrokeSummary = {
+  fontFace: string
+  fontLabel: string
+  strokeCount: number
+  source: 'cloud' | 'taught' | 'local'
+  isActive: boolean
+}
+
+function sourcePriority(s: FontStrokeSummary['source']): number {
+  if (s === 'cloud') return 0
+  if (s === 'taught') return 1
+  return 2
+}
+
+/** All fonts that have saved strokes for this letter (any source). */
+export function listFontStrokeSummaries(
+  letterId: string,
+  script: StrokeScript,
+): FontStrokeSummary[] {
+  const active = activeFace(script)
+  const byFace = new Map<string, FontStrokeSummary>()
+
+  const bump = (
+    face: string,
+    label: string | undefined,
+    count: number,
+    source: FontStrokeSummary['source'],
+  ) => {
+    const key = resolveStrokeFontFace(script, face)
+    const next: FontStrokeSummary = {
+      fontFace: key,
+      fontLabel: strokeFontLabel(script, key, label),
+      strokeCount: count,
+      source,
+      isActive: key === active,
+    }
+    const prev = byFace.get(key)
+    if (!prev || sourcePriority(source) < sourcePriority(prev.source)) {
+      byFace.set(key, next)
+    }
+  }
+
+  for (const [face, entry] of Object.entries(readStore()[script]?.[letterId] ?? {})) {
+    bump(face, entry.fontLabel, entry.strokes.length, 'local')
+  }
+  for (const [face, entry] of Object.entries(getTaughtFontMap(letterId, script))) {
+    bump(face, entry.fontLabel, entry.strokes.length, 'taught')
+  }
+  for (const { face, entry } of listCloudTaughtFontsForLetter(letterId, script)) {
+    bump(face, entry.fontLabel, entry.strokes.length, 'cloud')
+  }
+
+  return [...byFace.values()].sort((a, b) => {
+    if (a.isActive !== b.isActive) return a.isActive ? -1 : 1
+    return a.fontLabel.localeCompare(b.fontLabel, 'ko')
+  })
 }
 
 export type TeachingInfo = {
@@ -84,25 +275,34 @@ export type TeachingInfo = {
   strokeCount: number
   hasOfficial: boolean
   hasCloud: boolean
-  /** Guide tip / teaching note (cloud · bundled · local). */
   note: string | null
+  /** Active font scope (always set). */
+  fontFace: string
+  fontLabel: string
+  /** Other fonts that have strokes for this letter. */
+  otherFonts: FontStrokeSummary[]
 }
 
 export function getTeachingInfo(
   letterId: string,
   script: StrokeScript,
+  fontFace?: string | null,
 ): TeachingInfo {
-  const cloud = getCloudTaughtEntry(letterId, script)
-  const hasOfficial = isTaughtLetter(letterId, script)
-  const official = getTaughtEntry(letterId, script)
-  const local = loadUserStrokes(script, letterId)
-  const localMeta = loadUserStrokesMeta(script, letterId)
-  const localNote = loadUserStrokesNote(script, letterId)
+  const face = activeFace(script, fontFace)
+  const faceLabel = strokeFontLabel(script, face)
+  const cloud = getCloudTaughtEntry(letterId, script, face)
+  const hasOfficial = isTaughtLetter(letterId, script, face)
+  const official = getTaughtEntry(letterId, script, face)
+  const local = loadUserStrokes(script, letterId, face)
+  const localMeta = loadUserStrokesMeta(script, letterId, face)
+  const localNote = loadUserStrokesNote(script, letterId, face)
   const hasCloud = Boolean(cloud)
   const resolvedNote =
     localNote ??
     (cloud?.note?.trim() ? cloud.note : null) ??
     (official?.note?.trim() ? official.note : null)
+
+  const otherFonts = listFontStrokeSummaries(letterId, script).filter((s) => !s.isActive)
 
   if (local) {
     return {
@@ -114,6 +314,9 @@ export function getTeachingInfo(
       hasOfficial: hasCloud || hasOfficial,
       hasCloud,
       note: resolvedNote,
+      fontFace: face,
+      fontLabel: strokeFontLabel(script, face, localMeta ? loadUserStrokesFont(script, letterId, face).fontLabel : faceLabel),
+      otherFonts,
     }
   }
 
@@ -127,6 +330,9 @@ export function getTeachingInfo(
       hasOfficial: true,
       hasCloud: true,
       note: resolvedNote,
+      fontFace: face,
+      fontLabel: strokeFontLabel(script, face, cloud.fontLabel),
+      otherFonts,
     }
   }
 
@@ -140,6 +346,9 @@ export function getTeachingInfo(
       hasOfficial: true,
       hasCloud: false,
       note: resolvedNote,
+      fontFace: face,
+      fontLabel: strokeFontLabel(script, face, official.fontLabel),
+      otherFonts,
     }
   }
 
@@ -152,6 +361,9 @@ export function getTeachingInfo(
     hasOfficial: false,
     hasCloud: false,
     note: null,
+    fontFace: face,
+    fontLabel: faceLabel,
+    otherFonts,
   }
 }
 
@@ -160,42 +372,72 @@ export function saveUserStrokes(
   letterId: string,
   data: GlyphStrokeData,
   note?: string | null,
+  font?: { fontFace?: string | null; fontLabel?: string | null } | null,
 ) {
   const store = readStore()
   if (!store[script]) store[script] = {}
+  if (!store[script]![letterId]) store[script]![letterId] = {}
+  const face = resolveStrokeFontFace(
+    script,
+    font?.fontFace ?? getScriptFontChoice(script),
+  )
+  const label = strokeFontLabel(script, face, font?.fontLabel)
   const trimmed = note?.trim()
-  store[script]![letterId] = {
-    ...data,
-    savedAt: new Date().toISOString(),
+  store[script]![letterId]![face] = {
+    d: data.d,
+    strokes: data.strokes,
+    taughtAt: new Date().toISOString(),
+    fontFace: face,
+    fontLabel: label,
     ...(trimmed ? { note: trimmed } : {}),
   }
   writeStore(store)
 }
 
-export function clearUserStrokes(script: StrokeScript, letterId: string) {
+export function clearUserStrokes(
+  script: StrokeScript,
+  letterId: string,
+  fontFace?: string | null,
+) {
   const store = readStore()
-  if (!store[script]?.[letterId]) return
-  delete store[script]![letterId]
+  const bucket = store[script]?.[letterId]
+  if (!bucket) return
+  if (fontFace != null && fontFace !== '') {
+    const face = resolveStrokeFontFace(script, fontFace)
+    delete bucket[face]
+    if (Object.keys(bucket).length === 0) delete store[script]![letterId]
+  } else {
+    // When clearing after cloud publish, clear only the active font draft
+    const face = activeFace(script)
+    delete bucket[face]
+    if (Object.keys(bucket).length === 0) delete store[script]![letterId]
+  }
   writeStore(store)
 }
 
-/** Mother/teacher recorded theory only (cloud → bundled → local draft). */
+/** Mother/teacher recorded theory only for the active (or given) font. */
 export function getTaughtGlyphStrokes(
   letterId: string,
   script: StrokeScript,
+  fontFace?: string | null,
 ): GlyphStrokeData | null {
+  const face = activeFace(script, fontFace)
   return (
-    getCloudTaughtStrokes(letterId, script) ??
-    getTaughtStrokes(letterId, script) ??
-    loadUserStrokes(script, letterId)
+    getCloudTaughtStrokes(letterId, script, face) ??
+    getTaughtStrokes(letterId, script, face) ??
+    loadUserStrokes(script, letterId, face)
   )
 }
 
 export function getEffectiveGlyphStrokes(
   letterId: string,
   script: StrokeScript,
+  fontFace?: string | null,
 ): GlyphStrokeData | null {
-  return getTaughtGlyphStrokes(letterId, script) ?? getGlyphStrokes(letterId, script)
+  return (
+    getTaughtGlyphStrokes(letterId, script, fontFace) ??
+    getGlyphStrokes(letterId, script)
+  )
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100
@@ -204,13 +446,6 @@ function dist(a: [number, number], b: [number, number]) {
   return Math.hypot(a[0] - b[0], a[1] - b[1])
 }
 
-function polyLength(pts: [number, number][]) {
-  let n = 0
-  for (let i = 1; i < pts.length; i++) n += dist(pts[i - 1], pts[i])
-  return n
-}
-
-/** Catmull-Rom → cubic bezier path (same family as the generator). */
 export function pointsToPathD(pts: [number, number][]): string {
   if (pts.length === 0) return ''
   if (pts.length === 1) {
@@ -232,7 +467,6 @@ export function pointsToPathD(pts: [number, number][]): string {
   return d.join('')
 }
 
-/** Thin noisy pointer samples → smoother centreline. */
 export function simplifyPoints(
   pts: [number, number][],
   minDist = 2.2,
@@ -255,28 +489,28 @@ export function recordedToGlyphStrokes(
 ): GlyphStrokeData {
   const strokes: GlyphStroke[] = recorded.map((r, i) => {
     const pts = simplifyPoints(r.points)
-    const d = pointsToPathD(pts)
-    const length = r2(Math.max(polyLength(pts), 1))
     return {
-      d,
+      d: pointsToPathD(pts),
       width: defaultWidth,
-      length,
-      label: labels[i] ?? `획 ${i + 1}`,
+      label: labels[i] || `획 ${i + 1}`,
     }
   })
   return { d: outlineD, strokes }
 }
 
-/** JSON for taught-strokes/inbox/ → npm run strokes:teach */
 export function exportForTeaching(
   script: StrokeScript,
   letterId: string,
   data: GlyphStrokeData,
+  fontFace?: string | null,
 ): string {
+  const face = activeFace(script, fontFace)
   return JSON.stringify(
     {
       script,
       letterId,
+      fontFace: face,
+      fontLabel: strokeFontLabel(script, face),
       d: data.d,
       strokes: data.strokes,
       taughtAt: new Date().toISOString(),
@@ -287,12 +521,11 @@ export function exportForTeaching(
 }
 
 export function exportOverrideBundle(script: StrokeScript, letterId: string): string {
-  const local = loadUserStrokes(script, letterId)
-  if (local) return exportForTeaching(script, letterId, local)
-
-  const taught = getTaughtStrokes(letterId, script)
-  if (taught) return exportForTeaching(script, letterId, taught)
-
+  const face = activeFace(script)
+  const local = loadUserStrokes(script, letterId, face)
+  if (local) return exportForTeaching(script, letterId, local, face)
+  const taught = getTaughtStrokes(letterId, script, face)
+  if (taught) return exportForTeaching(script, letterId, taught, face)
   return ''
 }
 
@@ -307,6 +540,9 @@ export function importTeachingBundle(
       letterId?: string
       d?: string
       strokes?: GlyphStrokeData['strokes']
+      fontFace?: string
+      fontLabel?: string
+      note?: string
     }
     if (raw.script && raw.script !== script) {
       return { ok: false, error: `스크립트 불일치 (${raw.script})` }
@@ -317,7 +553,13 @@ export function importTeachingBundle(
     if (!raw.d || !Array.isArray(raw.strokes) || raw.strokes.length === 0) {
       return { ok: false, error: 'd, strokes[] 가 필요합니다' }
     }
-    saveUserStrokes(script, letterId, { d: raw.d, strokes: raw.strokes })
+    saveUserStrokes(
+      script,
+      letterId,
+      { d: raw.d, strokes: raw.strokes },
+      raw.note,
+      { fontFace: raw.fontFace, fontLabel: raw.fontLabel },
+    )
     return { ok: true }
   } catch {
     return { ok: false, error: 'JSON 형식이 올바르지 않습니다' }
@@ -344,6 +586,6 @@ export function defaultLabels(letterId: string, track: ScriptTrack): string[] {
 
 export function avgStrokeWidth(data: GlyphStrokeData | null): number {
   if (!data?.strokes.length) return 26
-  const w = data.strokes.reduce((s, x) => s + x.width, 0) / data.strokes.length
-  return r2(w)
+  const sum = data.strokes.reduce((n, s) => n + (s.width || 26), 0)
+  return sum / data.strokes.length
 }

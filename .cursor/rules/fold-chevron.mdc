@@ -1,0 +1,12 @@
+---
+description: Fold/expand UI always uses a triangle chevron, never 접기/펴기 text
+alwaysApply: true
+---
+
+# Fold / expand controls
+
+- Use the shared `FoldChevron` component (`src/components/FoldChevron.tsx`) for every collapsible section.
+- Icon is a triangle: **▶** when collapsed, rotates to point down when open (`.fold-chevron.is-open`).
+- Do **not** use text labels like `접기`, `펴기`, `펼치기` as the fold affordance.
+- Keep `aria-expanded` on the toggle button; the chevron stays `aria-hidden`.
+- Pair with existing `.fold-panel` / `.fold-panel__inner` expand animation.

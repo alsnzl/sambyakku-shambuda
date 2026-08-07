@@ -83,9 +83,9 @@
 }
 
 .practice__switch-btn.is-active {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
-  color: var(--accent);
+  border-color: var(--control-on-border);
+  background: var(--control-on-bg);
+  color: var(--control-on-fg);
 }
 
 .practice__switch-btn:disabled {
@@ -104,6 +104,8 @@
   border-radius: var(--radius-lg);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .practice__prompt-block {
@@ -113,6 +115,8 @@
   border-radius: var(--radius-lg);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .practice__mode {
@@ -167,6 +171,8 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
   transition:
     transform var(--motion-press, 0.22s) var(--motion-ease, ease),
     background-color var(--motion-press, 0.22s) var(--motion-soft, ease),
@@ -206,6 +212,8 @@
   border-radius: var(--radius-lg);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .practice__cta--enter {
@@ -245,11 +253,19 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .practice__mode-card.is-active {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: var(--control-on-border);
+  background: var(--control-on-bg);
+  color: var(--control-on-fg);
+}
+
+.practice__mode-card.is-active .practice__mode-card-title,
+.practice__mode-card.is-active .practice__mode-card-body {
+  color: var(--control-on-fg);
 }
 
 .practice__mode-card-title {

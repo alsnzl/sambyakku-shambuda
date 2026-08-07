@@ -2,7 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
-import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import {
+  ensureScriptFontReady,
+  getActiveScriptFontLabel,
+  getActiveScriptFontStack,
+  getScriptFontChoice,
+  getScriptFontStack,
+  matchesGeneratedOutlineFont,
+  parseScriptFontChoice,
+} from '../lib/customScriptFonts'
 import {
   clearUserStrokes,
   DEFAULT_TEACH_GUIDE_TIP,
@@ -18,7 +26,6 @@ import {
   refreshCloudStore,
 } from '../lib/strokeCloud'
 import {
-  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   PRESSURE_SENS_MAX,
   PRESSURE_SENS_MIN,
@@ -27,14 +34,11 @@ import {
   commitFreehandStroke,
   freehandPressureSegments,
   glyphStrokeMaskSegments,
-  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
 import {
-  getBrushKind,
   getPenOnly,
   getPressureSens,
-  setBrushKind,
   setPenOnly,
   setPressureSens,
 } from '../lib/prefsStore'
@@ -43,6 +47,7 @@ import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
 import { FoldChevron } from './FoldChevron'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
+import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './StrokeTeachPanel.css'
 
 type Props = {
@@ -66,20 +71,31 @@ type CloudUiStatus =
   | 'error'
 
 export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: Props) {
-  useScriptFontEpoch()
+  const fontEpoch = useScriptFontEpoch()
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
+  const fontSlot = script
   const generated = getGlyphStrokes(letterId, script)
   const labels = defaultLabels(letterId, track)
   const inkWidth = FREEHAND_INK_WIDTH
-  const outlineD = generated?.d
-  /** Active face stack (settings). Stroke order stays taught/generated paths. */
-  const fontFamily = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
+  const fontChoice = getScriptFontChoice(fontSlot)
+  const fontFamily = getActiveScriptFontStack(fontSlot)
   const glyphX = STROKE_VIEWBOX / 2
   /** Baseline low enough for Devanagari top matras (ई, ऐ, …) inside the square. */
   const glyphY = STROKE_VIEWBOX * 0.7
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)
+  /** Prefer taught/cloud outline so saved strokes stay registered with the guide. */
+  const outlineD = info.data?.d ?? generated?.d
+  const activeFontLabel = info.fontLabel
+  const recordedFontChoice = parseScriptFontChoice(fontSlot, info.fontFace)
+  const watchFontFamily = recordedFontChoice
+    ? getScriptFontStack(fontSlot, recordedFontChoice)
+    : fontFamily
+  const otherFontHint =
+    info.otherFonts.length > 0
+      ? info.otherFonts.map((f) => `${f.fontLabel} ${f.strokeCount}획`).join(' · ')
+      : null
 
   const [recorded, setRecorded] = useState<GlyphStroke[]>([])
   const [redoStack, setRedoStack] = useState<GlyphStroke[]>([])
@@ -92,13 +108,25 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
-  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
   const [saveAckLow, setSaveAckLow] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const brush = 'pen' as const
   const [labelDrafts, setLabelDrafts] = useState<string[]>(() => [...labels])
   const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
+
+  /**
+   * Draw always uses live SVG text so font switches update immediately.
+   * Watch uses path only for legacy cloud entries (no fontFace) that match Noto outlines.
+   */
+  const usePathGuide =
+    mode === 'watch' &&
+    Boolean(outlineD) &&
+    !recordedFontChoice &&
+    matchesGeneratedOutlineFont(fontSlot, fontChoice)
+  const canvasFontFamily = mode === 'watch' ? watchFontFamily : fontFamily
+  const canvasFontKey = `${fontEpoch}-${canvasFontFamily}-${mode}`
 
   const maskId = `${useId()}-teach-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -109,6 +137,9 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
   const pointsRef = useRef<FreehandPoint[]>([])
   const recordedCountRef = useRef(0)
   recordedCountRef.current = recorded.length
+  const [scrollLock, setScrollLock] = useState(false)
+  useLockScrollWhileDrawing(scrollLock)
+  const fontBootRef = useRef(true)
 
   const refresh = () => setTick((n) => n + 1)
 
@@ -163,11 +194,57 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     setActiveStep(0)
     setSaveAckLow(false)
     drawingRef.current = false
+    setScrollLock(false)
     pointsRef.current = []
     const nextInfo = getTeachingInfo(letterId, script)
     setLabelDrafts(buildLabelDrafts(nextInfo.data?.strokes))
     setGuideTip(nextInfo.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
   }, [letterId, script, track])
+
+  /** Font switch: hide other-face strokes and wipe in-progress ink. */
+  useEffect(() => {
+    if (fontBootRef.current) {
+      fontBootRef.current = false
+      return
+    }
+    setRecorded([])
+    setRedoStack([])
+    setDrawing([])
+    drawingRef.current = false
+    setScrollLock(false)
+    pointsRef.current = []
+    setSaveAckLow(false)
+    setMode('draw')
+    setWatchDone(false)
+    setActiveStep(0)
+    const next = getTeachingInfo(letterId, script)
+    setLabelDrafts(buildLabelDrafts(next.data?.strokes))
+    setGuideTip(next.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
+    refresh()
+    if (next.strokeCount > 0) {
+      setFlash(`「${next.fontLabel}」에 저장된 획 ${next.strokeCount}개`)
+    } else if (next.otherFonts.length > 0) {
+      setFlash(
+        `「${next.fontLabel}」에는 획 없음 · 다른 폰트 ${next.otherFonts.length}개에 기록됨`,
+      )
+    } else {
+      setFlash(`「${next.fontLabel}」로 새 획을 기록합니다`)
+    }
+  }, [fontEpoch])
+
+  useEffect(() => {
+    const choice = parseScriptFontChoice(fontSlot, info.fontFace)
+    if (!choice) return
+    let cancelled = false
+    void ensureScriptFontReady(fontSlot, choice).catch(() => {
+      if (!cancelled) {
+        /* keep CSS fallback stack */
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [fontSlot, info.fontFace, letterId])
 
   useEffect(() => {
     let cancelled = false
@@ -246,7 +323,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       return
     }
     if (!allowPointer(e)) {
-      setFlash('손바닥·손가락은 무시합니다. S Pen으로 그려 주세요. (펜만 켜짐)')
+      setFlash('손바닥·손가락은 무시합니다. S Pen으로 그려 주세요. (Spen 모드 켜짐)')
       return
     }
     // Ignore pure hover from S Pen until tip contacts the screen
@@ -259,6 +336,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     if (!svg) return
     svg.setPointerCapture(e.pointerId)
     drawingRef.current = true
+    setScrollLock(true)
     setSaveAckLow(false)
 
     const samples = collectFreehandSamples(e, svg)
@@ -270,6 +348,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     if (mode !== 'draw' || !drawingRef.current) return
     if (!allowPointer(e)) return
     if (e.pointerType === 'pen' && e.buttons === 0) return
+    e.preventDefault()
     const svg = svgRef.current
     if (!svg) return
     const samples = collectFreehandSamples(e, svg)
@@ -280,6 +359,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
   function endStroke(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'draw' || !drawingRef.current) return
     drawingRef.current = false
+    setScrollLock(false)
 
     const svg = svgRef.current
     if (svg?.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId)
@@ -304,6 +384,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
   function handleWatch() {
     if (!canWatch || saving) return
     drawingRef.current = false
+    setScrollLock(false)
     pointsRef.current = []
     setDrawing([])
     if (mode === 'watch') {
@@ -376,6 +457,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     setRedoStack([])
     setDrawing([])
     drawingRef.current = false
+    setScrollLock(false)
     pointsRef.current = []
     setSaveAckLow(false)
     setFlash(`${strokes.length}획을 불러왔어요. 고친 뒤 저장하세요.`)
@@ -383,14 +465,15 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
 
   function handleEdit() {
     exitWatch()
-    clearUserStrokes(script, letterId)
+    clearUserStrokes(script, letterId, getScriptFontChoice(fontSlot))
     setRecorded([])
     setRedoStack([])
     setDrawing([])
     drawingRef.current = false
+    setScrollLock(false)
     pointsRef.current = []
     setSaveAckLow(false)
-    setFlash('캔버스를 비웠어요. 그린 뒤 저장을 눌러 주세요.')
+    setFlash(`「${activeFontLabel}」 획을 비웠어요. 그린 뒤 저장을 눌러 주세요.`)
     refresh()
   }
 
@@ -398,7 +481,10 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     if (!glyph || recorded.length === 0 || saving) return
     exitWatch()
 
-    const coverage = assessTeachCoverage(recorded, outlineD)
+    const coverageOutline = matchesGeneratedOutlineFont(fontSlot, fontChoice)
+      ? outlineD
+      : null
+    const coverage = assessTeachCoverage(recorded, coverageOutline)
     if (coverage.level === 'bad' && !saveAckLow) {
       setSaveAckLow(true)
       setFlash(`${coverage.message} 한 번 더 「저장」을 누르면 그대로 올립니다.`)
@@ -408,6 +494,9 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
 
     const count = recorded.length
     const tip = guideTip.trim() || DEFAULT_TEACH_GUIDE_TIP
+    const face = getScriptFontChoice(fontSlot)
+    const faceLabel = getActiveScriptFontLabel(fontSlot)
+    const fontMeta = { fontFace: face, fontLabel: faceLabel }
     // Keep a path outline for playback fill when available; UI itself uses the face font.
     const data = {
       d: outlineD || `M${glyphX} ${glyphY}`,
@@ -417,7 +506,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       })),
     }
 
-    saveUserStrokes(script, letterId, data, tip)
+    saveUserStrokes(script, letterId, data, tip, fontMeta)
     setGuideTip(tip)
     refresh()
 
@@ -427,7 +516,9 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
         : `맞춤 ${coverage.score}점(주의)`
 
     if (!hasCloudWriteToken()) {
-      setFlash(`${count}획 · ${coverageNote} · 이 기기에만 저장 (설정에서 토큰을 저장하세요)`)
+      setFlash(
+        `${count}획 · ${faceLabel} · ${coverageNote} · 이 기기에만 저장 (설정에서 토큰을 저장하세요)`,
+      )
       return
     }
 
@@ -435,8 +526,8 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
     setFlash('클라우드에 저장 중…')
     setCloudError(null)
     try {
-      await publishLetterToCloud(script, letterId, data, tip)
-      clearUserStrokes(script, letterId)
+      await publishLetterToCloud(script, letterId, data, tip, fontMeta)
+      clearUserStrokes(script, letterId, face)
       await refreshCloudStore({ force: true })
       refresh()
       setRecorded([])
@@ -445,7 +536,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       setLabelDrafts(buildLabelDrafts(data.strokes))
       setGuideTip(tip)
       setCloudPhase('idle')
-      setFlash(`${count}획 · ${coverageNote} · 클라우드 저장 완료`)
+      setFlash(`${count}획 · ${faceLabel} · ${coverageNote} · 클라우드 저장 완료`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setCloudPhase('error')
@@ -542,9 +633,25 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
             : recorded.length > 0
               ? `${recorded.length}획 · 이름을 고쳐도 돼요`
               : info.strokeCount > 0
-                ? `저장된 획 ${info.strokeCount}개 · 불러오기로 수정`
-                : '글자 위에 손가락이 아닌 펜으로 그려 주세요'}
+                ? `이 폰트 저장 ${info.strokeCount}획 · 불러오기로 수정`
+                : '이 폰트에는 아직 획이 없습니다 · 펜으로 그려 주세요'}
         </p>
+        <div className="teach__font-badge" aria-label={`기록 폰트 ${activeFontLabel}`}>
+          <span className="teach__font-badge-kicker">기록 폰트</span>
+          <strong className="teach__font-badge-name">{activeFontLabel}</strong>
+          <span
+            className={`teach__font-badge-state${
+              info.strokeCount > 0 ? ' is-saved' : ' is-empty'
+            }`}
+          >
+            {info.strokeCount > 0 ? `${info.strokeCount}획 저장됨` : '미기록'}
+          </span>
+        </div>
+        {otherFontHint ? (
+          <p className="teach__font-other">
+            다른 폰트 기록(숨김): {otherFontHint}
+          </p>
+        ) : null}
       </div>
 
       <div className="teach__workspace">
@@ -639,7 +746,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                         ))}
                       </mask>
                     </defs>
-                    {outlineD ? (
+                    {usePathGuide && outlineD ? (
                       <>
                         <path className="teach__glyph-guide" d={outlineD} />
                         <path
@@ -651,22 +758,26 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                     ) : (
                       <>
                         <text
+                          key={`guide-${canvasFontKey}`}
                           className="teach__glyph-guide"
                           x={glyphX}
                           y={glyphY}
                           textAnchor="middle"
                           lang="sa"
-                          style={{ fontFamily }}
+                          fontSize={158}
+                          style={{ fontFamily: canvasFontFamily }}
                         >
                           {glyph}
                         </text>
                         <text
+                          key={`ink-${canvasFontKey}`}
                           className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
                           x={glyphX}
                           y={glyphY}
                           textAnchor="middle"
                           lang="sa"
-                          style={{ fontFamily }}
+                          fontSize={158}
+                          style={{ fontFamily: canvasFontFamily }}
                           mask={`url(#${maskId}-watch)`}
                         >
                           {glyph}
@@ -694,7 +805,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                             y2={seg.y2}
                             stroke="white"
                             strokeWidth={seg.width}
-                            strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         ))}
@@ -707,46 +818,37 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                             y2={seg.y2}
                             stroke="white"
                             strokeWidth={seg.width}
-                            strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                           />
                         ))}
                       </mask>
                     </defs>
-                    {outlineD ? (
-                      <>
-                        <path className="teach__glyph-guide" d={outlineD} />
-                        <path
-                          className="teach__glyph-ink"
-                          d={outlineD}
-                          mask={`url(#${maskId})`}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <text
-                          className="teach__glyph-guide"
-                          x={glyphX}
-                          y={glyphY}
-                          textAnchor="middle"
-                          lang="sa"
-                          style={{ fontFamily }}
-                        >
-                          {glyph}
-                        </text>
-                        <text
-                          className="teach__glyph-ink"
-                          x={glyphX}
-                          y={glyphY}
-                          textAnchor="middle"
-                          lang="sa"
-                          style={{ fontFamily }}
-                          mask={`url(#${maskId})`}
-                        >
-                          {glyph}
-                        </text>
-                      </>
-                    )}
+                    <text
+                      key={`guide-${canvasFontKey}`}
+                      className="teach__glyph-guide"
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      lang="sa"
+                      fontSize={158}
+                      style={{ fontFamily: canvasFontFamily }}
+                    >
+                      {glyph}
+                    </text>
+                    <text
+                      key={`ink-${canvasFontKey}`}
+                      className="teach__glyph-ink"
+                      x={glyphX}
+                      y={glyphY}
+                      textAnchor="middle"
+                      lang="sa"
+                      fontSize={158}
+                      style={{ fontFamily: canvasFontFamily }}
+                      mask={`url(#${maskId})`}
+                    >
+                      {glyph}
+                    </text>
                     <StrokeArrowLayer strokes={recorded} emphasizeLatest />
                   </>
                 )}
@@ -769,7 +871,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
             />
           ) : null}
 
-          <div className="teach__bar teach__bar--primary">
+          <div className="teach__actions-row">
             <button
               type="button"
               className="teach__btn teach__btn--primary"
@@ -786,9 +888,6 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
             >
               {mode === 'watch' ? '다시 보기' : '보기'}
             </button>
-          </div>
-
-          <div className="teach__bar teach__bar--secondary">
             <button
               type="button"
               className="teach__btn"
@@ -874,20 +973,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
             <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>
               <div className="fold-panel__inner">
                 <div className="teach__advanced-body">
-                  <div className="teach__brush" role="group" aria-label="붓·펜">
-                    {BRUSH_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
-                        title={opt.hint}
-                        disabled={saving}
-                        tabIndex={advancedOpen ? 0 : -1}
-                        onClick={() => setBrush(setBrushKind(opt.id))}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                  <div className="teach__brush" role="group" aria-label="그리기 입력">
                     <button
                       type="button"
                       className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
@@ -896,7 +982,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                       tabIndex={advancedOpen ? 0 : -1}
                       onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
                     >
-                      펜만
+                      Spen 모드
                     </button>
                   </div>
 

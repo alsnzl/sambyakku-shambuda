@@ -206,6 +206,24 @@ function isSiddhamChoice(value: unknown): value is SiddhamFontChoice {
   return value === 'muktam' || value === 'noto-siddham' || value === 'user'
 }
 
+/** Validate a stored fontFace id for a slot. */
+export function parseScriptFontChoice(
+  slot: ScriptFontSlot,
+  value: string | null | undefined,
+): ScriptFontChoice | null {
+  if (!value) return null
+  if (slot === 'deva') return isDevaChoice(value) ? value : null
+  return isSiddhamChoice(value) ? value : null
+}
+
+/** Load a face without changing the user's active selection. */
+export async function ensureScriptFontReady(
+  slot: ScriptFontSlot,
+  choice: ScriptFontChoice,
+): Promise<void> {
+  await ensureFaceReady(slot, choice)
+}
+
 function readChoices(): ChoiceMap {
   const defaults: ChoiceMap = {
     deva: DEFAULT_CHOICE.deva as DevaFontChoice,
@@ -279,6 +297,17 @@ export function usesUnicodeSiddham(): boolean {
   return getScriptFontChoice('siddham') === 'noto-siddham'
 }
 
+/**
+ * Generated glyph outlines (`glyphStrokes`) come from Noto Sans Devanagari /
+ * Noto Sans Siddham. Only those faces match the path guide.
+ */
+export function matchesGeneratedOutlineFont(
+  slot: ScriptFontSlot,
+  choice: ScriptFontChoice = getScriptFontChoice(slot),
+): boolean {
+  return slot === 'deva' ? choice === 'noto-deva' : choice === 'noto-siddham'
+}
+
 export function getScriptFontSample(slot: ScriptFontSlot, choice?: ScriptFontChoice): string {
   const c = choice ?? getScriptFontChoice(slot)
   if (slot === 'siddham' && c === 'noto-siddham') return SCRIPT_FONT_SAMPLE_UNICODE_SIDDHAM
@@ -299,6 +328,29 @@ function stackForChoice(slot: ScriptFontSlot, choice: ScriptFontChoice): string 
   }
   const opt = SIDDHAM_FONT_OPTIONS.find((o) => o.id === choice)
   return opt?.stack ?? SIDDHAM_FONT_OPTIONS[0]!.stack
+}
+
+/** Resolved `font-family` stack for a specific choice (or active if omitted). */
+export function getScriptFontStack(
+  slot: ScriptFontSlot,
+  choice?: ScriptFontChoice,
+): string {
+  return stackForChoice(slot, choice ?? getScriptFontChoice(slot))
+}
+
+/** Human label for a choice id (falls back to id). */
+export function getScriptFontLabelForChoice(
+  slot: ScriptFontSlot,
+  choice: string | null | undefined,
+): string | null {
+  if (!choice) return null
+  if (choice === 'user') {
+    return getScriptFontMeta(slot)?.fileName ?? '사용자 폰트'
+  }
+  if (slot === 'deva') {
+    return DEVA_FONT_OPTIONS.find((o) => o.id === choice)?.label ?? choice
+  }
+  return SIDDHAM_FONT_OPTIONS.find((o) => o.id === choice)?.label ?? choice
 }
 
 /** Resolved `font-family` stack for the active choice (for inline styles / load). */

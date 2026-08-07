@@ -5,63 +5,63 @@
  */
 
 :root {
-  --glass-blur: 22px;
-  --glass-blur-soft: 14px;
-  --glass-blur-strong: 32px;
-  --glass-saturate: 1.85;
+  --glass-blur: 40px;
+  --glass-blur-soft: 24px;
+  --glass-blur-strong: 56px;
+  --glass-saturate: 1.95;
   --block-blur: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   --block-blur-soft: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
   --block-blur-strong: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
 
-  --glass-fill: color-mix(in srgb, var(--surface) 42%, transparent);
-  --glass-fill-soft: color-mix(in srgb, var(--surface) 32%, transparent);
-  --glass-fill-strong: color-mix(in srgb, var(--surface) 58%, transparent);
+  --glass-fill: color-mix(in srgb, var(--surface) 36%, transparent);
+  --glass-fill-soft: color-mix(in srgb, var(--surface) 26%, transparent);
+  --glass-fill-strong: color-mix(in srgb, var(--surface) 52%, transparent);
   --block-bg: var(--glass-fill);
 
-  --glass-border: color-mix(in srgb, white 38%, var(--line-strong));
+  --glass-border: color-mix(in srgb, white 42%, var(--line-strong));
   --block-border: var(--glass-border);
 
-  /* Highlight / rim / depth — Apple’s glass layers, CSS-approximated */
+  /* Highlight / rim / depth — Apple Liquid Glass layers */
   --glass-specular:
-    inset 0 1px 0 color-mix(in srgb, white 72%, transparent),
-    inset 0 -0.5px 0 color-mix(in srgb, white 18%, transparent),
-    inset 1px 0 0 color-mix(in srgb, white 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 78%, transparent),
+    inset 0 -0.5px 0 color-mix(in srgb, white 16%, transparent),
+    inset 1px 0 0 color-mix(in srgb, white 24%, transparent),
     inset -1px 0 0 color-mix(in srgb, white 10%, transparent);
   --glass-depth:
-    0 1px 2px color-mix(in srgb, var(--shadow) 55%, transparent),
-    0 10px 32px color-mix(in srgb, var(--shadow) 70%, transparent),
-    0 0 0 0.5px color-mix(in srgb, white 28%, transparent);
+    0 1px 2px color-mix(in srgb, var(--shadow) 45%, transparent),
+    0 12px 40px color-mix(in srgb, var(--shadow) 55%, transparent),
+    0 0 0 0.5px color-mix(in srgb, white 32%, transparent);
   --block-shadow: var(--glass-specular), var(--glass-depth);
 
   --press-shadow:
     var(--glass-specular),
-    0 16px 44px color-mix(in srgb, var(--shadow-lift) 80%, transparent),
-    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent),
-    0 0 0 0.5px color-mix(in srgb, white 35%, transparent);
+    0 18px 48px color-mix(in srgb, var(--shadow-lift) 72%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 45%, transparent),
+    0 0 0 0.5px color-mix(in srgb, white 38%, transparent);
   --press-shadow-active:
-    inset 0 1px 0 color-mix(in srgb, white 45%, transparent),
-    0 6px 20px color-mix(in srgb, var(--shadow) 55%, transparent);
+    inset 0 1px 0 color-mix(in srgb, white 40%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 50%, transparent);
 }
 
 :root[data-theme='dark'] {
-  --glass-blur: 26px;
-  --glass-blur-soft: 16px;
-  --glass-saturate: 1.7;
-  --glass-fill: color-mix(in srgb, var(--surface) 38%, transparent);
-  --glass-fill-soft: color-mix(in srgb, var(--surface) 28%, transparent);
-  --glass-fill-strong: color-mix(in srgb, var(--surface) 52%, transparent);
+  --glass-blur: 48px;
+  --glass-blur-soft: 28px;
+  --glass-saturate: 1.75;
+  --glass-fill: color-mix(in srgb, var(--surface) 34%, transparent);
+  --glass-fill-soft: color-mix(in srgb, var(--surface) 24%, transparent);
+  --glass-fill-strong: color-mix(in srgb, var(--surface) 48%, transparent);
   --block-bg: var(--glass-fill);
-  --glass-border: color-mix(in srgb, white 16%, var(--line-strong));
+  --glass-border: color-mix(in srgb, white 18%, var(--line-strong));
   --block-border: var(--glass-border);
   --glass-specular:
-    inset 0 1px 0 color-mix(in srgb, white 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 32%, transparent),
     inset 0 -0.5px 0 color-mix(in srgb, white 6%, transparent),
-    inset 1px 0 0 color-mix(in srgb, white 10%, transparent),
+    inset 1px 0 0 color-mix(in srgb, white 12%, transparent),
     inset -1px 0 0 color-mix(in srgb, white 4%, transparent);
   --glass-depth:
-    0 1px 2px color-mix(in srgb, black 35%, transparent),
-    0 12px 36px color-mix(in srgb, var(--shadow) 85%, transparent),
-    0 0 0 0.5px color-mix(in srgb, white 10%, transparent);
+    0 1px 2px color-mix(in srgb, black 40%, transparent),
+    0 14px 44px color-mix(in srgb, var(--shadow) 80%, transparent),
+    0 0 0 0.5px color-mix(in srgb, white 12%, transparent);
   --block-shadow: var(--glass-specular), var(--glass-depth);
 }
 
@@ -85,13 +85,11 @@
   .home__card,
   .home__track,
   .home__settings-entry,
-  .home__feed.is-collapsed .home__feed-toggle,
-  .home__feed-toggle,
+  .home__feed,
   .learn__group,
   .learn__all-btn,
   .learn__chart-section,
   .learn__cell,
-  .learn__sheet-panel,
   .learn__focus > .script-font-bar,
   .letter-card,
   .letter-card__hero-frame,
@@ -103,26 +101,30 @@
   .practice__mode-card,
   .practice__choice,
   .tool__block,
+  .tool__font-pane,
   .about__section,
   .about__note,
   .teach-page__track,
-  .teach-page__card,
   .write__grade,
   .write__steps,
   .write__advanced,
-  .write__step,
-  .teach__steps,
-  .teach__advanced,
-  .teach__step,
   .teach__token,
   .teach__message,
-  .theory-tip,
-  .stroke-history
+  .teach__advanced,
+  .theory-tip
 ) {
   border-color: var(--block-border);
   box-shadow: var(--block-shadow);
   -webkit-backdrop-filter: var(--block-blur);
   backdrop-filter: var(--block-blur);
+  /*
+   * Clip fill + backdrop-filter to border-radius.
+   * Without this, WebKit/Chromium paint a square blur/fill layer behind rounded corners.
+   * Do not put glass on radius-less wrappers (e.g. learn__sheet-panel) — that caused the peek.
+   */
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
 }
 
 .ui-block--soft {
@@ -170,6 +172,8 @@
   box-shadow: var(--block-shadow);
   -webkit-backdrop-filter: var(--block-blur);
   backdrop-filter: var(--block-blur);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .app-home-fab:hover,
@@ -194,44 +198,80 @@
   .write__btn,
   .write__replay,
   .write__brush-btn,
-  .write__advanced-summary,
-  .teach__btn,
   .teach__brush-btn,
-  .teach__toggle,
-  .teach__advanced-summary,
+  .teach__btn,
   .letter-card__fav,
   .letter-card__write-btn,
   .letter-card__audio,
   .letter-card__side-nav,
   .letter-card__similar-btn,
-  .script-font-bar__toggle,
   .script-font-bar__opt,
   .stroke-history__btn,
   .theory-tip__edit,
-  .theory-tip__btn
+  .theory-tip__btn,
+  .teach-page__nav-btn
 ) {
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/*
+ * Nested full-bleed toggles inside already-glass shells must NOT add another
+ * backdrop layer — that paints a square under the parent’s rounded corners.
+ */
+:is(
+  .script-font-bar__toggle,
+  .write__advanced-summary,
+  .teach__advanced-summary,
+  .teach__toggle
+) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+:is(
+  .script-font-bar__toggle,
+  .write__advanced-summary,
+  .teach__advanced-summary,
+  .teach__toggle
+).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+/* Radius-less sheet wrapper — never a glass surface (would show square under letter-card). */
+.learn__sheet-panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 :is(
   .home__btn:not(.home__btn--primary),
-  .write__btn:not(.write__btn--ghost.is-active),
+  .write__btn:not(.is-active),
   .write__replay,
-  .write__brush-btn,
-  .teach__btn:not(.teach__btn--primary):not(.teach__btn--warn),
-  .teach__brush-btn,
-  .practice__switch-btn,
+  .write__brush-btn:not(.is-active),
+  .teach__brush-btn:not(.is-active),
+  .practice__switch-btn:not(.is-active),
+  .practice__mode-card:not(.is-active),
   .practice__secondary,
   .tool__chip,
-  .tool__seg-btn,
+  .tool__seg-btn:not(.is-active),
+  .tool__mantra-step:not(.is-active),
   .tool__btn:not(.tool__btn--primary),
-  .letter-card__fav,
+  .letter-card__fav:not(.is-on),
+  .letter-card__write-btn,
   .letter-card__audio,
   .letter-card__side-nav,
   .letter-card__similar-btn,
-  .script-font-bar__opt,
-  .stroke-history__btn,
+  .script-font-bar__opt:not(.is-active),
   .write__advanced,
   .teach__advanced,
   .theory-tip__edit,
@@ -245,10 +285,8 @@
 :is(
   .home__btn--primary,
   .practice__cta,
-  .teach__btn--primary,
   .tool__btn--primary,
   .about__cta,
-  .letter-card__write-btn,
   .theory-tip__btn--primary
 ) {
   background: color-mix(in srgb, var(--accent) 82%, transparent);
@@ -283,4 +321,51 @@
 :is(.write__svg, .teach__svg, .letter-card__hero-frame) {
   box-shadow: var(--glass-specular), var(--glass-depth);
   border-color: var(--glass-border);
+}
+
+/* Selected toggles: accent-tinted glass — blur stays, still obvious vs idle */
+:is(
+  .write__btn.is-active,
+  .write__brush-btn.is-active,
+  .teach__btn.is-active,
+  .teach__brush-btn.is-active,
+  .practice__switch-btn.is-active,
+  .practice__mode-card.is-active,
+  .tool__seg-btn.is-active,
+  .tool__mantra-step.is-active,
+  .script-font-bar__opt.is-active,
+  .letter-card__fav.is-on
+) {
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
+  -webkit-backdrop-filter: blur(16px) saturate(1.65);
+  backdrop-filter: blur(16px) saturate(1.65);
+  box-shadow: var(--control-on-shadow);
+}
+
+:is(
+  .practice__mode-card.is-active .practice__mode-card-title,
+  .practice__mode-card.is-active .practice__mode-card-body,
+  .script-font-bar__opt.is-active .script-font-bar__opt-label,
+  .script-font-bar__opt.is-active .script-font-bar__sample,
+  .tool__seg-btn.is-active .tool__seg-preview,
+  .tool__seg-btn.is-active .tool__seg-title,
+  .tool__mantra-step.is-active .tool__mantra-step-deva,
+  .tool__mantra-step.is-active .tool__mantra-step-iast
+) {
+  color: var(--control-on-fg);
+}
+
+.tool__mantra-step.is-active .tool__mantra-step-iast,
+.practice__mode-card.is-active .practice__mode-card-body {
+  opacity: 0.88;
+}
+
+.tool__font-pane.is-active-pane {
+  border-color: var(--control-on-border);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  -webkit-backdrop-filter: var(--block-blur-soft);
+  backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--control-on-shadow);
 }

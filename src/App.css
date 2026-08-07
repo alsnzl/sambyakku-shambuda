@@ -10,31 +10,36 @@
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
   overflow-x: clip;
-  transition: max-width var(--motion-base, 220ms) var(--motion-ease, ease);
+  transition: max-width var(--motion-base) var(--motion-ease-out);
 }
 
 .app-home-fab {
   appearance: none;
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 0.55rem);
-  right: calc(env(safe-area-inset-right, 0px) + 0.45rem);
+  top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y));
+  right: calc(env(safe-area-inset-right, 0px) + var(--space));
   z-index: 50;
-  width: 2.15rem;
-  height: 2.15rem;
+  width: var(--touch-min);
+  height: var(--touch-min);
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  border-radius: var(--radius-capsule);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
   color: var(--ink-soft);
   cursor: pointer;
   display: grid;
   place-items: center;
+  -webkit-backdrop-filter: var(--block-blur-soft);
+  backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--glass-specular, none);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .app-home-fab:hover,
 .app-home-fab:focus-visible {
   border-color: color-mix(in srgb, var(--line-strong) 55%, transparent);
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
 }
 
 .app-home-fab__icon {
@@ -45,5 +50,5 @@
 
 /* Keep letter prev/next clear of the floating home control */
 .app-shell:has(.app-home-fab) .teach-page__nav {
-  margin-right: 2.55rem;
+  margin-right: calc(var(--touch-min) + var(--space-2));
 }

@@ -46,6 +46,8 @@
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .tool__block h2 {
@@ -352,9 +354,9 @@
 .tool__seg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
-  padding: 0.28rem;
-  border-radius: var(--radius);
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-capsule);
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 88%, transparent);
 }
@@ -367,7 +369,7 @@
   display: block;
   width: 1.15rem;
   height: 1.15rem;
-  border-radius: 999px;
+  border-radius: var(--radius-capsule);
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--shadow) 80%, transparent);
 }
@@ -379,10 +381,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.18rem;
-  min-height: 3.2rem;
-  padding: 0.4rem 0.25rem;
+  min-height: var(--touch-min);
+  padding: 0.45rem 0.25rem;
   border: 1px solid transparent;
-  border-radius: calc(var(--radius) - 0.2rem);
+  border-radius: var(--radius-capsule);
   background: transparent;
   color: var(--muted);
   font-size: 0.74rem;
@@ -391,10 +393,14 @@
 }
 
 .tool__seg-btn.is-active {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
-  background: var(--teal-wash);
-  color: var(--accent);
-  box-shadow: 0 2px 8px var(--shadow);
+  border-color: var(--control-on-border);
+  background: var(--control-on-bg);
+  color: var(--control-on-fg);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.tool__seg-btn.is-active .tool__seg-preview {
+  color: var(--control-on-fg);
 }
 
 .tool__seg-preview {
@@ -530,9 +536,10 @@
 }
 
 .tool__mantra-step.is-active {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
-  background: var(--teal-wash);
-  box-shadow: 0 2px 10px var(--shadow);
+  border-color: var(--control-on-border);
+  background: var(--control-on-bg);
+  color: var(--control-on-fg);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .tool__mantra-step-deva {
@@ -722,8 +729,9 @@
 }
 
 .tool__font-pane.is-active-pane {
-  border-color: color-mix(in srgb, var(--teal) 45%, var(--line));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 25%, transparent);
+  border-color: var(--control-on-border);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .tool__font-pane.is-empty {

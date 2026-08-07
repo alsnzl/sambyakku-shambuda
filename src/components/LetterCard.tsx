@@ -25,6 +25,36 @@ type Props = {
   onNext?: () => void
   hasPrev?: boolean
   hasNext?: boolean
+  /** Letter paging motion — canvas slides; copy blurs in. */
+  navMotion?: 'slide-left' | 'slide-right' | 'pop'
+  /** Notify parent when write practice is open (e.g. hide outer font bar). */
+  onWritingChange?: (writing: boolean) => void
+}
+
+function SideNavChevron({ dir }: { dir: 'prev' | 'next' }) {
+  return (
+    <svg className="letter-card__side-nav-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      {dir === 'prev' ? (
+        <path
+          d="M14.5 5.5 8 12l6.5 6.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9.5 5.5 16 12l-6.5 6.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  )
 }
 
 export function LetterCard({
@@ -35,6 +65,8 @@ export function LetterCard({
   onNext,
   hasPrev = false,
   hasNext = false,
+  navMotion = 'pop',
+  onWritingChange,
 }: Props) {
   const fontEpoch = useScriptFontEpoch()
   const glyph = glyphForTrack(letter, track)
@@ -46,12 +78,22 @@ export function LetterCard({
   const heroClass =
     track === 'sanskrit' ? 'letter-card__hero--deva' : 'letter-card__hero--siddham'
   const scriptStack = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
+  const heroMotionClass =
+    navMotion === 'slide-left'
+      ? 'letter-card__hero--slide-next'
+      : navMotion === 'slide-right'
+        ? 'letter-card__hero--slide-prev'
+        : 'letter-card__hero--pop'
 
   useEffect(() => {
     markLetterSeen(track, letter.id)
     setFav(isFavorite(track, letter.id))
     setWriteOpen(false)
   }, [letter.id, track])
+
+  useEffect(() => {
+    onWritingChange?.(writeOpen)
+  }, [writeOpen, onWritingChange])
 
   useHardwareBack(() => {
     setWriteOpen(false)
@@ -95,13 +137,13 @@ export function LetterCard({
                 disabled={!hasPrev || !onPrev}
                 aria-label="이전 글자"
               >
-                ◀
+                <SideNavChevron dir="prev" />
               </button>
 
               <div className="letter-card__hero-frame">
                 <p
-                  key={`hero-${fontEpoch}`}
-                  className={`letter-card__hero ${heroClass}`}
+                  key={`hero-${letter.id}-${fontEpoch}`}
+                  className={`letter-card__hero ${heroClass} ${heroMotionClass}`}
                   lang="sa"
                   aria-label={letter.iast}
                   style={{ fontFamily: scriptStack }}
@@ -117,7 +159,7 @@ export function LetterCard({
                 disabled={!hasNext || !onNext}
                 aria-label="다음 글자"
               >
-                ▶
+                <SideNavChevron dir="next" />
               </button>
             </div>
 
@@ -127,7 +169,7 @@ export function LetterCard({
                 className="letter-card__write-btn motion-press"
                 onClick={() => setWriteOpen(true)}
               >
-                따라 쓰기
+                쓰기 연습 시작
               </button>
               <button
                 type="button"
@@ -140,7 +182,7 @@ export function LetterCard({
             </div>
           </div>
 
-          <div className="letter-card__rail">
+          <div key={`rail-${letter.id}`} className="letter-card__rail letter-card__blur-swap">
             <div className="letter-card__meta">
               <p className="letter-card__iast">{letter.iast}</p>
               <p className="letter-card__hangul">{letter.hangulHint}</p>

@@ -86,22 +86,51 @@ store.meta.description =
   store.meta.description ||
   '교사가 직접 쓴 획 — 앱의 공식 기준. auto-generated보다 항상 우선.'
 store.meta.updatedAt = new Date().toISOString()
+
+function isEntry(v) {
+  return v && typeof v === 'object' && typeof v.d === 'string' && Array.isArray(v.strokes)
+}
+
+function fontMapForLetter(raw) {
+  if (!raw) return {}
+  if (isEntry(raw)) {
+    const face = raw.fontFace || 'legacy'
+    return { [face]: raw }
+  }
+  const out = {}
+  for (const [k, v] of Object.entries(raw)) {
+    if (isEntry(v)) out[v.fontFace || k] = v
+  }
+  return out
+}
+
+function countLetters(bucket) {
+  return Object.values(bucket || {}).filter((raw) => Object.keys(fontMapForLetter(raw)).length > 0)
+    .length
+}
+
 store.meta.taughtCount = {
-  deva: Object.keys(store.deva).length,
-  siddham: Object.keys(store.siddham).length,
+  deva: countLetters(store.deva),
+  siddham: countLetters(store.siddham),
 }
 
 writeJson(taughtPath, store)
 
 let strokesSrc = fs.readFileSync(strokesPath, 'utf8')
 for (const script of ['deva', 'siddham']) {
-  for (const [letterId, entry] of Object.entries(store[script])) {
-    if (!entry?.strokes?.length) continue
+  for (const [letterId, raw] of Object.entries(store[script])) {
+    const map = fontMapForLetter(raw)
+    // Prefer default outline faces for label bake-in; else first available.
+    const preferred =
+      map[script === 'deva' ? 'noto-deva' : 'noto-siddham'] ||
+      map[script === 'deva' ? 'tiro-deva' : 'muktam'] ||
+      Object.values(map)[0]
+    if (!preferred?.strokes?.length) continue
     strokesSrc = syncStrokeLabels(
       strokesSrc,
       letterId,
       script,
-      entry.strokes.map((s) => s.label ?? '획'),
+      preferred.strokes.map((s) => s.label ?? '획'),
     )
   }
 }

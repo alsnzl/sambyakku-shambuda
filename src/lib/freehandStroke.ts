@@ -12,11 +12,6 @@ export const PRESSURE_SENS_MAX = 2
 
 export type BrushKind = 'pen' | 'brush'
 
-export const BRUSH_OPTIONS: { id: BrushKind; label: string; hint: string }[] = [
-  { id: 'brush', label: '붓', hint: '시작·끝이 날카로움' },
-  { id: 'pen', label: '펜', hint: '끝도 둥글게' },
-]
-
 export type FreehandPoint = {
   x: number
   y: number
@@ -168,7 +163,7 @@ export function freehandPreviewPath(points: FreehandPoint[]): string {
 export function freehandPressureSegments(
   points: FreehandPoint[],
   baseWidth: number,
-  brush: BrushKind = 'brush',
+  brush: BrushKind = 'pen',
   sensitivity = 1,
 ): PressureSegment[] {
   if (points.length < 2) return []
@@ -223,7 +218,7 @@ function samplePathPoints(d: string, spacing = 2.2): [number, number][] {
  */
 export function glyphStrokeMaskSegments(
   stroke: GlyphStroke,
-  brush: BrushKind = 'brush',
+  brush: BrushKind = 'pen',
   keyBase = 0,
 ): PressureSegment[] {
   if (brush === 'pen') {

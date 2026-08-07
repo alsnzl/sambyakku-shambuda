@@ -99,9 +99,9 @@
 }
 
 .write__btn.is-active {
-  background: var(--teal-wash);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
-  color: var(--ink);
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
 }
 
 .write__badge,
@@ -122,6 +122,44 @@
   font-weight: 600;
 }
 
+.write__font-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--block-border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  overflow: hidden;
+}
+
+.write__font-badge-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.write__font-badge-name {
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+.write__font-badge-state {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .write__flash {
   color: var(--accent);
 }
@@ -133,6 +171,8 @@
   border-radius: var(--radius);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .write__grade .write__flash {
@@ -262,8 +302,9 @@
 }
 
 .write__brush-btn.is-active {
-  background: var(--teal-wash);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: var(--control-on-bg);
+  border-color: var(--control-on-border);
+  color: var(--control-on-fg);
 }
 
 .write__sens {
@@ -301,6 +342,8 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .write__advanced-summary {
@@ -373,12 +416,12 @@
 
 .write__svg {
   width: 100%;
-  max-width: var(--canvas-max);
+  max-width: var(--canvas-draw-max);
   margin: 0 auto;
   aspect-ratio: 1;
   display: block;
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
@@ -416,8 +459,7 @@
 }
 
 .write__glyph-fallback {
-  /* Match teach canvas: fixed to viewBox so tall Devanagari fits. */
-  font-size: 158px;
+  /* SVG user units via fontSize attr — do not use CSS px / --glyph-scale */
   dominant-baseline: alphabetic;
   fill: var(--ink);
 }
@@ -433,6 +475,8 @@
   border-radius: var(--radius-lg);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .write__step {

@@ -6,9 +6,9 @@ import {
   defaultLabels,
   getEffectiveGlyphStrokes,
   getTaughtGlyphStrokes,
+  getTeachingInfo,
 } from '../lib/strokeRecord'
 import {
-  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   PRESSURE_SENS_MAX,
   PRESSURE_SENS_MIN,
@@ -17,14 +17,11 @@ import {
   commitFreehandStroke,
   freehandPressureSegments,
   glyphStrokeMaskSegments,
-  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
 import {
-  getBrushKind,
   getPenOnly,
   getPressureSens,
-  setBrushKind,
   setPenOnly,
   setPressureSens,
 } from '../lib/prefsStore'
@@ -32,11 +29,19 @@ import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
-import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import {
+  ensureScriptFontReady,
+  getActiveScriptFontStack,
+  getScriptFontChoice,
+  getScriptFontStack,
+  matchesGeneratedOutlineFont,
+  parseScriptFontChoice,
+} from '../lib/customScriptFonts'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptFontQuickBar } from './ScriptFontQuickBar'
 import { FoldChevron } from './FoldChevron'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
+import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './WritePractice.css'
 
 type Props = {
@@ -44,20 +49,36 @@ type Props = {
   glyph: string
   track: ScriptTrack
   onClose?: () => void
+  /** When embedded under Learn's font bar, skip the duplicate bar. */
+  hideFontBar?: boolean
 }
 
 type PracticeMode = 'trace' | 'watch'
 
-export function WritePractice({ letterId, glyph, track, onClose }: Props) {
-  useScriptFontEpoch()
+export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = false }: Props) {
+  const fontEpoch = useScriptFontEpoch()
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
+  const fontSlot = script
   const taughtData = getTaughtGlyphStrokes(letterId, script)
+  const teachInfo = getTeachingInfo(letterId, script)
   const data = getEffectiveGlyphStrokes(letterId, script)
   const fallback = getGlyphStrokes(letterId, script)
   const canvasData = data ?? fallback
   const outlineD = canvasData?.d
   const inkWidth = FREEHAND_INK_WIDTH
   const canWatchStrokes = Boolean(taughtData?.strokes.length)
+  const fontChoice = getScriptFontChoice(fontSlot)
+  const fontFamily = getActiveScriptFontStack(fontSlot)
+  const recordedFontChoice = parseScriptFontChoice(fontSlot, teachInfo.fontFace)
+  const recordedFontLabel = teachInfo.fontLabel
+  const watchFontFamily = recordedFontChoice
+    ? getScriptFontStack(fontSlot, recordedFontChoice)
+    : fontFamily
+  const useWatchPathGuide =
+    Boolean(taughtData?.d) && matchesGeneratedOutlineFont(fontSlot, fontChoice)
+  const glyphX = STROKE_VIEWBOX / 2
+  const glyphY = STROKE_VIEWBOX * 0.7
+  const watchFontKey = `${fontEpoch}-${watchFontFamily}`
 
   const [mode, setMode] = useState<PracticeMode>('trace')
   const [playId, setPlayId] = useState(0)
@@ -70,9 +91,9 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [grade, setGrade] = useState<WritingGrade | null>(null)
   const [watchBlocked, setWatchBlocked] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
+  const brush = 'pen' as const
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
@@ -88,6 +109,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const advancedRef = useRef<HTMLDivElement>(null)
   const drawingRef = useRef(false)
   const pointsRef = useRef<FreehandPoint[]>([])
+  const [scrollLock, setScrollLock] = useState(false)
+  useLockScrollWhileDrawing(scrollLock)
 
   function toggleAdvanced() {
     setAdvancedOpen((v) => {
@@ -109,6 +132,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     setTraceDone(false)
     setGrade(null)
     drawingRef.current = false
+    setScrollLock(false)
     pointsRef.current = []
   }, [])
 
@@ -118,10 +142,30 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     resetTrace()
   }, [letterId, script, resetTrace])
 
+  /** Hide strokes from other fonts when the active face changes. */
+  useEffect(() => {
+    setMode('trace')
+    setWatchBlocked(false)
+    resetTrace()
+  }, [fontEpoch, resetTrace])
+
   useEffect(() => {
     if (mode !== 'trace') return
     resetTrace()
   }, [mode, resetTrace])
+
+  useEffect(() => {
+    if (!recordedFontChoice) return
+    let cancelled = false
+    void ensureScriptFontReady(fontSlot, recordedFontChoice).catch(() => {
+      if (!cancelled) {
+        /* CSS fallback */
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [fontSlot, recordedFontChoice, letterId])
 
   /** Watch animation — taught strokes only; don't restart when activeStep updates */
   useEffect(() => {
@@ -162,8 +206,6 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     }
   }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d])
 
-  const fontFamily = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
-
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !outlineD) return
     if (theoryCount > 0 && drawn.length >= theoryCount) return
@@ -177,6 +219,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     if (!svg) return
     svg.setPointerCapture(e.pointerId)
     drawingRef.current = true
+    setScrollLock(true)
     setActiveStep(drawn.length)
 
     const samples = collectFreehandSamples(e, svg)
@@ -188,6 +231,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     if (!drawingRef.current || mode !== 'trace') return
     if (penOnly && e.pointerType === 'touch') return
     if (e.pointerType === 'pen' && e.buttons === 0) return
+    e.preventDefault()
     const svg = svgRef.current
     if (!svg) return
     const samples = collectFreehandSamples(e, svg)
@@ -199,6 +243,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     if (mode !== 'trace') return
     if (!drawingRef.current) return
     drawingRef.current = false
+    setScrollLock(false)
 
     const svg = svgRef.current
     if (svg?.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId)
@@ -253,7 +298,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   return (
     <section className="write" aria-label="쓰기 연습">
       <div className="write__chrome">
-        <ScriptFontQuickBar track={track} />
+        {hideFontBar ? null : <ScriptFontQuickBar track={track} />}
         <div className="write__head">
           <div className="write__title-row">
             {onClose ? (
@@ -337,7 +382,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                           y2={seg.y2}
                           stroke="white"
                           strokeWidth={seg.width}
-                          strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                          strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       ))}
@@ -350,7 +395,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                           y2={seg.y2}
                           stroke="white"
                           strokeWidth={seg.width}
-                          strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                          strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       ))}
@@ -381,12 +426,44 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                     </mask>
                   </defs>
 
-                  <path className="write__glyph-guide" d={taughtData.d} />
-                  <path
-                    className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                    d={taughtData.d}
-                    mask={`url(#${maskId}-watch)`}
-                  />
+                  {useWatchPathGuide ? (
+                    <>
+                      <path className="write__glyph-guide" d={taughtData.d} />
+                      <path
+                        className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                        d={taughtData.d}
+                        mask={`url(#${maskId}-watch)`}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <text
+                        key={`guide-${watchFontKey}`}
+                        className="write__glyph-guide"
+                        x={glyphX}
+                        y={glyphY}
+                        textAnchor="middle"
+                        lang="sa"
+                        fontSize={158}
+                        style={{ fontFamily: watchFontFamily }}
+                      >
+                        {glyph}
+                      </text>
+                      <text
+                        key={`ink-${watchFontKey}`}
+                        className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                        x={glyphX}
+                        y={glyphY}
+                        textAnchor="middle"
+                        lang="sa"
+                        fontSize={158}
+                        style={{ fontFamily: watchFontFamily }}
+                        mask={`url(#${maskId}-watch)`}
+                      >
+                        {glyph}
+                      </text>
+                    </>
+                  )}
                   <StrokeArrowLayer
                     strokes={taughtData.strokes}
                     revealCount={watchDone ? taughtData.strokes.length : Math.max(activeStep + 1, 1)}
@@ -400,6 +477,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                   x={STROKE_VIEWBOX / 2}
                   y={STROKE_VIEWBOX * 0.7}
                   textAnchor="middle"
+                  fontSize={158}
                   style={{ fontFamily }}
                 >
                   {glyph}
@@ -440,19 +518,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
               <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>
                 <div className="fold-panel__inner">
                   <div className="write__advanced-body">
-                    <div className="write__brush" role="group" aria-label="붓·펜">
-                      {BRUSH_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
-                          title={opt.hint}
-                          tabIndex={advancedOpen ? 0 : -1}
-                          onClick={() => setBrush(setBrushKind(opt.id))}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                    <div className="write__brush" role="group" aria-label="그리기 입력">
                       <button
                         type="button"
                         className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
@@ -460,7 +526,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                         tabIndex={advancedOpen ? 0 : -1}
                         onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
                       >
-                        펜만
+                        Spen 모드
                       </button>
                     </div>
                     <label className="write__sens">
@@ -492,7 +558,31 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
           {watchBlocked ? (
             <p className="write__hint write__hint--warn" role="alert">
-              이 글자의 획이 아직 없습니다. 홈의 「획 기록하기」에서 먼저 획을 그려 저장해 주세요.
+              「{teachInfo.fontLabel}」에는 획이 없습니다
+              {teachInfo.otherFonts.length > 0
+                ? ` (다른 폰트 ${teachInfo.otherFonts.length}개에 기록이 있어요).`
+                : '.'}{' '}
+              홈의 「획 기록하기」에서 이 폰트로 먼저 저장해 주세요.
+            </p>
+          ) : null}
+
+          {mode === 'watch' && !watchBlocked && taughtData ? (
+            <div className="write__font-badge" aria-label={`기록 폰트 ${recordedFontLabel}`}>
+              <span className="write__font-badge-kicker">기록 폰트</span>
+              <strong className="write__font-badge-name">{recordedFontLabel}</strong>
+              <span className="write__font-badge-state is-saved">
+                {taughtData.strokes.length}획
+              </span>
+            </div>
+          ) : null}
+
+          {mode === 'watch' && !watchBlocked && !taughtData ? (
+            <p className="write__hint write__hint--warn" role="status">
+              지금 폰트「{teachInfo.fontLabel}」에는 획이 없습니다
+              {teachInfo.otherFonts.length > 0
+                ? ` · 다른 폰트 ${teachInfo.otherFonts.length}개에 기록이 있어요`
+                : ''}
+              .
             </p>
           ) : null}
 

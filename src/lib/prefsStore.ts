@@ -30,7 +30,7 @@ const DEFAULTS: Prefs = {
   glyphSize: 'md',
   theme: 'system',
   palette: 'study',
-  brush: 'brush',
+  brush: 'pen',
   penOnly: true,
   pressureSens: PRESSURE_SENS_DEFAULT,
 }
@@ -157,13 +157,12 @@ export function setPalettePref(palette: PalettePref): PalettePref {
 }
 
 export function getBrushKind(): BrushKind {
-  return load().brush
+  return 'pen'
 }
 
-export function setBrushKind(brush: BrushKind): BrushKind {
-  const next = isBrushKind(brush) ? brush : DEFAULTS.brush
-  save({ ...load(), brush: next })
-  return next
+export function setBrushKind(_brush: BrushKind): BrushKind {
+  save({ ...load(), brush: 'pen' })
+  return 'pen'
 }
 
 export function getPenOnly(): boolean {

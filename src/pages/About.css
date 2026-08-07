@@ -44,6 +44,8 @@
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--block-shadow);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .about__section h2 {
