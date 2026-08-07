@@ -60,6 +60,10 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const labels = defaultLabels(letterId, track)
   const inkWidth = avgStrokeWidth(generated)
   const outlineD = generated?.d
+  /** UI glyph face — Muktamsiddham for Siddhaṃ (Devanagari codepoints in `glyph`). */
+  const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
+  const glyphX = STROKE_VIEWBOX / 2
+  const glyphY = STROKE_VIEWBOX * 0.7
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)
@@ -113,7 +117,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   }, [letterId, script])
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
-    if (!outlineD || saving) return
+    if (!glyph || saving) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -168,9 +172,10 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   }
 
   async function handleSave() {
-    if (!outlineD || recorded.length === 0 || saving) return
+    if (!glyph || recorded.length === 0 || saving) return
     const count = recorded.length
-    const data = { d: outlineD, strokes: recorded }
+    // Keep a path outline for playback fill when available; UI itself uses the face font.
+    const data = { d: outlineD || `M${glyphX} ${glyphY}`, strokes: recorded }
 
     saveUserStrokes(script, letterId, data)
     refresh()
@@ -279,7 +284,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
         <p className="teach__message teach__message--warn">{cloudError}</p>
       ) : null}
 
-      {outlineD ? (
+      {glyph ? (
         <div className="teach__stage">
           <svg
             ref={svgRef}
@@ -318,8 +323,25 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                 )}
               </mask>
             </defs>
-            <path className="teach__glyph-guide" d={outlineD} />
-            <path className="teach__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
+            <text
+              className="teach__glyph-guide"
+              x={glyphX}
+              y={glyphY}
+              textAnchor="middle"
+              style={{ fontFamily }}
+            >
+              {glyph}
+            </text>
+            <text
+              className="teach__glyph-ink"
+              x={glyphX}
+              y={glyphY}
+              textAnchor="middle"
+              style={{ fontFamily }}
+              mask={`url(#${maskId})`}
+            >
+              {glyph}
+            </text>
             <StrokeArrowLayer strokes={recorded} emphasizeLatest />
           </svg>
 

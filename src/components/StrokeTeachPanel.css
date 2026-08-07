@@ -239,6 +239,13 @@
   cursor: crosshair;
 }
 
+.teach__glyph-guide,
+.teach__glyph-ink {
+  font-size: 148px;
+  dominant-baseline: alphabetic;
+  pointer-events: none;
+}
+
 .teach__glyph-guide {
   fill: color-mix(in srgb, var(--ink) 10%, transparent);
 }
