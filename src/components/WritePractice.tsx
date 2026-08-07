@@ -186,7 +186,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
       cancelled = true
       cancelAnimationFrame(raf)
     }
-  }, [mode, playId, letterId, script, data?.strokes.length, data?.d])
+  }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d])
 
   const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
 
