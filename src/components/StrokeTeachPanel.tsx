@@ -15,17 +15,15 @@ import {
   refreshCloudStore,
 } from '../lib/strokeCloud'
 import {
-  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
   freehandPressureSegments,
   glyphStrokeMaskSegments,
-  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
-import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
+import { getPenOnly, setPenOnly } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './StrokeTeachPanel.css'
@@ -92,7 +90,6 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
-  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [saveAckLow, setSaveAckLow] = useState(false)
 
@@ -479,10 +476,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     error: 'teach__status--warn',
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
-  const recordedMaskSegs = recorded.flatMap((s, i) =>
-    glyphStrokeMaskSegments(s, brush, i * 1000),
-  )
+  const liveSegments = freehandPressureSegments(drawing, inkWidth)
+  const recordedMaskSegs = recorded.flatMap((s, i) => glyphStrokeMaskSegments(s, i * 1000))
   void tick
 
   return (
@@ -510,19 +505,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
               : '글자 위에 바로 그려 주세요'}
       </p>
 
-      <div className="teach__brush" role="group" aria-label="브러시">
-        {BRUSH_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
-            title={opt.hint}
-            disabled={saving}
-            onClick={() => setBrush(setBrushKind(opt.id))}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="teach__brush" role="group" aria-label="입력">
         <button
           type="button"
           className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
@@ -663,7 +646,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                         y2={seg.y2}
                         stroke="white"
                         strokeWidth={seg.width}
-                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     ))}
@@ -676,7 +659,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                         y2={seg.y2}
                         stroke="white"
                         strokeWidth={seg.width}
-                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     ))}
