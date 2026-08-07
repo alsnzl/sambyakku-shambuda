@@ -236,6 +236,36 @@
   border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
 }
 
+.write__sens {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  margin: 0 0 0.55rem;
+}
+
+.write__sens-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.write__sens-label strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.write__sens-range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.write__sens-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
 .write__stroke-ghost {
   fill: none;
   stroke: color-mix(in srgb, var(--accent) 30%, transparent);

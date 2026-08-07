@@ -1,4 +1,9 @@
 import type { BrushKind } from './freehandStroke'
+import {
+  PRESSURE_SENS_DEFAULT,
+  PRESSURE_SENS_MAX,
+  PRESSURE_SENS_MIN,
+} from './freehandStroke'
 
 export type GlyphSize = 'sm' | 'md' | 'lg'
 export type ThemePref = 'light' | 'dark' | 'system'
@@ -14,6 +19,8 @@ type Prefs = {
   brush: BrushKind
   /** Reject finger/palm on teach & write canvases (S Pen / mouse only). */
   penOnly: boolean
+  /** 1 = current default pressure curve. */
+  pressureSens: number
 }
 
 const DEFAULTS: Prefs = {
@@ -21,6 +28,7 @@ const DEFAULTS: Prefs = {
   theme: 'system',
   brush: 'brush',
   penOnly: true,
+  pressureSens: PRESSURE_SENS_DEFAULT,
 }
 
 let systemListener: ((e: MediaQueryListEvent) => void) | null = null
@@ -37,6 +45,11 @@ function isBrushKind(value: unknown): value is BrushKind {
   return value === 'pen' || value === 'brush'
 }
 
+function clampPressureSens(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULTS.pressureSens
+  return Math.min(PRESSURE_SENS_MAX, Math.max(PRESSURE_SENS_MIN, Math.round(value * 100) / 100))
+}
+
 function load(): Prefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -47,6 +60,7 @@ function load(): Prefs {
       theme: isThemePref(parsed.theme) ? parsed.theme : DEFAULTS.theme,
       brush: isBrushKind(parsed.brush) ? parsed.brush : DEFAULTS.brush,
       penOnly: typeof parsed.penOnly === 'boolean' ? parsed.penOnly : DEFAULTS.penOnly,
+      pressureSens: clampPressureSens(parsed.pressureSens),
     }
   } catch {
     return { ...DEFAULTS }
@@ -128,6 +142,16 @@ export function getPenOnly(): boolean {
 export function setPenOnly(penOnly: boolean): boolean {
   save({ ...load(), penOnly })
   return penOnly
+}
+
+export function getPressureSens(): number {
+  return load().pressureSens
+}
+
+export function setPressureSens(value: number): number {
+  const next = clampPressureSens(value)
+  save({ ...load(), pressureSens: next })
+  return next
 }
 
 export function initPrefs() {

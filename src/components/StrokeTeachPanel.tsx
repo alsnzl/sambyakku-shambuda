@@ -17,6 +17,8 @@ import {
 import {
   BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
+  PRESSURE_SENS_MAX,
+  PRESSURE_SENS_MIN,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
@@ -25,7 +27,14 @@ import {
   type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
-import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
+import {
+  getBrushKind,
+  getPenOnly,
+  getPressureSens,
+  setBrushKind,
+  setPenOnly,
+  setPressureSens,
+} from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './StrokeTeachPanel.css'
@@ -94,6 +103,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [watchDone, setWatchDone] = useState(false)
   const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
+  const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
   const [saveAckLow, setSaveAckLow] = useState(false)
 
   const maskId = `${useId()}-teach-mask`
@@ -310,6 +320,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       pointsRef.current,
       labels[index] ?? `획 ${index + 1}`,
       inkWidth,
+      pressureSens,
     )
     pointsRef.current = []
     setDrawing([])
@@ -479,7 +490,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     error: 'teach__status--warn',
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush, pressureSens)
   const recordedMaskSegs = recorded.flatMap((s, i) =>
     glyphStrokeMaskSegments(s, brush, i * 1000),
   )
@@ -533,6 +544,28 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
           펜만
         </button>
       </div>
+
+      <label className="teach__sens">
+        <span className="teach__sens-label">
+          필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+        </span>
+        <input
+          className="teach__sens-range"
+          type="range"
+          min={PRESSURE_SENS_MIN}
+          max={PRESSURE_SENS_MAX}
+          step={0.05}
+          value={pressureSens}
+          disabled={saving}
+          aria-label="필압 민감도"
+          onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+        />
+        <span className="teach__sens-ends" aria-hidden="true">
+          <span>낮음</span>
+          <span>기본 100%</span>
+          <span>높음</span>
+        </span>
+      </label>
 
       <div className="teach__bar teach__bar--simple">
         <button

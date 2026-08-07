@@ -5,6 +5,11 @@ import { clientToSvgPoint, pointsToPathD } from './strokeRecord'
 /** Light / no-pressure freehand brush (SVG user units). */
 export const FREEHAND_INK_WIDTH = 3.2
 
+/** Pressure sensitivity: 1 = current default curve. */
+export const PRESSURE_SENS_DEFAULT = 1
+export const PRESSURE_SENS_MIN = 0.4
+export const PRESSURE_SENS_MAX = 2
+
 export type BrushKind = 'pen' | 'brush'
 
 export const BRUSH_OPTIONS: { id: BrushKind; label: string; hint: string }[] = [
@@ -77,24 +82,34 @@ export function readPointerPressure(e: PointerEvent): number | null {
 
 /**
  * Map pressure → brush width.
- * Light tip stays thin; firm press opens a wide range (high sensitivity).
+ * `sensitivity` 1 = current default curve; higher = wider soft→hard range.
  */
-export function pressureToWidth(pressure: number | null, baseWidth: number): number {
+export function pressureToWidth(
+  pressure: number | null,
+  baseWidth: number,
+  sensitivity = 1,
+): number {
   if (pressure == null) return baseWidth
+  const s = Math.min(PRESSURE_SENS_MAX, Math.max(PRESSURE_SENS_MIN, sensitivity))
   const t = Math.min(1, Math.max(0, pressure))
-  // Soft ≈ 0.55× base, hard ≈ 5× base
-  const minMul = 0.55
-  const maxMul = 5
-  const curved = t ** 0.62
+  // s=1 → min 0.55, max 5, gamma 0.62 (current baseline)
+  const minMul = Math.min(0.9, Math.max(0.3, 0.55 + (1 - s) * 0.25))
+  const maxMul = Math.min(9, Math.max(1.8, 5 * s))
+  const gamma = 0.62 / s
+  const curved = t ** gamma
   return r2(baseWidth * (minMul + (maxMul - minMul) * curved))
 }
 
-export function averagePressureWidth(points: FreehandPoint[], baseWidth: number): number {
+export function averagePressureWidth(
+  points: FreehandPoint[],
+  baseWidth: number,
+  sensitivity = 1,
+): number {
   const samples = points.map((pt) => pt.p).filter((p): p is number => p != null)
   if (!samples.length) return baseWidth
   const sorted = [...samples].sort((a, b) => a - b)
   const pick = sorted[Math.floor(sorted.length * 0.62)] ?? sorted[sorted.length - 1]
-  return pressureToWidth(pick, baseWidth)
+  return pressureToWidth(pick, baseWidth, sensitivity)
 }
 
 export function simplifyFreehand(points: FreehandPoint[], minDist = 2): FreehandPoint[] {
@@ -128,13 +143,14 @@ export function commitFreehandStroke(
   points: FreehandPoint[],
   label: string,
   baseWidth = FREEHAND_INK_WIDTH,
+  sensitivity = 1,
 ): GlyphStroke | null {
   const pts = simplifyFreehand(points, 2)
   if (pts.length < 2) return null
   const xy = pts.map((pt) => [pt.x, pt.y] as [number, number])
   return {
     d: pointsToPathD(xy),
-    width: averagePressureWidth(pts, baseWidth),
+    width: averagePressureWidth(pts, baseWidth, sensitivity),
     length: r2(Math.max(polyLength(pts), 1)),
     label,
   }
@@ -153,6 +169,7 @@ export function freehandPressureSegments(
   points: FreehandPoint[],
   baseWidth: number,
   brush: BrushKind = 'brush',
+  sensitivity = 1,
 ): PressureSegment[] {
   if (points.length < 2) return []
   const total = Math.max(polyLength(points), 1e-6)
@@ -164,7 +181,7 @@ export function freehandPressureSegments(
     const segLen = dist(prev, pt)
     const mid = (traveled + segLen * 0.5) / total
     traveled += segLen
-    const pressW = pressureToWidth(pt.p ?? prev.p, baseWidth)
+    const pressW = pressureToWidth(pt.p ?? prev.p, baseWidth, sensitivity)
     segs.push({
       i,
       x1: prev.x,

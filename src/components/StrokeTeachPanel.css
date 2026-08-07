@@ -191,6 +191,36 @@
   cursor: not-allowed;
 }
 
+.teach__sens {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  margin: 0 0 0.55rem;
+}
+
+.teach__sens-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.teach__sens-label strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.teach__sens-range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.teach__sens-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
 .teach__svg--watch {
   touch-action: none;
   cursor: pointer;

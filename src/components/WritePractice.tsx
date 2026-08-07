@@ -11,6 +11,8 @@ import {
 import {
   BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
+  PRESSURE_SENS_MAX,
+  PRESSURE_SENS_MIN,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
@@ -19,7 +21,14 @@ import {
   type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
-import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
+import {
+  getBrushKind,
+  getPenOnly,
+  getPressureSens,
+  setBrushKind,
+  setPenOnly,
+  setPressureSens,
+} from '../lib/prefsStore'
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
@@ -61,6 +70,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [watchBlocked, setWatchBlocked] = useState(false)
   const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
+  const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
@@ -243,6 +253,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
       pointsRef.current,
       steps[index] ?? `획 ${index + 1}`,
       inkWidth,
+      pressureSens,
     )
     pointsRef.current = []
     setDrawing([])
@@ -281,7 +292,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     recordWriteScore(track, letterId, result.average)
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush, pressureSens)
   const drawnMaskSegs = drawn.flatMap((s, i) => glyphStrokeMaskSegments(s, brush, i * 1000))
 
   return (
@@ -364,27 +375,49 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
       </div>
 
       {mode === 'trace' ? (
-        <div className="write__brush" role="group" aria-label="브러시">
-          {BRUSH_OPTIONS.map((opt) => (
+        <>
+          <div className="write__brush" role="group" aria-label="브러시">
+            {BRUSH_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+                title={opt.hint}
+                onClick={() => setBrush(setBrushKind(opt.id))}
+              >
+                {opt.label}
+              </button>
+            ))}
             <button
-              key={opt.id}
               type="button"
-              className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
-              title={opt.hint}
-              onClick={() => setBrush(setBrushKind(opt.id))}
+              className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
+              title="손바닥·손가락 입력 무시 (S Pen만)"
+              onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
             >
-              {opt.label}
+              펜만
             </button>
-          ))}
-          <button
-            type="button"
-            className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
-            title="손바닥·손가락 입력 무시 (S Pen만)"
-            onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
-          >
-            펜만
-          </button>
-        </div>
+          </div>
+          <label className="write__sens">
+            <span className="write__sens-label">
+              필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+            </span>
+            <input
+              className="write__sens-range"
+              type="range"
+              min={PRESSURE_SENS_MIN}
+              max={PRESSURE_SENS_MAX}
+              step={0.05}
+              value={pressureSens}
+              aria-label="필압 민감도"
+              onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+            />
+            <span className="write__sens-ends" aria-hidden="true">
+              <span>낮음</span>
+              <span>기본 100%</span>
+              <span>높음</span>
+            </span>
+          </label>
+        </>
       ) : null}
 
       {watchBlocked ? (
