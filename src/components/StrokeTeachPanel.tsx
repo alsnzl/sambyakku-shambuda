@@ -631,15 +631,6 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                   </>
                 )}
               </svg>
-
-              {mode === 'draw' ? (
-                <StrokeHistoryRail
-                  undoDisabled={recorded.length === 0 || saving}
-                  redoDisabled={redoStack.length === 0 || saving}
-                  onUndo={undoStroke}
-                  onRedo={redoStroke}
-                />
-              ) : null}
             </div>
           ) : (
             <p className="teach__message teach__message--warn">
@@ -649,6 +640,15 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
         </div>
 
         <div className="teach__rail">
+          {mode === 'draw' ? (
+            <StrokeHistoryRail
+              undoDisabled={recorded.length === 0 || saving}
+              redoDisabled={redoStack.length === 0 || saving}
+              onUndo={undoStroke}
+              onRedo={redoStroke}
+            />
+          ) : null}
+
           <div className="teach__bar teach__bar--primary">
             <button
               type="button"

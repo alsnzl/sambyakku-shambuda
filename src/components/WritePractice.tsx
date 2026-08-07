@@ -449,23 +449,23 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 </text>
               )}
             </svg>
-
-            {mode === 'trace' ? (
-              <StrokeHistoryRail
-                undoDisabled={drawn.length === 0 || traceDone}
-                redoDisabled={
-                  redoStack.length === 0 ||
-                  traceDone ||
-                  (theoryCount > 0 && drawn.length >= theoryCount)
-                }
-                onUndo={undoStroke}
-                onRedo={redoStroke}
-              />
-            ) : null}
           </div>
         </div>
 
         <div className="write__rail">
+          {mode === 'trace' ? (
+            <StrokeHistoryRail
+              undoDisabled={drawn.length === 0 || traceDone}
+              redoDisabled={
+                redoStack.length === 0 ||
+                traceDone ||
+                (theoryCount > 0 && drawn.length >= theoryCount)
+              }
+              onUndo={undoStroke}
+              onRedo={redoStroke}
+            />
+          ) : null}
+
           {mode === 'trace' ? (
             <details className="write__advanced">
               <summary className="write__advanced-summary">그리기 설정</summary>
