@@ -92,10 +92,43 @@
   color: var(--muted);
 }
 
+.teach__status--warn {
+  background: var(--clay-wash);
+  border-color: color-mix(in srgb, var(--clay) 30%, transparent);
+  color: var(--ink-soft);
+}
+
+.teach__status-dot {
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+  vertical-align: 0.05rem;
+}
+
+.teach__status--official .teach__status-dot {
+  background: var(--moss);
+}
+
+.teach__status--draft .teach__status-dot {
+  background: var(--accent);
+}
+
+.teach__status--warn .teach__status-dot {
+  background: var(--clay);
+}
+
 .teach__meta {
-  margin: 0.55rem 0 0.7rem;
+  margin: 0.35rem 0 0.65rem;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.teach__bar--simple {
+  margin-bottom: 0.55rem;
 }
 
 .teach__actions,
@@ -175,6 +208,11 @@
   background: var(--teal-wash);
   border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--ink-soft);
+}
+
+.teach__message--warn {
+  background: var(--clay-wash);
+  border-color: color-mix(in srgb, var(--clay) 28%, transparent);
 }
 
 .teach__stage {
