@@ -39,7 +39,7 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   const path = getPathSnapshot()
   const openPetals = path.petals.filter(Boolean).length
   const feed = getHomeFeed()
-  const [feedOpen, setFeedOpen] = useState(true)
+  const [feedOpen, setFeedOpen] = useState(false)
 
   function openFeedTarget(target: (typeof feed)[number]['target']) {
     if (target.type === 'global') {
@@ -59,14 +59,34 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
       <header className="home__hero home__hero--gate">
         <h1 className="home__brand">삼뱌꾸샴붓다</h1>
         <p className="home__lead">산스크리트 · 실담 자모</p>
+        <p className="home__hero-hint">글자를 보고, 듣고, 따라 써 보세요.</p>
         <button type="button" className="home__about motion-press" onClick={onAbout}>
-          산스크리트 · 실담이 뭔가요?
+          이게 뭔가요?
         </button>
       </header>
 
       <button
         type="button"
-        className="home__card home__card--path motion-press"
+        className="home__card home__card--learn home__card--primary motion-press"
+        onClick={() => onOpenGlobal('tracks')}
+      >
+        <div className="home__card-top">
+          <div>
+            <p className="home__card-kicker">시작하기</p>
+            <p className="home__card-title">글자 배우기</p>
+          </div>
+          <span className="home__card-glyphs" lang="sa" aria-hidden="true">
+            <span className="home__card-glyphs-deva">अ</span>
+            <span className="home__card-glyphs-siddham">अ</span>
+          </span>
+        </div>
+        <p className="home__card-verse">산스크리트와 실담 글자를 고르고 학습합니다.</p>
+        <p className="home__card-cta">글자 고르기 →</p>
+      </button>
+
+      <button
+        type="button"
+        className="home__card home__card--path home__card--secondary motion-press"
         onClick={() => onOpenGlobal('path')}
       >
         <p className="home__card-kicker">수행 길</p>
@@ -90,30 +110,9 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         {path.dueHint ? <p className="home__card-hint">{path.dueHint}</p> : null}
       </button>
 
-      <button
-        type="button"
-        className="home__card home__card--learn motion-press"
-        onClick={() => onOpenGlobal('tracks')}
-      >
-        <div className="home__card-top">
-          <div>
-            <p className="home__card-kicker">학습하기</p>
-            <p className="home__card-title">산스크리트 · 실담</p>
-          </div>
-          <span className="home__card-glyphs" lang="sa" aria-hidden="true">
-            <span className="home__card-glyphs-deva">अ</span>
-            <span className="home__card-glyphs-siddham">अ</span>
-          </span>
-        </div>
-        <p className="home__card-verse">
-          데바나가리와 Siddhaṃ을 트랙별로 보고, 쓰고, 복습합니다.
-        </p>
-        <p className="home__card-cta">트랙 선택 →</p>
-      </button>
-
       <section
         className={`home__feed ${feedOpen ? 'is-open' : 'is-collapsed'}`}
-        aria-label="오늘의 피드"
+        aria-label="오늘의 추천"
       >
         <button
           type="button"
@@ -126,11 +125,11 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
               {feedOpen ? '▾' : '▸'}
             </span>
             <span>
-              <span className="home__feed-toggle-title">오늘의 인연</span>
+              <span className="home__feed-toggle-title">오늘의 추천</span>
               <span className="home__feed-toggle-sub">
                 {feedOpen
-                  ? '가볍게 훑어보고, 끌리는 것만 눌러 보세요.'
-                  : `${feed.length}개의 인연 · 눌러서 펼치기`}
+                  ? '원하는 것만 눌러 보세요.'
+                  : `${feed.length}개 · 눌러서 펼치기`}
               </span>
             </span>
           </span>
@@ -173,7 +172,7 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         onClick={() => onOpenGlobal('settings')}
       >
         <span className="home__settings-entry-title">설정</span>
-        <span className="home__settings-entry-sub">글자 크기 · 다크 모드</span>
+        <span className="home__settings-entry-sub">글자 크기 · 화면 밝기 · 클라우드 토큰</span>
       </button>
     </main>
   )

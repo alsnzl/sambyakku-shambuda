@@ -61,6 +61,11 @@
   /* Script / learning glyph scale (Home 글자 크기). UI chrome stays fixed. */
   --glyph-scale: 1;
 
+  /* Phone-first shell; landscape tablet overrides in styles/landscape.css */
+  --shell-max: 28rem;
+  --canvas-max: 280px;
+  --stage-max: 22.5rem;
+
   font-family: var(--sans);
   font-size: 16px;
   line-height: 1.65;

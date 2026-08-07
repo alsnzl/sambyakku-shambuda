@@ -266,6 +266,45 @@
   color: var(--muted);
 }
 
+.write__advanced {
+  margin: 0 0 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
+}
+
+.write__advanced-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--ink-soft);
+  user-select: none;
+}
+
+.write__advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.write__advanced-summary::before {
+  content: '▸ ';
+  color: var(--muted);
+}
+
+.write__advanced[open] .write__advanced-summary::before {
+  content: '▾ ';
+}
+
+.write__advanced-body {
+  padding: 0 0.85rem 0.75rem;
+}
+
+.write__advanced-body .write__brush,
+.write__advanced-body .write__sens {
+  margin-bottom: 0.45rem;
+}
+
 .write__stroke-ghost {
   fill: none;
   stroke: color-mix(in srgb, var(--accent) 30%, transparent);
@@ -304,7 +343,7 @@
 
 .write__svg {
   width: 100%;
-  max-width: 280px;
+  max-width: var(--canvas-max);
   margin: 0 auto;
   aspect-ratio: 1;
   display: block;

@@ -13,6 +13,8 @@ import './TheoryTipPanel.css'
 
 type Props = {
   letterId: string
+  /** When false, tip is read-only (learner view). Default true. */
+  editable?: boolean
 }
 
 const sourceLabel: Record<TheoryTipSource, string> = {
@@ -22,7 +24,7 @@ const sourceLabel: Record<TheoryTipSource, string> = {
   empty: '없음',
 }
 
-export function TheoryTipPanel({ letterId }: Props) {
+export function TheoryTipPanel({ letterId, editable = true }: Props) {
   const [tick, setTick] = useState(0)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -107,34 +109,36 @@ export function TheoryTipPanel({ letterId }: Props) {
       <div className="theory-tip__head">
         <h4>이론 · 쓰기 팁</h4>
         <div className="theory-tip__head-actions">
-          {!editing ? (
+          {editable && !editing ? (
             <span className={`theory-tip__badge theory-tip__badge--${tip.source}`}>
               {sourceLabel[tip.source]}
             </span>
           ) : null}
-          <button
-            type="button"
-            className="theory-tip__edit motion-press"
-            onClick={editing ? cancelEdit : startEdit}
-            disabled={saving}
-            aria-label={editing ? '편집 취소' : '이론·쓰기 팁 편집'}
-            title={editing ? '취소' : '편집'}
-          >
-            {editing ? (
-              '닫기'
-            ) : (
-              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.99-1.66z"
-                />
-              </svg>
-            )}
-          </button>
+          {editable ? (
+            <button
+              type="button"
+              className="theory-tip__edit motion-press"
+              onClick={editing ? cancelEdit : startEdit}
+              disabled={saving}
+              aria-label={editing ? '편집 취소' : '이론·쓰기 팁 편집'}
+              title={editing ? '취소' : '편집'}
+            >
+              {editing ? (
+                '닫기'
+              ) : (
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.99-1.66z"
+                  />
+                </svg>
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {editing ? (
+      {editable && editing ? (
         <div className="theory-tip__editor">
           <textarea
             className="theory-tip__textarea"
@@ -177,7 +181,7 @@ export function TheoryTipPanel({ letterId }: Props) {
         <p className="theory-tip__body">{tip.text}</p>
       ) : (
         <p className="theory-tip__body theory-tip__body--empty">
-          아직 팁이 없습니다. 편집 아이콘으로 추가할 수 있어요.
+          {editable ? '아직 팁이 없습니다. 편집 아이콘으로 추가할 수 있어요.' : '아직 팁이 없습니다.'}
         </p>
       )}
 

@@ -100,16 +100,16 @@ function TrackCard({
         className="home__btn home__btn--primary home__btn--block motion-press"
         onClick={() => onOpen(track, 'learn')}
       >
-        학습 시작
+        글자 배우기
       </button>
 
       <div className="home__track-links">
         <button type="button" className="home__link motion-press" onClick={() => onOpen(track, 'practice')}>
-          연습
+          따라 쓰기
         </button>
         <span aria-hidden="true">·</span>
         <button type="button" className="home__link motion-press" onClick={() => onOpen(track, 'chart')}>
-          전체 문자
+          글자표
         </button>
       </div>
 
@@ -176,9 +176,9 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
         <button type="button" className="home__tracks-back motion-press" onClick={onBack}>
           ← 홈
         </button>
-        <h1>학습하기</h1>
+        <h1>글자 고르기</h1>
       </header>
-      <p className="home__tracks-lead">문자를 고르고, 학습부터 시작해 보세요.</p>
+      <p className="home__tracks-lead">먼저 산스크리트 또는 실담을 고른 뒤, 글자를 배워 보세요.</p>
 
       <TrackCard
         track="sanskrit"

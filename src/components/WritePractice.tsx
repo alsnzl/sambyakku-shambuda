@@ -5,7 +5,6 @@ import type { GlyphStroke } from '../data/glyphStrokes'
 import {
   defaultLabels,
   getEffectiveGlyphStrokes,
-  getStrokeSource,
   getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
@@ -74,7 +73,6 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
-  const strokeSource = getStrokeSource(letterId, script)
   const steps =
     theoryStrokes.map((s) => s.label).filter(Boolean).length > 0
       ? theoryStrokes.map((s) => s.label)
@@ -342,7 +340,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 onClick={undoStroke}
                 aria-label="이전 획 취소"
               >
-                ← 뒤로
+                ← 취소
               </button>
               <button
                 type="button"
@@ -355,7 +353,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 onClick={redoStroke}
                 aria-label="취소한 획 다시"
               >
-                앞으로 →
+                되돌리기
               </button>
               <button type="button" className="write__replay motion-press" onClick={resetTrace}>
                 다시
@@ -375,65 +373,64 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
       </div>
 
       {mode === 'trace' ? (
-        <>
-          <div className="write__brush" role="group" aria-label="브러시">
-            {BRUSH_OPTIONS.map((opt) => (
+        <details className="write__advanced">
+          <summary className="write__advanced-summary">그리기 설정</summary>
+          <div className="write__advanced-body">
+            <div className="write__brush" role="group" aria-label="붓·펜">
+              {BRUSH_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+                  title={opt.hint}
+                  onClick={() => setBrush(setBrushKind(opt.id))}
+                >
+                  {opt.label}
+                </button>
+              ))}
               <button
-                key={opt.id}
                 type="button"
-                className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
-                title={opt.hint}
-                onClick={() => setBrush(setBrushKind(opt.id))}
+                className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
+                title="손바닥·손가락 입력 무시 (S Pen만)"
+                onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
               >
-                {opt.label}
+                펜만
               </button>
-            ))}
-            <button
-              type="button"
-              className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
-              title="손바닥·손가락 입력 무시 (S Pen만)"
-              onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
-            >
-              펜만
-            </button>
+            </div>
+            <label className="write__sens">
+              <span className="write__sens-label">
+                필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+              </span>
+              <input
+                className="write__sens-range"
+                type="range"
+                min={PRESSURE_SENS_MIN}
+                max={PRESSURE_SENS_MAX}
+                step={0.05}
+                value={pressureSens}
+                aria-label="필압 민감도"
+                onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+              />
+              <span className="write__sens-ends" aria-hidden="true">
+                <span>낮음</span>
+                <span>기본 100%</span>
+                <span>높음</span>
+              </span>
+            </label>
           </div>
-          <label className="write__sens">
-            <span className="write__sens-label">
-              필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-            </span>
-            <input
-              className="write__sens-range"
-              type="range"
-              min={PRESSURE_SENS_MIN}
-              max={PRESSURE_SENS_MAX}
-              step={0.05}
-              value={pressureSens}
-              aria-label="필압 민감도"
-              onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-            />
-            <span className="write__sens-ends" aria-hidden="true">
-              <span>낮음</span>
-              <span>기본 100%</span>
-              <span>높음</span>
-            </span>
-          </label>
-        </>
+        </details>
       ) : null}
 
       {watchBlocked ? (
         <p className="write__hint write__hint--warn" role="alert">
-          이 글자의 획이 아직 가르쳐지지 않았습니다. 아래에서 「획 가르치기」로 이론값을 먼저
-          저장해 주세요.
+          이 글자의 획이 아직 없습니다. 위쪽 「가르치기」 탭에서 먼저 획을 그려 저장해 주세요.
         </p>
       ) : null}
 
       {mode === 'trace' && !traceDone && (
         <p className="write__hint">
-          이론값 순서대로 획을 쓰세요
+          순서대로 따라 쓰세요
           {theoryCount > 0 ? ` (${drawn.length}/${theoryCount})` : ''}.
-          {strokeSource === 'generated'
-            ? ' 자동 획 기준입니다. 이론값을 가르치며 저장하면 더 정확한 채점이 됩니다.'
-            : ' 형태·순서·방향을 함께 채점합니다.'}{' '}
           다 쓴 뒤 「채점」을 누르세요.
         </p>
       )}

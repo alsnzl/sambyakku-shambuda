@@ -34,6 +34,73 @@
   letter-spacing: 0.03em;
 }
 
+.letter-card__modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0.35rem;
+  padding: 0.25rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  border: 1px solid var(--line);
+}
+
+.letter-card__mode {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius) - 2px);
+  min-height: 2.55rem;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.letter-card__mode.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  box-shadow: 0 1px 4px var(--shadow);
+}
+
+.letter-card__teach {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  text-align: left;
+  padding-top: 0.25rem;
+}
+
+.letter-card__teach-lead {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.letter-card__teach-glyph {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  padding: 0.35rem 0.15rem;
+}
+
+.letter-card__teach-glyph .letter-card__hero--deva,
+.letter-card__teach-glyph .letter-card__hero--siddham {
+  font-size: calc(2.4rem * var(--glyph-scale));
+  line-height: 1;
+  padding: 0;
+}
+
+.letter-card__teach-iast {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
 .letter-card__fav {
   appearance: none;
   border: 1px solid var(--line);
@@ -63,23 +130,23 @@
 
 .letter-card__stage {
   display: grid;
-  grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem;
+  grid-template-columns: 2.85rem minmax(0, 1fr) 2.85rem;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   width: 100%;
-  max-width: 22.5rem;
+  max-width: var(--stage-max);
 }
 
 .letter-card__side-nav {
   appearance: none;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.85rem;
+  height: 2.85rem;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: 1.55rem;
+  font-size: 1.7rem;
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
@@ -101,7 +168,7 @@
 .letter-card__hero-frame {
   container-type: inline-size;
   width: 100%;
-  max-width: 280px;
+  max-width: var(--canvas-max);
   aspect-ratio: 1;
   margin: 0 auto;
   display: flex;
@@ -116,7 +183,7 @@
 
 .letter-card__stage .write {
   width: 100%;
-  max-width: 280px;
+  max-width: var(--canvas-max);
   margin: 0 auto;
 }
 
@@ -161,11 +228,12 @@
   appearance: none;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: 0.7rem 1.35rem;
+  padding: 0.8rem 1.45rem;
+  min-height: 2.7rem;
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   cursor: pointer;
 }
 
@@ -177,11 +245,12 @@
   appearance: none;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 0.7rem 1.3rem;
+  padding: 0.8rem 1.35rem;
+  min-height: 2.7rem;
   background: var(--chip);
   color: var(--ink);
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.98rem;
   cursor: pointer;
 }
 
@@ -238,15 +307,6 @@
   font-family: var(--siddham);
   font-size: calc(1.35rem * var(--glyph-scale));
   color: var(--ink);
-}
-
-.letter-card__script-label {
-  margin: 0 0 0.2rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.03em;
-  text-align: center;
 }
 
 .letter-card__meta {

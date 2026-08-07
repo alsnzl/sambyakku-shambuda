@@ -62,20 +62,6 @@ const MIN_STROKE_MS = 220
 const LIFT_MS = 55
 const glide = (t: number) => 1 - (1 - t) ** 1.25
 
-function formatWhen(iso: string | null) {
-  if (!iso) return ''
-  try {
-    return new Date(iso).toLocaleString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return iso
-  }
-}
-
 export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const generated = getGlyphStrokes(letterId, script)
@@ -105,6 +91,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
   const [saveAckLow, setSaveAckLow] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const maskId = `${useId()}-teach-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -499,7 +486,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   return (
     <section className="teach is-open" aria-label="획 가르치기">
       <div className="teach__head">
-        <h3>획 가르치기</h3>
+        <h3>획 그리기</h3>
         <span
           className={`teach__status ${statusClass[cloudStatus]}`}
           title={cloudError ?? cloudRepoLabel()}
@@ -512,80 +499,16 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       <p className="teach__meta">
         {mode === 'watch'
           ? watchDone
-            ? '재생 완료 · 캔버스를 누르면 다시 그릴 수 있어요'
+            ? '재생 끝 · 화면을 누르면 다시 그릴 수 있어요'
             : `${previewStrokes.length}획 재생 중`
           : recorded.length > 0
-            ? `${recorded.length}획 그리는 중`
+            ? `${recorded.length}획 · 이름을 고쳐도 돼요`
             : info.strokeCount > 0
-              ? `${info.strokeCount}획 · ${formatWhen(info.savedAt) || '저장됨'}`
-              : '글자 위에 바로 그려 주세요'}
+              ? `저장된 획 ${info.strokeCount}개 · 불러오기로 수정`
+              : '글자 위에 손가락이 아닌 펜으로 그려 주세요'}
       </p>
 
-      <div className="teach__brush" role="group" aria-label="브러시">
-        {BRUSH_OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
-            title={opt.hint}
-            disabled={saving}
-            onClick={() => setBrush(setBrushKind(opt.id))}
-          >
-            {opt.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
-          title="손바닥·손가락 입력 무시 (S Pen만)"
-          disabled={saving}
-          onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
-        >
-          펜만
-        </button>
-      </div>
-
-      <label className="teach__sens">
-        <span className="teach__sens-label">
-          필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
-        </span>
-        <input
-          className="teach__sens-range"
-          type="range"
-          min={PRESSURE_SENS_MIN}
-          max={PRESSURE_SENS_MAX}
-          step={0.05}
-          value={pressureSens}
-          disabled={saving}
-          aria-label="필압 민감도"
-          onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
-        />
-        <span className="teach__sens-ends" aria-hidden="true">
-          <span>낮음</span>
-          <span>기본 100%</span>
-          <span>높음</span>
-        </span>
-      </label>
-
-      <div className="teach__bar teach__bar--simple">
-        <button
-          type="button"
-          className="teach__btn"
-          disabled={recorded.length === 0 || saving}
-          onClick={undoStroke}
-          aria-label="이전 획 취소"
-        >
-          ← 뒤로
-        </button>
-        <button
-          type="button"
-          className="teach__btn"
-          disabled={redoStack.length === 0 || saving}
-          onClick={redoStroke}
-          aria-label="취소한 획 다시"
-        >
-          앞으로 →
-        </button>
+      <div className="teach__bar teach__bar--primary">
         <button
           type="button"
           className="teach__btn teach__btn--primary"
@@ -596,6 +519,35 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
         </button>
         <button
           type="button"
+          className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
+          disabled={!canWatch || saving}
+          onClick={handleWatch}
+        >
+          {mode === 'watch' ? '다시 보기' : '보기'}
+        </button>
+        <button
+          type="button"
+          className="teach__btn"
+          disabled={recorded.length === 0 || saving}
+          onClick={undoStroke}
+          aria-label="이전 획 취소"
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          className="teach__btn"
+          disabled={redoStack.length === 0 || saving}
+          onClick={redoStroke}
+          aria-label="취소한 획 다시"
+        >
+          되돌리기
+        </button>
+      </div>
+
+      <div className="teach__bar teach__bar--secondary">
+        <button
+          type="button"
           className="teach__btn"
           disabled={!canLoadSaved || saving}
           onClick={handleLoad}
@@ -604,15 +556,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
           불러오기
         </button>
         <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
-          새로
-        </button>
-        <button
-          type="button"
-          className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
-          disabled={!canWatch || saving}
-          onClick={handleWatch}
-        >
-          {mode === 'watch' ? '다시 보기' : '보기'}
+          비우기
         </button>
       </div>
 
@@ -780,6 +724,61 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       ) : (
         <p className="teach__message teach__message--warn">이 글자는 그리기 윤곽을 불러올 수 없습니다.</p>
       )}
+
+      <details
+        className="teach__advanced"
+        open={advancedOpen}
+        onToggle={(e) => setAdvancedOpen((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="teach__advanced-summary">그리기 설정</summary>
+        <div className="teach__advanced-body">
+          <div className="teach__brush" role="group" aria-label="붓·펜">
+            {BRUSH_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
+                title={opt.hint}
+                disabled={saving}
+                onClick={() => setBrush(setBrushKind(opt.id))}
+              >
+                {opt.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
+              title="손바닥·손가락 입력 무시 (S Pen만)"
+              disabled={saving}
+              onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+            >
+              펜만
+            </button>
+          </div>
+
+          <label className="teach__sens">
+            <span className="teach__sens-label">
+              필압 민감도 <strong>{Math.round(pressureSens * 100)}%</strong>
+            </span>
+            <input
+              className="teach__sens-range"
+              type="range"
+              min={PRESSURE_SENS_MIN}
+              max={PRESSURE_SENS_MAX}
+              step={0.05}
+              value={pressureSens}
+              disabled={saving}
+              aria-label="필압 민감도"
+              onChange={(e) => setPressureSensState(setPressureSens(Number(e.target.value)))}
+            />
+            <span className="teach__sens-ends" aria-hidden="true">
+              <span>낮음</span>
+              <span>기본 100%</span>
+              <span>높음</span>
+            </span>
+          </label>
+        </div>
+      </details>
     </section>
   )
 }

@@ -49,6 +49,15 @@
   line-height: 1.45;
 }
 
+.home__hero-hint {
+  margin: 0.55rem auto 0;
+  max-width: 18rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .home__about {
   appearance: none;
   display: inline-flex;
@@ -121,6 +130,30 @@
 
 .home__card:active {
   transform: scale(0.985);
+}
+
+.home__card--primary {
+  padding: 1.35rem 1.25rem 1.25rem;
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--block-border));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75) inset, 0 16px 32px var(--shadow-lift);
+}
+
+.home__card--primary .home__card-title {
+  font-size: clamp(1.45rem, 5.5vw, 1.7rem);
+}
+
+.home__card--primary .home__card-cta {
+  margin-top: 0.85rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.home__card--secondary {
+  opacity: 0.96;
+}
+
+.home__card--secondary .home__card-title {
+  font-size: 1.15rem;
 }
 
 .home__card--path {
