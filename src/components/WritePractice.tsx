@@ -32,6 +32,7 @@ import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
+import { ScriptFontQuickBar } from './ScriptFontQuickBar'
 import './WritePractice.css'
 
 type Props = {
@@ -298,6 +299,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   return (
     <section className="write" aria-label="쓰기 연습">
       <div className="write__chrome">
+        <ScriptFontQuickBar track={track} />
         <div className="write__head">
           <div className="write__title-row">
             {onClose ? (
@@ -442,7 +444,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 <text
                   className="write__glyph-fallback"
                   x={STROKE_VIEWBOX / 2}
-                  y={STROKE_VIEWBOX * 0.72}
+                  y={STROKE_VIEWBOX * 0.7}
                   textAnchor="middle"
                   style={{ fontFamily }}
                 >

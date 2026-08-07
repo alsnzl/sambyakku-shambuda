@@ -1,0 +1,108 @@
+.script-font-bar {
+  margin: 0 0 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 78%, var(--paper));
+  overflow: hidden;
+}
+
+.script-font-bar__toggle {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.script-font-bar__toggle-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.script-font-bar__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.script-font-bar__current {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.script-font-bar__count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--teal);
+}
+
+.script-font-bar__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 0.55rem 0.6rem;
+}
+
+.script-font-bar__opt {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.script-font-bar__opt.is-active {
+  border-color: color-mix(in srgb, var(--teal) 45%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 22%, transparent);
+  background: color-mix(in srgb, var(--teal-wash) 55%, var(--paper));
+}
+
+.script-font-bar__opt:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.script-font-bar__sample {
+  flex-shrink: 0;
+  width: 2rem;
+  font-size: 1.35rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--ink);
+}
+
+.script-font-bar__opt-label {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.script-font-bar__opt.is-active .script-font-bar__opt-label {
+  color: var(--ink);
+  font-weight: 700;
+}

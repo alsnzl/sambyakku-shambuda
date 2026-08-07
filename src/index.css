@@ -42,7 +42,7 @@
   --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
   --sans: 'Noto Sans KR', sans-serif;
   --deva: 'Noto Sans Devanagari', sans-serif;
-  /* UI Siddhaṃ: Muktamsiddham (shapes on Devanagari codepoints). */
+  /* UI Siddhaṃ default: Muktamsiddham (Devanagari codepoints). Switchable in settings. */
   --siddham: 'Muktamsiddham', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 

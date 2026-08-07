@@ -11,6 +11,7 @@ import {
 import { getSimilarLetters } from '../data/similarLetters'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { WritePractice } from './WritePractice'
 import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
@@ -34,6 +35,7 @@ export function LetterCard({
   hasPrev = false,
   hasNext = false,
 }: Props) {
+  useScriptFontEpoch()
   const glyph = glyphForTrack(letter, track)
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)

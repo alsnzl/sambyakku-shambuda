@@ -1,9 +1,18 @@
 /**
- * Per-device custom Devanagari / Siddham UI fonts (OTF/TTF).
- * Siddham slot still uses Devanagari codepoints (same contract as Muktamsiddham).
+ * Per-device script font selection.
+ * - Devanagari: Noto Sans Devanagari | user upload
+ * - Siddham: Muktamsiddham | Noto Sans Siddham | user upload
+ *
+ * Siddham UI strings are Devanagari codepoints except when Noto Sans Siddham
+ * is active (then Unicode Siddham U+11580+ is used). Stroke *order* always
+ * comes from taught/generated path data — fonts only change the face.
  */
 
 export type ScriptFontSlot = 'deva' | 'siddham'
+
+export type DevaFontChoice = 'noto-deva' | 'user'
+export type SiddhamFontChoice = 'muktam' | 'noto-siddham' | 'user'
+export type ScriptFontChoice = DevaFontChoice | SiddhamFontChoice
 
 export type ScriptFontMeta = {
   fileName: string
@@ -30,14 +39,18 @@ export class ScriptFontError extends Error {
 }
 
 export const SCRIPT_FONT_MAX_BYTES = 8 * 1024 * 1024
+/** Devanagari-codepoint sample (Noto Deva, Muktam, user uploads). */
 export const SCRIPT_FONT_SAMPLE = 'अ आ क'
+/** Unicode Siddham sample for Noto Sans Siddham preview. */
+export const SCRIPT_FONT_SAMPLE_UNICODE_SIDDHAM = '𑖀 𑖁 𑖎'
 
 const DB_NAME = 'sambyakku-script-fonts-v1'
 const DB_VERSION = 1
 const STORE = 'fonts'
 const META_KEY = 'sambyakku-script-font-meta-v1'
+const CHOICE_KEY = 'sambyakku-script-font-choice-v1'
 
-const FAMILY: Record<ScriptFontSlot, string> = {
+const USER_FAMILY: Record<ScriptFontSlot, string> = {
   deva: 'User Devanagari',
   siddham: 'User Siddham',
 }
@@ -47,14 +60,40 @@ const CSS_VAR: Record<ScriptFontSlot, string> = {
   siddham: '--siddham',
 }
 
-const DEFAULT_STACK: Record<ScriptFontSlot, string> = {
-  deva: "'Noto Sans Devanagari', sans-serif",
-  siddham: "'Muktamsiddham', sans-serif",
+type BundledOpt = {
+  id: ScriptFontChoice
+  family: string
+  label: string
+  stack: string
 }
 
-const DEFAULT_LABEL: Record<ScriptFontSlot, string> = {
-  deva: 'Noto Sans Devanagari',
-  siddham: 'Muktamsiddham',
+export const DEVA_FONT_OPTIONS: BundledOpt[] = [
+  {
+    id: 'noto-deva',
+    family: 'Noto Sans Devanagari',
+    label: 'Noto Sans Devanagari',
+    stack: "'Noto Sans Devanagari', sans-serif",
+  },
+]
+
+export const SIDDHAM_FONT_OPTIONS: BundledOpt[] = [
+  {
+    id: 'muktam',
+    family: 'Muktamsiddham',
+    label: 'Muktamsiddham',
+    stack: "'Muktamsiddham', sans-serif",
+  },
+  {
+    id: 'noto-siddham',
+    family: 'Noto Sans Siddham',
+    label: 'Noto Sans Siddham',
+    stack: "'Noto Sans Siddham', sans-serif",
+  },
+]
+
+const DEFAULT_CHOICE: Record<ScriptFontSlot, ScriptFontChoice> = {
+  deva: 'noto-deva',
+  siddham: 'muktam',
 }
 
 type StoredFont = {
@@ -66,8 +105,31 @@ type StoredFont = {
 }
 
 type MetaMap = Partial<Record<ScriptFontSlot, ScriptFontMeta>>
+type ChoiceMap = {
+  deva: DevaFontChoice
+  siddham: SiddhamFontChoice
+}
 
 const loadedFaces = new Map<ScriptFontSlot, FontFace>()
+const listeners = new Set<() => void>()
+let snapshotEpoch = 0
+
+function notify() {
+  snapshotEpoch += 1
+  listeners.forEach((fn) => fn())
+}
+
+/** Subscribe to font choice / custom-font changes (for React re-render). */
+export function subscribeScriptFonts(onStoreChange: () => void): () => void {
+  listeners.add(onStoreChange)
+  return () => {
+    listeners.delete(onStoreChange)
+  }
+}
+
+export function getScriptFontEpoch(): number {
+  return snapshotEpoch
+}
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -105,7 +167,7 @@ function writeMeta(map: MetaMap) {
   try {
     localStorage.setItem(META_KEY, JSON.stringify(map))
   } catch {
-    /* quota / private mode */
+    /* quota */
   }
 }
 
@@ -120,40 +182,108 @@ export function getScriptFontMeta(slot: ScriptFontSlot): ScriptFontMeta | null {
   return readMeta()[slot] ?? null
 }
 
-export function getDefaultScriptFontLabel(slot: ScriptFontSlot): string {
-  return DEFAULT_LABEL[slot]
+function isDevaChoice(value: unknown): value is DevaFontChoice {
+  return value === 'noto-deva' || value === 'user'
 }
 
-/** Bundled face name for side-by-side preview (ignores CSS vars). */
+function isSiddhamChoice(value: unknown): value is SiddhamFontChoice {
+  return value === 'muktam' || value === 'noto-siddham' || value === 'user'
+}
+
+function readChoices(): ChoiceMap {
+  const defaults: ChoiceMap = {
+    deva: DEFAULT_CHOICE.deva as DevaFontChoice,
+    siddham: DEFAULT_CHOICE.siddham as SiddhamFontChoice,
+  }
+  try {
+    const raw = localStorage.getItem(CHOICE_KEY)
+    if (!raw) {
+      // Migrate: old installs that only stored custom meta
+      const meta = readMeta()
+      return {
+        deva: meta.deva ? 'user' : defaults.deva,
+        siddham: meta.siddham ? 'user' : defaults.siddham,
+      }
+    }
+    const parsed = JSON.parse(raw) as Partial<ChoiceMap>
+    return {
+      deva: isDevaChoice(parsed.deva) ? parsed.deva : defaults.deva,
+      siddham: isSiddhamChoice(parsed.siddham) ? parsed.siddham : defaults.siddham,
+    }
+  } catch {
+    return defaults
+  }
+}
+
+function writeChoices(map: ChoiceMap) {
+  try {
+    localStorage.setItem(CHOICE_KEY, JSON.stringify(map))
+  } catch {
+    /* quota */
+  }
+}
+
+export function getScriptFontChoice(slot: ScriptFontSlot): ScriptFontChoice {
+  return readChoices()[slot]
+}
+
+export function getUserScriptFontFamily(slot: ScriptFontSlot): string {
+  return USER_FAMILY[slot]
+}
+
 export function getBundledScriptFontFamily(slot: ScriptFontSlot): string {
+  if (slot === 'deva') return 'Noto Sans Devanagari'
+  const choice = getScriptFontChoice('siddham')
+  if (choice === 'noto-siddham') return 'Noto Sans Siddham'
+  return 'Muktamsiddham'
+}
+
+export function getDefaultScriptFontLabel(slot: ScriptFontSlot): string {
   return slot === 'deva' ? 'Noto Sans Devanagari' : 'Muktamsiddham'
 }
 
-/** Custom face name registered via FontFace. */
-export function getUserScriptFontFamily(slot: ScriptFontSlot): string {
-  return FAMILY[slot]
-}
-
 export function getActiveScriptFontLabel(slot: ScriptFontSlot): string {
-  return getScriptFontMeta(slot)?.fileName ?? DEFAULT_LABEL[slot]
+  const choice = getScriptFontChoice(slot)
+  if (choice === 'user') {
+    return getScriptFontMeta(slot)?.fileName ?? '사용자 폰트'
+  }
+  if (slot === 'deva') return 'Noto Sans Devanagari'
+  if (choice === 'noto-siddham') return 'Noto Sans Siddham'
+  return 'Muktamsiddham'
 }
 
-function extensionOf(fileName: string): string {
-  const i = fileName.lastIndexOf('.')
-  return i >= 0 ? fileName.slice(i + 1).toLowerCase() : ''
+/** True when Siddham UI must render Unicode Siddham codepoints. */
+export function usesUnicodeSiddham(): boolean {
+  return getScriptFontChoice('siddham') === 'noto-siddham'
 }
 
-function mimeForExt(ext: string): string {
-  if (ext === 'otf') return 'font/otf'
-  if (ext === 'ttf') return 'font/ttf'
-  return 'application/octet-stream'
+export function getScriptFontSample(slot: ScriptFontSlot, choice?: ScriptFontChoice): string {
+  const c = choice ?? getScriptFontChoice(slot)
+  if (slot === 'siddham' && c === 'noto-siddham') return SCRIPT_FONT_SAMPLE_UNICODE_SIDDHAM
+  return SCRIPT_FONT_SAMPLE
 }
 
-function applyCssVar(slot: ScriptFontSlot, custom: boolean) {
-  const value = custom
-    ? `'${FAMILY[slot]}', ${DEFAULT_STACK[slot]}`
-    : DEFAULT_STACK[slot]
-  document.documentElement.style.setProperty(CSS_VAR[slot], value)
+function stackForChoice(slot: ScriptFontSlot, choice: ScriptFontChoice): string {
+  if (choice === 'user') {
+    const fallback =
+      slot === 'deva'
+        ? DEVA_FONT_OPTIONS[0]!.stack
+        : SIDDHAM_FONT_OPTIONS[0]!.stack
+    return `'${USER_FAMILY[slot]}', ${fallback}`
+  }
+  if (slot === 'deva') return DEVA_FONT_OPTIONS[0]!.stack
+  const opt = SIDDHAM_FONT_OPTIONS.find((o) => o.id === choice)
+  return opt?.stack ?? SIDDHAM_FONT_OPTIONS[0]!.stack
+}
+
+function applySlotCss(slot: ScriptFontSlot) {
+  const choice = getScriptFontChoice(slot)
+  document.documentElement.style.setProperty(CSS_VAR[slot], stackForChoice(slot, choice))
+}
+
+export function applyActiveScriptFonts() {
+  applySlotCss('deva')
+  applySlotCss('siddham')
 }
 
 async function unloadFace(slot: ScriptFontSlot) {
@@ -172,19 +302,17 @@ async function loadFaceFromBuffer(
   buffer: ArrayBuffer,
 ): Promise<FontFace> {
   await unloadFace(slot)
-  // Pass a copy so callers can keep the original buffer (FontFace may transfer it).
-  const face = new FontFace(FAMILY[slot], buffer.slice(0))
+  const face = new FontFace(USER_FAMILY[slot], buffer.slice(0))
   await face.load()
   document.fonts.add(face)
   loadedFaces.set(slot, face)
   return face
 }
 
-/** Rough check: sample glyphs should ink a non-trivial share of pixels. */
 function sampleGlyphsVisible(family: string, sample: string): boolean {
   const size = 64
   const canvas = document.createElement('canvas')
-  canvas.width = size * sample.length
+  canvas.width = Math.max(size * 4, size * sample.length)
   canvas.height = size
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
   if (!ctx) return false
@@ -200,9 +328,18 @@ function sampleGlyphsVisible(family: string, sample: string): boolean {
   for (let i = 3; i < data.length; i += 4) {
     if (data[i]! > 16) inked += 1
   }
-  const ratio = inked / (canvas.width * canvas.height)
-  // Empty / tofu / missing glyphs stay near 0; real Devanagari ink is higher.
-  return ratio > 0.012
+  return inked / (canvas.width * canvas.height) > 0.012
+}
+
+function extensionOf(fileName: string): string {
+  const i = fileName.lastIndexOf('.')
+  return i >= 0 ? fileName.slice(i + 1).toLowerCase() : ''
+}
+
+function mimeForExt(ext: string): string {
+  if (ext === 'otf') return 'font/otf'
+  if (ext === 'ttf') return 'font/ttf'
+  return 'application/octet-stream'
 }
 
 function assertFileOk(file: File) {
@@ -261,34 +398,64 @@ async function deleteStored(slot: ScriptFontSlot) {
   }
 }
 
-/**
- * Validate, persist, and apply a user font for one script slot.
- */
-export async function installScriptFont(slot: ScriptFontSlot, file: File): Promise<ScriptFontMeta> {
+async function ensureUserFaceLoaded(slot: ScriptFontSlot): Promise<boolean> {
+  if (loadedFaces.has(slot)) return true
+  const meta = getScriptFontMeta(slot)
+  if (!meta) return false
+  try {
+    const record = await getStored(slot)
+    if (!record?.buffer) return false
+    await loadFaceFromBuffer(slot, record.buffer)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Select bundled or user face for a slot. */
+export async function setScriptFontChoice(
+  slot: ScriptFontSlot,
+  choice: ScriptFontChoice,
+): Promise<void> {
+  if (slot === 'deva' && !isDevaChoice(choice)) return
+  if (slot === 'siddham' && !isSiddhamChoice(choice)) return
+
+  if (choice === 'user') {
+    const ok = await ensureUserFaceLoaded(slot)
+    if (!ok) {
+      throw new ScriptFontError('unavailable', '먼저 사용자 폰트 파일을 올려 주세요.')
+    }
+  }
+
+  const next = readChoices()
+  if (slot === 'deva') next.deva = choice as DevaFontChoice
+  else next.siddham = choice as SiddhamFontChoice
+  writeChoices(next)
+  applySlotCss(slot)
+  notify()
+}
+
+export async function installScriptFont(
+  slot: ScriptFontSlot,
+  file: File,
+): Promise<ScriptFontMeta> {
   assertFileOk(file)
   const ext = extensionOf(file.name)
-  // FontFace may detach/transfer the buffer — keep a copy for IndexedDB.
   const buffer = await file.arrayBuffer()
 
   try {
     await loadFaceFromBuffer(slot, buffer)
   } catch {
     await unloadFace(slot)
-    try {
-      await restoreScriptFontSlot(slot)
-    } catch {
-      applyCssVar(slot, false)
-    }
+    await ensureUserFaceLoaded(slot).catch(() => false)
+    applySlotCss(slot)
     throw new ScriptFontError('load', '폰트를 불러오지 못했습니다. 다른 파일을 시도해 주세요.')
   }
 
-  if (!sampleGlyphsVisible(FAMILY[slot], SCRIPT_FONT_SAMPLE)) {
+  if (!sampleGlyphsVisible(USER_FAMILY[slot], SCRIPT_FONT_SAMPLE)) {
     await unloadFace(slot)
-    try {
-      await restoreScriptFontSlot(slot)
-    } catch {
-      applyCssVar(slot, false)
-    }
+    await ensureUserFaceLoaded(slot).catch(() => false)
+    applySlotCss(slot)
     throw new ScriptFontError(
       'glyphs',
       '샘플 글자(अ आ क)가 이 폰트에 없습니다. 데바나가리 글자를 담은 폰트를 올려 주세요.',
@@ -312,74 +479,66 @@ export async function installScriptFont(slot: ScriptFontSlot, file: File): Promi
     })
   } catch {
     await unloadFace(slot)
-    try {
-      await restoreScriptFontSlot(slot)
-    } catch {
-      applyCssVar(slot, false)
-    }
+    applySlotCss(slot)
     throw new ScriptFontError('storage', '이 기기에 폰트를 저장하지 못했습니다.')
   }
 
   setMeta(slot, meta)
-  applyCssVar(slot, true)
+  const choices = readChoices()
+  if (slot === 'deva') choices.deva = 'user'
+  else choices.siddham = 'user'
+  writeChoices(choices)
+  applySlotCss(slot)
+  notify()
   return meta
 }
 
-/** Remove custom font and return to the bundled default. */
+/** Remove uploaded font and fall back to the slot default bundled face. */
 export async function resetScriptFont(slot: ScriptFontSlot): Promise<void> {
   try {
     await deleteStored(slot)
   } catch {
-    /* still clear CSS / meta */
+    /* ignore */
   }
   await unloadFace(slot)
   setMeta(slot, null)
-  applyCssVar(slot, false)
+  const choices = readChoices()
+  if (slot === 'deva') choices.deva = 'noto-deva'
+  else choices.siddham = 'muktam'
+  writeChoices(choices)
+  applySlotCss(slot)
+  notify()
 }
 
-async function restoreScriptFontSlot(slot: ScriptFontSlot): Promise<boolean> {
-  const meta = getScriptFontMeta(slot)
-  if (!meta) {
-    applyCssVar(slot, false)
-    return false
-  }
-
-  let record: StoredFont | undefined
-  try {
-    record = await getStored(slot)
-  } catch {
-    setMeta(slot, null)
-    applyCssVar(slot, false)
-    return false
-  }
-
-  if (!record?.buffer) {
-    setMeta(slot, null)
-    applyCssVar(slot, false)
-    return false
-  }
-
-  try {
-    await loadFaceFromBuffer(slot, record.buffer)
-    applyCssVar(slot, true)
-    return true
-  } catch {
-    setMeta(slot, null)
-    try {
-      await deleteStored(slot)
-    } catch {
-      /* ignore */
+async function restoreScriptFontSlot(slot: ScriptFontSlot): Promise<void> {
+  const choice = getScriptFontChoice(slot)
+  if (getScriptFontMeta(slot)) {
+    const ok = await ensureUserFaceLoaded(slot)
+    if (!ok) {
+      setMeta(slot, null)
+      const choices = readChoices()
+      if (choices[slot] === 'user') {
+        if (slot === 'deva') choices.deva = 'noto-deva'
+        else choices.siddham = 'muktam'
+        writeChoices(choices)
+      }
+    } else if (choice === 'user') {
+      applySlotCss(slot)
+      return
     }
-    await unloadFace(slot)
-    applyCssVar(slot, false)
-    return false
   }
+  applySlotCss(slot)
 }
 
-/** Call once at app boot after bundled @font-face styles are injected. */
+/** Boot: load any saved user faces, then apply current choices. */
 export async function restoreCustomScriptFonts(): Promise<void> {
-  if (typeof indexedDB === 'undefined') return
+  applyActiveScriptFonts()
+  if (typeof indexedDB === 'undefined') {
+    notify()
+    return
+  }
   await Promise.all([restoreScriptFontSlot('deva'), restoreScriptFontSlot('siddham')])
+  notify()
 }
 
 export function scriptFontErrorMessage(err: unknown): string {

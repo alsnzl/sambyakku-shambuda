@@ -19,16 +19,20 @@ import {
   type CloudTokenProbe,
 } from '../lib/strokeCloud'
 import {
+  DEVA_FONT_OPTIONS,
   SCRIPT_FONT_MAX_BYTES,
   SCRIPT_FONT_SAMPLE,
+  SIDDHAM_FONT_OPTIONS,
   getActiveScriptFontLabel,
-  getBundledScriptFontFamily,
-  getDefaultScriptFontLabel,
+  getScriptFontChoice,
   getScriptFontMeta,
+  getScriptFontSample,
   getUserScriptFontFamily,
   installScriptFont,
   resetScriptFont,
   scriptFontErrorMessage,
+  setScriptFontChoice,
+  type ScriptFontChoice,
   type ScriptFontSlot,
 } from '../lib/customScriptFonts'
 import './tools.css'
@@ -43,7 +47,8 @@ type FontSlotUi = {
   label: string
   busy: boolean
   error: string | null
-  custom: boolean
+  hasUser: boolean
+  choice: ScriptFontChoice
 }
 
 function emptyFontUi(slot: ScriptFontSlot): FontSlotUi {
@@ -51,7 +56,8 @@ function emptyFontUi(slot: ScriptFontSlot): FontSlotUi {
     label: getActiveScriptFontLabel(slot),
     busy: false,
     error: null,
-    custom: Boolean(getScriptFontMeta(slot)),
+    hasUser: Boolean(getScriptFontMeta(slot)),
+    choice: getScriptFontChoice(slot),
   }
 }
 
@@ -121,7 +127,6 @@ export function SettingsPage({ onBack }: Props) {
       busy: true,
       error: null,
       label: file.name,
-      custom: Boolean(getScriptFontMeta(slot)),
     })
     try {
       const meta = await installScriptFont(slot, file)
@@ -129,15 +134,30 @@ export function SettingsPage({ onBack }: Props) {
         label: meta.fileName,
         busy: false,
         error: null,
-        custom: true,
+        hasUser: true,
+        choice: 'user',
       })
       setPreviewTick((n) => n + 1)
     } catch (err) {
       setFontUi(slot, {
-        label: getActiveScriptFontLabel(slot),
+        ...emptyFontUi(slot),
         busy: false,
         error: scriptFontErrorMessage(err),
-        custom: Boolean(getScriptFontMeta(slot)),
+      })
+    }
+  }
+
+  async function handleFontChoice(slot: ScriptFontSlot, choice: ScriptFontChoice) {
+    setFontUi(slot, { ...emptyFontUi(slot), busy: true, error: null })
+    try {
+      await setScriptFontChoice(slot, choice)
+      setFontUi(slot, emptyFontUi(slot))
+      setPreviewTick((n) => n + 1)
+    } catch (err) {
+      setFontUi(slot, {
+        ...emptyFontUi(slot),
+        busy: false,
+        error: scriptFontErrorMessage(err),
       })
     }
   }
@@ -146,19 +166,13 @@ export function SettingsPage({ onBack }: Props) {
     setFontUi(slot, { ...emptyFontUi(slot), busy: true, error: null })
     try {
       await resetScriptFont(slot)
-      setFontUi(slot, {
-        label: getDefaultScriptFontLabel(slot),
-        busy: false,
-        error: null,
-        custom: false,
-      })
+      setFontUi(slot, emptyFontUi(slot))
       setPreviewTick((n) => n + 1)
     } catch (err) {
       setFontUi(slot, {
-        label: getActiveScriptFontLabel(slot),
+        ...emptyFontUi(slot),
         busy: false,
         error: scriptFontErrorMessage(err),
-        custom: Boolean(getScriptFontMeta(slot)),
       })
     }
   }
@@ -187,39 +201,70 @@ export function SettingsPage({ onBack }: Props) {
     inputRef: RefObject<HTMLInputElement | null>,
     note?: string,
   ) {
-    const bundledFamily = getBundledScriptFontFamily(slot)
+    const bundled = slot === 'deva' ? DEVA_FONT_OPTIONS : SIDDHAM_FONT_OPTIONS
     const userFamily = getUserScriptFontFamily(slot)
     return (
       <div className="tool__font-slot">
         <div className="tool__font-slot-head">
           <h3>{title}</h3>
-          <span className={`tool__font-badge ${ui.custom ? 'is-custom' : ''}`}>
-            {ui.custom ? '사용자 폰트' : '기본'}
+          <span className={`tool__font-badge ${ui.choice === 'user' ? 'is-custom' : ''}`}>
+            {ui.choice === 'user' ? '사용자' : '기본'}
           </span>
         </div>
         {note ? <p className="tool__meta tool__font-note">{note}</p> : null}
+
+        <p className="tool__font-pane-label" style={{ marginBottom: '0.35rem' }}>
+          적용할 폰트
+        </p>
+        <div className="tool__seg tool__font-choices" role="group" aria-label={`${title} 폰트 선택`}>
+          {bundled.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`tool__seg-btn motion-press ${ui.choice === opt.id ? 'is-active' : ''}`}
+              aria-pressed={ui.choice === opt.id}
+              disabled={ui.busy}
+              onClick={() => void handleFontChoice(slot, opt.id)}
+            >
+              <span className="tool__seg-title">{opt.label}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`tool__seg-btn motion-press ${ui.choice === 'user' ? 'is-active' : ''}`}
+            aria-pressed={ui.choice === 'user'}
+            disabled={ui.busy || !ui.hasUser}
+            onClick={() => void handleFontChoice(slot, 'user')}
+          >
+            <span className="tool__seg-title">사용자</span>
+            <span className="tool__seg-hint">{ui.hasUser ? '업로드됨' : '없음'}</span>
+          </button>
+        </div>
+
         <div
           key={`${slot}-${previewTick}`}
           className="tool__font-compare"
           role="group"
-          aria-label={`${title} 기본·사용자 비교`}
+          aria-label={`${title} 미리보기`}
         >
-          <div className="tool__font-pane">
-            <p className="tool__font-pane-label">기본</p>
-            <p
-              className="tool__font-preview"
-              lang="sa"
-              style={{ fontFamily: `"${bundledFamily}", sans-serif` }}
+          {bundled.map((opt) => (
+            <div
+              key={opt.id}
+              className={`tool__font-pane ${ui.choice === opt.id ? 'is-active-pane' : ''}`}
             >
-              {SCRIPT_FONT_SAMPLE}
-            </p>
-            <p className="tool__font-name" title={getDefaultScriptFontLabel(slot)}>
-              {getDefaultScriptFontLabel(slot)}
-            </p>
-          </div>
-          <div className={`tool__font-pane ${ui.custom ? '' : 'is-empty'}`}>
+              <p className="tool__font-pane-label">{opt.label}</p>
+              <p
+                className="tool__font-preview"
+                lang="sa"
+                style={{ fontFamily: `"${opt.family}", sans-serif` }}
+              >
+                {getScriptFontSample(slot, opt.id)}
+              </p>
+            </div>
+          ))}
+          <div className={`tool__font-pane ${ui.hasUser ? '' : 'is-empty'} ${ui.choice === 'user' ? 'is-active-pane' : ''}`}>
             <p className="tool__font-pane-label">사용자</p>
-            {ui.custom ? (
+            {ui.hasUser ? (
               <>
                 <p
                   className="tool__font-preview"
@@ -228,8 +273,8 @@ export function SettingsPage({ onBack }: Props) {
                 >
                   {SCRIPT_FONT_SAMPLE}
                 </p>
-                <p className="tool__font-name" title={ui.label}>
-                  {ui.busy ? '적용 중…' : ui.label}
+                <p className="tool__font-name" title={getScriptFontMeta(slot)?.fileName}>
+                  {getScriptFontMeta(slot)?.fileName}
                 </p>
               </>
             ) : (
@@ -237,13 +282,15 @@ export function SettingsPage({ onBack }: Props) {
                 <p className="tool__font-preview tool__font-preview--placeholder" aria-hidden="true">
                   —
                 </p>
-                <p className="tool__font-name">
-                  {ui.busy ? '적용 중…' : '아직 올린 폰트 없음'}
-                </p>
+                <p className="tool__font-name">아직 올린 폰트 없음</p>
               </>
             )}
           </div>
         </div>
+
+        <p className="tool__font-name" style={{ marginBottom: '0.55rem' }}>
+          {ui.busy ? '적용 중…' : `현재: ${ui.label}`}
+        </p>
         {ui.error ? <p className="tool__font-error">{ui.error}</p> : null}
         <div className="tool__row">
           <input
@@ -270,10 +317,10 @@ export function SettingsPage({ onBack }: Props) {
           <button
             type="button"
             className="tool__btn tool__btn--ghost motion-press"
-            disabled={ui.busy || !ui.custom}
+            disabled={ui.busy || !ui.hasUser}
             onClick={() => void handleFontReset(slot)}
           >
-            기본값으로
+            사용자 폰트 삭제
           </button>
         </div>
       </div>
@@ -357,7 +404,8 @@ export function SettingsPage({ onBack }: Props) {
             <div className="tool__labs-body">
               <h3 className="tool__labs-section-title">스크립트 폰트</h3>
               <p className="tool__meta">
-                OTF·TTF 파일을 올리면 학습·퀴즈 등 해당 문자 표시에 적용됩니다. 최대{' '}
+                기본 폰트를 고르거나 OTF·TTF를 올리면 학습·쓰기(기록)·퀴즈 등 해당 문자 표시가
+                모두 바뀝니다. 획 순서는 기록값 그대로입니다. 최대{' '}
                 {SCRIPT_FONT_MAX_BYTES / (1024 * 1024)}MB. 사용권이 있는 파일만 올려 주세요.
               </p>
               {renderFontSlot('deva', '산스크리트 (데바나가리)', devaFont, devaInputId, devaInputRef)}
@@ -367,7 +415,7 @@ export function SettingsPage({ onBack }: Props) {
                 siddhamFont,
                 siddhamInputId,
                 siddhamInputRef,
-                '이 앱 실담은 데바나가리 글자에 실담 모양을 얹는 폰트입니다. Muktamsiddham과 같은 방식의 폰트를 올려 주세요.',
+                'Muktamsiddham은 데바나가리 글자에 실담 모양을 얹습니다. Noto Sans Siddham은 유니코드 실담 글자를 씁니다. 사용자 폰트는 데바나가리 글자(अ आ क)를 담은 파일을 올려 주세요. 획 순서는 기록값 그대로입니다.',
               )}
             </div>
           </div>

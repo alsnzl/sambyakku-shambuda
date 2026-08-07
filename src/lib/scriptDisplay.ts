@@ -1,20 +1,22 @@
 import type { Letter } from '../data/letters'
 import type { ScriptTrack } from '../types/track'
+import { usesUnicodeSiddham } from './customScriptFonts'
 
 /**
- * Muktamsiddham draws Siddhaṃ letterforms on Devanagari codepoints
- * (not Unicode Siddham U+11580+). All Siddham *UI* must render Devanagari
- * characters with `font-family: var(--siddham)`.
+ * Glyph string for UI / teach / write guide text.
+ * - Sanskrit track: always Devanagari
+ * - Siddham + Muktam/user: Devanagari codepoints (Siddhaṃ shapes in those faces)
+ * - Siddham + Noto Sans Siddham: Unicode Siddham (U+11580+)
  *
- * Unicode Siddham (`letter.siddham`) remains for stroke/cloud tooling that
- * still uses Noto Sans Siddham outlines.
+ * Stroke *order* still comes from taught/generated path data, not from this string.
  */
 export function glyphForTrack(
   letter: Pick<Letter, 'dewa' | 'siddham'>,
-  _track: ScriptTrack,
+  track: ScriptTrack,
 ): string {
-  void _track
-  void letter.siddham
+  if (track === 'siddham' && usesUnicodeSiddham()) {
+    return letter.siddham || letter.dewa
+  }
   return letter.dewa
 }
 

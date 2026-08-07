@@ -17,6 +17,7 @@ import { CorrespondencePage } from './pages/CorrespondencePage'
 import { ConjunctsPage } from './pages/ConjunctsPage'
 import { TeachPage } from './pages/TeachPage'
 import { MotionPage } from './components/MotionPage'
+import { HomeFab } from './components/HomeFab'
 import type { Letter } from './data/letters'
 import type { ScriptTrack } from './types/track'
 import { refreshCloudStore } from './lib/strokeCloud'
@@ -63,7 +64,6 @@ function App() {
   const [track, setTrack] = useState<ScriptTrack>('sanskrit')
   const [openLetterId, setOpenLetterId] = useState<string | null>(null)
   const [backTo, setBackTo] = useState<BackTo>('tracks')
-
   useEffect(() => {
     void refreshCloudStore({ force: true }).catch(() => {
       // offline ok
@@ -136,6 +136,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      {screen !== 'home' ? <HomeFab onHome={goHome} /> : null}
       <MotionPage
         motionKey={pageKey}
         variant={screen === 'home' ? 'fade-up' : 'pop'}

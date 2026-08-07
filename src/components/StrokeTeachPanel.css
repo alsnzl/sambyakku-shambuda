@@ -399,7 +399,8 @@
 
 .teach__glyph-guide,
 .teach__glyph-ink {
-  font-size: calc(210px * var(--glyph-scale));
+  /* Fixed to viewBox — do not use --glyph-scale (lg would clip matras). */
+  font-size: 158px;
   dominant-baseline: alphabetic;
   pointer-events: none;
 }

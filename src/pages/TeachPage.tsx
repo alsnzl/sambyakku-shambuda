@@ -7,6 +7,8 @@ import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
+import { ScriptFontQuickBar } from '../components/ScriptFontQuickBar'
 import './Learn.css'
 import './TeachPage.css'
 
@@ -22,6 +24,7 @@ export function TeachPage({ onBack }: Props) {
   const [track, setTrack] = useState<ScriptTrack>('sanskrit')
   const [letter, setLetter] = useState<Letter | null>(null)
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
+  useScriptFontEpoch()
 
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
@@ -107,6 +110,8 @@ export function TeachPage({ onBack }: Props) {
             </button>
           </div>
         </header>
+
+        <ScriptFontQuickBar track={track} />
 
         <div className="teach-page__stage">
           <MotionPage

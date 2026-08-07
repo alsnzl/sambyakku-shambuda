@@ -69,11 +69,11 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const labels = defaultLabels(letterId, track)
   const inkWidth = FREEHAND_INK_WIDTH
   const outlineD = generated?.d
-  /** UI glyph face — Muktamsiddham for Siddhaṃ (Devanagari codepoints in `glyph`). */
+  /** Guide face from CSS vars (settings). Stroke order stays taught/generated paths. */
   const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
   const glyphX = STROKE_VIEWBOX / 2
-  /** Optical vertical center for large Indic faces in the square viewBox. */
-  const glyphY = STROKE_VIEWBOX * 0.72
+  /** Baseline low enough for Devanagari top matras (ई, ऐ, …) inside the square. */
+  const glyphY = STROKE_VIEWBOX * 0.7
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)

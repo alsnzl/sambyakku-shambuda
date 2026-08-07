@@ -695,7 +695,7 @@
 
 .tool__font-compare {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
   gap: 0.55rem;
   margin: 0.35rem 0 0.55rem;
 }
@@ -708,9 +708,18 @@
   background: color-mix(in srgb, var(--surface) 70%, var(--paper));
 }
 
+.tool__font-pane.is-active-pane {
+  border-color: color-mix(in srgb, var(--teal) 45%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--teal) 25%, transparent);
+}
+
 .tool__font-pane.is-empty {
   border-style: dashed;
   opacity: 0.85;
+}
+
+.tool__font-choices {
+  margin-bottom: 0.65rem;
 }
 
 .tool__font-pane-label {

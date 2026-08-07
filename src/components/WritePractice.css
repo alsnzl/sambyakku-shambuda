@@ -413,7 +413,8 @@
 }
 
 .write__glyph-fallback {
-  font-size: calc(210px * var(--glyph-scale));
+  /* Match teach canvas: fixed to viewBox so tall Devanagari fits. */
+  font-size: 158px;
   dominant-baseline: alphabetic;
   fill: var(--ink);
 }

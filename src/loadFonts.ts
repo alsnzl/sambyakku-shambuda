@@ -3,6 +3,7 @@
  * Variable Devanagari needs both format hints for iOS Safari.
  *
  * Muktamsiddham: Siddhaṃ shapes on Devanagari codepoints (not U+11580+).
+ * Noto Sans Siddham: Unicode Siddham block (U+11580+).
  */
 const base = import.meta.env.BASE_URL
 
@@ -23,6 +24,13 @@ style.textContent = `
   font-display: swap;
   font-weight: 400;
   src: url('${base}fonts/Muktamsiddham.otf') format('opentype');
+}
+@font-face {
+  font-family: 'Noto Sans Siddham';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('${base}fonts/NotoSansSiddham-Regular.ttf') format('truetype');
 }
 `
 document.head.appendChild(style)
