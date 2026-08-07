@@ -3,6 +3,7 @@ import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { getProgressSummary, getWeakLetters } from '../lib/learnerStore'
 import { getPathSnapshot } from '../lib/pathProgress'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
 type Props = {
@@ -100,7 +101,7 @@ export function ProgressPage({
                 onClick={() => onOpenLetter?.(letter)}
               >
                 <span className={`tool__chip-glyph ${glyphClass}`} lang="sa">
-                  {track === 'sanskrit' ? letter.dewa : letter.siddham}
+                  {glyphForTrack(letter, track)}
                 </span>
                 <span className="tool__chip-sub">{letter.iast}</span>
               </button>

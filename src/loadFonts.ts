@@ -1,6 +1,8 @@
 /**
  * Script fonts from /public/fonts (same files used for stroke outlines).
  * Variable Devanagari needs both format hints for iOS Safari.
+ *
+ * Muktamsiddham: Siddhaṃ shapes on Devanagari codepoints (not U+11580+).
  */
 const base = import.meta.env.BASE_URL
 
@@ -16,12 +18,11 @@ style.textContent = `
     url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
 }
 @font-face {
-  font-family: 'Muktam Siddham';
+  font-family: 'Muktamsiddham';
   font-style: normal;
   font-display: swap;
   font-weight: 400;
   src: url('${base}fonts/Muktamsiddham.otf') format('opentype');
-  unicode-range: U+11580-115FF;
 }
 `
 document.head.appendChild(style)

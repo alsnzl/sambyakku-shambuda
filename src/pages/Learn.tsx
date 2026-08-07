@@ -4,6 +4,7 @@ import { LetterCard } from '../components/LetterCard'
 import { MotionPage } from '../components/MotionPage'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './Learn.css'
 
 type Props = {
@@ -152,7 +153,7 @@ export function Learn({
                 >
                   <span className="learn__tile-glyph" aria-hidden="true">
                     <span className={charClass} lang="sa">
-                      {isSanskrit ? item.dewa : item.siddham}
+                      {glyphForTrack(item, track)}
                     </span>
                   </span>
                   <span className="learn__tile-iast">{item.iast}</span>
@@ -211,7 +212,7 @@ export function Learn({
                       >
                         <span className="learn__tile-glyph" aria-hidden="true">
                           <span className={charClass} lang="sa">
-                            {isSanskrit ? item.dewa : item.siddham}
+                            {glyphForTrack(item, track)}
                           </span>
                         </span>
                         <span className="learn__tile-iast">{item.iast}</span>
@@ -271,7 +272,7 @@ export function Learn({
               >
                 {group.letters
                   .slice(0, 5)
-                  .map((l) => (isSanskrit ? l.dewa : l.siddham))
+                  .map((l) => glyphForTrack(l, track))
                   .join(' ')}
               </span>
             </button>

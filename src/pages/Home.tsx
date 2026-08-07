@@ -102,7 +102,7 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
           </div>
           <span className="home__card-glyphs" lang="sa" aria-hidden="true">
             <span className="home__card-glyphs-deva">अ</span>
-            <span className="home__card-glyphs-siddham">𑖀</span>
+            <span className="home__card-glyphs-siddham">अ</span>
           </span>
         </div>
         <p className="home__card-verse">

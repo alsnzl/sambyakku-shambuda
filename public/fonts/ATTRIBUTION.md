@@ -4,7 +4,7 @@
 
 - `NotoSansDevanagari.ttf` — Noto Sans Devanagari, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/notosansdevanagari) (SIL OFL 1.1)
 - `NotoSansSiddham-Regular.ttf` — Noto Sans Siddham, from [google/fonts](https://github.com/google/fonts/tree/main/ofl/notosanssiddham) (SIL OFL 1.1; kept as fallback / stroke generation source)
-- `Muktamsiddham.otf` — Muktam Siddham (UI display font for Siddhaṃ)
+- `Muktamsiddham.otf` — Muktamsiddham by MihailJP (Siddhaṃ shapes on Devanagari codepoints; Reserved Font Name Muktamsiddham)
 
 ## Stroke data (`src/data/glyphStrokes.ts`)
 

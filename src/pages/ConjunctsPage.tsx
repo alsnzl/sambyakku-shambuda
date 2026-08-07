@@ -34,7 +34,7 @@ export function ConjunctsPage({ onBack, backLabel = '← 학습', onOpenLetter }
               </div>
               <span className="tool__pair-vs">·</span>
               <div className="tool__pair-glyph tool__pair-glyph--siddham" lang="sa">
-                {item.siddham}
+                {item.dewa}
                 <div className="tool__chip-sub">실담</div>
               </div>
             </div>

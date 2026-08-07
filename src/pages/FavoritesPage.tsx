@@ -3,6 +3,7 @@ import type { Letter } from '../data/letters'
 import type { ScriptTrack } from '../types/track'
 import { getFavorites } from '../lib/learnerStore'
 import { getWeakLetters } from '../lib/learnerStore'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
 type Props = {
@@ -68,7 +69,7 @@ export function FavoritesPage({
                 onClick={() => onOpenLetter(letter)}
               >
                 <span className={`tool__chip-glyph ${glyphClass}`} lang="sa">
-                  {track === 'sanskrit' ? letter.dewa : letter.siddham}
+                  {glyphForTrack(letter, track)}
                 </span>
                 <span className="tool__chip-sub">{letter.iast}</span>
               </button>

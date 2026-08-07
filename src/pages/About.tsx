@@ -42,7 +42,7 @@ export function About({ onBack }: Props) {
 
         <section className="about__section" aria-labelledby="about-si">
           <p className="about__sample about__sample--siddham" lang="sa" aria-hidden="true">
-            𑖀 𑖁 𑖂 𑖃 𑖎 𑖏 𑖐
+            अ आ इ ई क ख ग
           </p>
           <h2 id="about-si">실담 (Siddhaṃ)</h2>
           <p>

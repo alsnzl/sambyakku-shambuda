@@ -4,6 +4,7 @@ import {
   getDailyCourse,
   markDailyDone,
 } from '../lib/learnerStore'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
 type Props = {
@@ -49,7 +50,7 @@ export function DailyPage({ track, onBack, backLabel = '← 학습', onOpenLette
                 className={`tool__chip-glyph ${glyphClass}`}
                 lang="sa"
               >
-                {track === 'sanskrit' ? letter.dewa : letter.siddham}
+                {glyphForTrack(letter, track)}
               </span>
               <span className="tool__chip-sub">{letter.iast}</span>
             </button>

@@ -10,6 +10,7 @@ import {
 } from '../lib/learnerStore'
 import { getSimilarLetters } from '../data/similarLetters'
 import { getTheoryBlurb } from '../data/theoryTips'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import { WritePractice } from './WritePractice'
 import { StrokeTeachPanel } from './StrokeTeachPanel'
 import './LetterCard.css'
@@ -33,7 +34,7 @@ export function LetterCard({
   hasPrev = false,
   hasNext = false,
 }: Props) {
-  const glyph = track === 'sanskrit' ? letter.dewa : letter.siddham
+  const glyph = glyphForTrack(letter, track)
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
   const similar = getSimilarLetters(letter.id)
@@ -152,7 +153,7 @@ export function LetterCard({
                 onClick={() => onOpenLetter?.(s)}
               >
                 <span className={glyphClass} lang="sa">
-                  {track === 'sanskrit' ? s.dewa : s.siddham}
+                  {glyphForTrack(s, track)}
                 </span>
                 <span>{s.iast}</span>
               </button>

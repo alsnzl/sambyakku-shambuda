@@ -1,5 +1,6 @@
 import type { ScriptTrack } from '../types/track'
 import { getAllSimilarPairs } from '../data/similarLetters'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
 type Props = {
@@ -28,12 +29,12 @@ export function SimilarPage({ track, onBack, backLabel = '← 학습' }: Props) 
           <p className="tool__meta">{reason}</p>
           <div className="tool__pair">
             <div className={`tool__pair-glyph ${glyphClass}`} lang="sa">
-              {track === 'sanskrit' ? a.dewa : a.siddham}
+              {glyphForTrack(a, track)}
               <div className="tool__chip-sub">{a.iast}</div>
             </div>
             <span className="tool__pair-vs">vs</span>
             <div className={`tool__pair-glyph ${glyphClass}`} lang="sa">
-              {track === 'sanskrit' ? b.dewa : b.siddham}
+              {glyphForTrack(b, track)}
               <div className="tool__chip-sub">{b.iast}</div>
             </div>
           </div>

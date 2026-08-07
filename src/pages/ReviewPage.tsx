@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import { getDueLetters, reviewSrs } from '../lib/learnerStore'
 import { playLetterPronunciation } from '../lib/audio'
+import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
 type Props = {
@@ -61,7 +62,7 @@ export function ReviewPage({ track, onBack, backLabel = '← 학습' }: Props) {
       >
         {!flipped ? (
           <span className={`tool__chip-glyph ${glyphClass}`} style={{ fontSize: '3.2rem' }} lang="sa">
-            {track === 'sanskrit' ? current.dewa : current.siddham}
+            {glyphForTrack(current, track)}
           </span>
         ) : (
           <>

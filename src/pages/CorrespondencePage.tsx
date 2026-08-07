@@ -57,7 +57,7 @@ export function CorrespondencePage({
                   onClick={() => onOpenLetter(letter, 'siddham')}
                   aria-label={`${letter.iast} 실담 학습`}
                 >
-                  {letter.siddham}
+                  {letter.dewa}
                 </button>
               </li>
             ))}

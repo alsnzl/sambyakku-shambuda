@@ -1,4 +1,5 @@
 import { letters, type Letter } from '../data/letters'
+import { glyphForTrack } from './scriptDisplay'
 import type { ScriptTrack } from '../types/track'
 
 export type QuizMode = 'glyph-to-iast' | 'iast-to-glyph'
@@ -28,7 +29,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 function glyphOf(letter: Letter, track: ScriptTrack): string {
-  return track === 'sanskrit' ? letter.dewa : letter.siddham
+  return glyphForTrack(letter, track)
 }
 
 function scriptOf(track: ScriptTrack): 'deva' | 'siddham' {

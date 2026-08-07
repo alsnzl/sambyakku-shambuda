@@ -51,7 +51,7 @@ function MantraCard({
               {mantra.dewa}
             </div>
             <div className="tool__output tool__output--siddham" lang="sa">
-              {mantra.siddham}
+              {mantra.dewa}
             </div>
           </div>
 
@@ -83,7 +83,7 @@ function MantraCard({
                   {active.dewa}
                 </span>
                 <span className="tool__mantra-focus-siddham" lang="sa">
-                  {active.siddham}
+                  {active.dewa}
                 </span>
               </div>
               <div className="tool__chips" style={{ marginTop: '0.65rem' }}>
