@@ -489,9 +489,12 @@ export function recordedToGlyphStrokes(
 ): GlyphStrokeData {
   const strokes: GlyphStroke[] = recorded.map((r, i) => {
     const pts = simplifyPoints(r.points)
+    let len = 0
+    for (let j = 1; j < pts.length; j++) len += dist(pts[j - 1], pts[j])
     return {
       d: pointsToPathD(pts),
       width: defaultWidth,
+      length: r2(Math.max(len, 1)),
       label: labels[i] || `획 ${i + 1}`,
     }
   })
