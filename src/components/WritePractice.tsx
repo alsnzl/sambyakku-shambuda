@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
+import {
+  STROKE_GUIDE_FONT_SIZE,
+  STROKE_GUIDE_X,
+  STROKE_GUIDE_Y,
+} from '../lib/strokeGuideLayout'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import {
   defaultLabels,
@@ -64,7 +69,6 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const data = getEffectiveGlyphStrokes(letterId, script)
   const fallback = getGlyphStrokes(letterId, script)
   const canvasData = data ?? fallback
-  const outlineD = canvasData?.d
   const inkWidth = FREEHAND_INK_WIDTH
   const canWatchStrokes = Boolean(taughtData?.strokes.length)
   const fontChoice = getScriptFontChoice(fontSlot)
@@ -75,10 +79,13 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
   const useWatchPathGuide =
-    Boolean(taughtData?.d) && matchesGeneratedOutlineFont(fontSlot, fontChoice)
-  const glyphX = STROKE_VIEWBOX / 2
-  const glyphY = STROKE_VIEWBOX * 0.7
+    Boolean(taughtData?.d) &&
+    !recordedFontChoice &&
+    matchesGeneratedOutlineFont(fontSlot, fontChoice)
+  const glyphX = STROKE_GUIDE_X
+  const glyphY = STROKE_GUIDE_Y
   const watchFontKey = `${fontEpoch}-${watchFontFamily}`
+  const traceFontKey = `${fontEpoch}-${fontFamily}`
 
   const [mode, setMode] = useState<PracticeMode>('trace')
   const [playId, setPlayId] = useState(0)
@@ -207,7 +214,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d])
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
-    if (mode !== 'trace' || traceDone || !outlineD) return
+    if (mode !== 'trace' || traceDone || !glyph) return
     if (theoryCount > 0 && drawn.length >= theoryCount) return
     if (penOnly && e.pointerType === 'touch') return
     if (e.pointerType === 'pen' && e.buttons === 0) return
@@ -368,7 +375,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
               onPointerCancel={endStroke}
               onContextMenu={(e) => e.preventDefault()}
             >
-              {mode === 'trace' && outlineD ? (
+              {mode === 'trace' ? (
                 <>
                   <defs>
                     <mask id={maskId} maskUnits="userSpaceOnUse">
@@ -401,8 +408,31 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                       ))}
                     </mask>
                   </defs>
-                  <path className="write__glyph-guide" d={outlineD} />
-                  <path className="write__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
+                  <text
+                    key={`guide-${traceFontKey}`}
+                    className="write__glyph-guide"
+                    x={glyphX}
+                    y={glyphY}
+                    textAnchor="middle"
+                    lang="sa"
+                    fontSize={STROKE_GUIDE_FONT_SIZE}
+                    style={{ fontFamily }}
+                  >
+                    {glyph}
+                  </text>
+                  <text
+                    key={`ink-${traceFontKey}`}
+                    className="write__glyph-ink"
+                    x={glyphX}
+                    y={glyphY}
+                    textAnchor="middle"
+                    lang="sa"
+                    fontSize={STROKE_GUIDE_FONT_SIZE}
+                    style={{ fontFamily }}
+                    mask={`url(#${maskId})`}
+                  >
+                    {glyph}
+                  </text>
                 </>
               ) : mode === 'watch' && taughtData ? (
                 <>
@@ -444,7 +474,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                         y={glyphY}
                         textAnchor="middle"
                         lang="sa"
-                        fontSize={158}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
                         style={{ fontFamily: watchFontFamily }}
                       >
                         {glyph}
@@ -456,7 +486,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                         y={glyphY}
                         textAnchor="middle"
                         lang="sa"
-                        fontSize={158}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
                         style={{ fontFamily: watchFontFamily }}
                         mask={`url(#${maskId}-watch)`}
                       >
@@ -474,10 +504,10 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
               ) : (
                 <text
                   className="write__glyph-fallback"
-                  x={STROKE_VIEWBOX / 2}
-                  y={STROKE_VIEWBOX * 0.7}
+                  x={glyphX}
+                  y={glyphY}
                   textAnchor="middle"
-                  fontSize={158}
+                  fontSize={STROKE_GUIDE_FONT_SIZE}
                   style={{ fontFamily }}
                 >
                   {glyph}

@@ -478,7 +478,7 @@
 }
 
 .teach__svg {
-  width: 100%;
+  width: min(100%, var(--canvas-draw-max));
   max-width: var(--canvas-draw-max);
   margin: 0 auto;
   aspect-ratio: 1;

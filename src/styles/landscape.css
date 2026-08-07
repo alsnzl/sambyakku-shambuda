@@ -2,6 +2,15 @@
  * Tablet / wide landscape: same DOM, denser 2-column reflow.
  * Phones keep the portrait column (narrow width or portrait orientation).
  */
+
+/* Tablet portrait: widen past the phone shell so rotate/resize clearly reflows. */
+@media (min-width: 600px) and (orientation: portrait) {
+  :root {
+    --shell-max: min(40rem, 100%);
+    --stage-max: min(34rem, 100%);
+  }
+}
+
 @media (orientation: landscape) and (min-width: 600px) {
   :root {
     --shell-max: min(64rem, 100%);
@@ -21,6 +30,7 @@
       "path side";
     gap: 0.75rem 1rem;
     align-content: start;
+    width: 100%;
   }
 
   .home--gate > .home__hero {
@@ -29,12 +39,14 @@
 
   .home--gate > .home__card--learn {
     grid-area: learn;
-    height: 100%;
+    height: auto;
+    min-height: 100%;
   }
 
   .home--gate > .home__card--teach {
     grid-area: teach;
-    height: 100%;
+    height: auto;
+    min-height: 100%;
   }
 
   /* Keep path at content height — don't stretch with expanded feed */
@@ -207,6 +219,10 @@
   }
 
   /* —— Write / teach workbench —— */
+  .write__chrome {
+    margin-bottom: 1rem;
+  }
+
   .write__chrome .write__head,
   .teach__chrome {
     margin-bottom: 0.35rem;
@@ -218,6 +234,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.45rem 0.85rem;
+    margin-bottom: 0;
   }
 
   .write__title-row {
@@ -613,15 +630,17 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  /* Keep section titles in normal flow — sticky + transparent head overlapped tiles. */
   .learn__chart-section {
-    position: relative;
+    position: static;
   }
 
   .learn__chart-head {
-    position: sticky;
-    top: 2.6rem;
-    z-index: 4;
-    padding: 0.35rem 0.15rem;
+    position: static;
+    top: auto;
+    z-index: auto;
+    margin-bottom: 0.85rem;
+    padding: 0;
     background: transparent;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

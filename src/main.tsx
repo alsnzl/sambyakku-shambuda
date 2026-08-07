@@ -7,6 +7,7 @@ import './styles/motion.css'
 import { initPrefs } from './lib/prefsStore'
 import { restoreCustomScriptFonts } from './lib/customScriptFonts'
 import { installHardwareBackListener } from './lib/hardwareBack'
+import { installViewportSync } from './lib/viewportSync'
 import App from './App.tsx'
 /* After App so landscape overrides win over component CSS in the bundle. */
 import './styles/landscape.css'
@@ -17,6 +18,7 @@ import './styles/press.css'
 
 initPrefs()
 installHardwareBackListener()
+installViewportSync()
 
 void restoreCustomScriptFonts()
   .catch(() => {

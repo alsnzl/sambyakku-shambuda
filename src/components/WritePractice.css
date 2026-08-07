@@ -38,6 +38,10 @@
   box-shadow: none;
 }
 
+.write__chrome {
+  margin-bottom: 1.15rem;
+}
+
 .write__chrome .write__head {
   margin-bottom: 0;
 }
@@ -415,7 +419,7 @@
 }
 
 .write__svg {
-  width: 100%;
+  width: min(100%, var(--canvas-draw-max));
   max-width: var(--canvas-draw-max);
   margin: 0 auto;
   aspect-ratio: 1;
@@ -429,10 +433,14 @@
 
 .write__glyph-guide {
   fill: color-mix(in srgb, var(--ink) 10%, transparent);
+  dominant-baseline: alphabetic;
+  pointer-events: none;
 }
 
 .write__glyph-ink {
   fill: var(--accent);
+  dominant-baseline: alphabetic;
+  pointer-events: none;
   transition: fill var(--motion-base, 0.4s) var(--motion-ease, ease);
 }
 

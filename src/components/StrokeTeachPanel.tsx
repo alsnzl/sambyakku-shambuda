@@ -3,6 +3,11 @@ import type { ScriptTrack } from '../types/track'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
 import {
+  STROKE_GUIDE_FONT_SIZE,
+  STROKE_GUIDE_X,
+  STROKE_GUIDE_Y,
+} from '../lib/strokeGuideLayout'
+import {
   ensureScriptFontReady,
   getActiveScriptFontLabel,
   getActiveScriptFontStack,
@@ -79,9 +84,9 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
   const inkWidth = FREEHAND_INK_WIDTH
   const fontChoice = getScriptFontChoice(fontSlot)
   const fontFamily = getActiveScriptFontStack(fontSlot)
-  const glyphX = STROKE_VIEWBOX / 2
+  const glyphX = STROKE_GUIDE_X
   /** Baseline low enough for Devanagari top matras (ई, ऐ, …) inside the square. */
-  const glyphY = STROKE_VIEWBOX * 0.7
+  const glyphY = STROKE_GUIDE_Y
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)
@@ -764,7 +769,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                           y={glyphY}
                           textAnchor="middle"
                           lang="sa"
-                          fontSize={158}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
                           style={{ fontFamily: canvasFontFamily }}
                         >
                           {glyph}
@@ -776,7 +781,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                           y={glyphY}
                           textAnchor="middle"
                           lang="sa"
-                          fontSize={158}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
                           style={{ fontFamily: canvasFontFamily }}
                           mask={`url(#${maskId}-watch)`}
                         >
@@ -831,7 +836,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                       y={glyphY}
                       textAnchor="middle"
                       lang="sa"
-                      fontSize={158}
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
                       style={{ fontFamily: canvasFontFamily }}
                     >
                       {glyph}
@@ -843,7 +848,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                       y={glyphY}
                       textAnchor="middle"
                       lang="sa"
-                      fontSize={158}
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
                       style={{ fontFamily: canvasFontFamily }}
                       mask={`url(#${maskId})`}
                     >
