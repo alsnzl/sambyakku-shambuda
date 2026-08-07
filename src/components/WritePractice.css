@@ -15,7 +15,7 @@
 .write__workspace {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 1rem;
 }
 
 .write__rail {
@@ -301,7 +301,6 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
-  overflow: hidden;
 }
 
 .write__advanced-summary {
@@ -312,6 +311,7 @@
   width: 100%;
   margin: 0;
   border: none;
+  border-radius: var(--radius);
   background: transparent;
   cursor: pointer;
   padding: 0.65rem 0.85rem;
@@ -322,8 +322,12 @@
   text-align: left;
 }
 
+.write__advanced.is-open .write__advanced-summary {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
 .write__advanced-body {
-  padding: 0 0.85rem 0.75rem;
+  padding: 0.55rem 0.85rem 0.75rem;
 }
 
 .write__advanced-body .write__brush,
@@ -386,7 +390,7 @@
 
 .write__glyph-ink {
   fill: var(--accent);
-  transition: fill 0.4s var(--motion-ease, ease);
+  transition: fill var(--motion-base, 0.4s) var(--motion-ease, ease);
 }
 
 .write__glyph-ink--under-arrows {
@@ -402,13 +406,12 @@
 }
 
 .write__settle {
-  transition: opacity 0.28s var(--motion-ease, ease);
+  transition: opacity var(--motion-fast, 0.28s) var(--motion-ease, ease);
 }
 
 .write__tip {
   fill: color-mix(in srgb, var(--accent) 50%, white);
   opacity: 0;
-  transition: opacity 0.16s ease;
   pointer-events: none;
 }
 

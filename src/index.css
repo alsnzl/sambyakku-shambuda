@@ -44,8 +44,32 @@
   --deva: 'Noto Sans Devanagari', sans-serif;
   /* UI Siddhaṃ default: Muktamsiddham (Devanagari codepoints). Switchable in settings. */
   --siddham: 'Muktamsiddham', sans-serif;
+  /* Noto Sans Siddham sits high in the em box; set when that face is active. */
+  --siddham-optical-nudge: 0;
   --mono: ui-monospace, Consolas, monospace;
+}
 
+/* Script face stacks via data-* so WebView recalculates font-family on switch. */
+html[data-deva-face='noto-deva'] {
+  --deva: 'Noto Sans Devanagari', sans-serif;
+}
+html[data-deva-face='tiro-deva'] {
+  --deva: 'Tiro Devanagari Sanskrit', 'Noto Sans Devanagari', sans-serif;
+}
+html[data-deva-face='user'] {
+  --deva: 'User Devanagari', 'Noto Sans Devanagari', sans-serif;
+}
+html[data-siddham-face='muktam'] {
+  --siddham: 'Muktamsiddham', sans-serif;
+}
+html[data-siddham-face='noto-siddham'] {
+  --siddham: 'Noto Sans Siddham', sans-serif;
+}
+html[data-siddham-face='user'] {
+  --siddham: 'User Siddham', 'Muktamsiddham', sans-serif;
+}
+
+:root {
   /* One shared corner radius for blocks, chips, and controls. */
   --radius-block: 1rem;
   --radius-sm: var(--radius-block);
@@ -57,9 +81,21 @@
   --block-bg: color-mix(in srgb, var(--surface) 94%, white);
   --block-border: var(--line-strong);
   --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 6px 18px var(--shadow);
+  --glass-blur: 22px;
+  --glass-blur-soft: 14px;
+  --glass-saturate: 1.85;
+  --block-blur: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  --block-blur-soft: blur(var(--glass-blur-soft)) saturate(var(--glass-saturate));
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
 
   /* Script / learning glyph scale (Home 글자 크기). UI chrome stays fixed. */
   --glyph-scale: 1;
+  /* Top matras (ई ऐ ओ …) extend above the em box when line-height is tight. */
+  --deva-matra-clearance: 0.3em;
 
   /* Phone-first shell; landscape tablet overrides in styles/landscape.css */
   --shell-max: 28rem;
@@ -73,8 +109,9 @@
   color: var(--ink);
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse 88% 58% at 10% -8%, rgba(44, 107, 102, 0.09), transparent 58%),
-    radial-gradient(ellipse 62% 42% at 100% 4%, rgba(58, 70, 88, 0.05), transparent 52%),
+    radial-gradient(ellipse 88% 58% at 10% -8%, rgba(44, 107, 102, 0.14), transparent 58%),
+    radial-gradient(ellipse 62% 42% at 100% 4%, rgba(58, 70, 88, 0.08), transparent 52%),
+    radial-gradient(ellipse 50% 36% at 50% 100%, rgba(44, 107, 102, 0.06), transparent 60%),
     linear-gradient(180deg, #f5f7f9 0%, var(--paper) 42%, var(--paper-deep) 100%);
   background-attachment: fixed;
   font-synthesis: none;
@@ -134,11 +171,545 @@
   --block-bg: color-mix(in srgb, var(--surface) 92%, #243040);
   --block-border: var(--line-strong);
   --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
 
   background-image:
     radial-gradient(ellipse 88% 58% at 10% -8%, rgba(95, 172, 164, 0.14), transparent 58%),
     radial-gradient(ellipse 62% 42% at 100% 4%, rgba(120, 140, 170, 0.08), transparent 52%),
     linear-gradient(180deg, #161c24 0%, var(--paper) 42%, var(--paper-deep) 100%);
+}
+
+/* —— Sangha palette: kasaya saffron, lotus, temple indigo (light + dark) —— */
+:root[data-palette='sangha'] {
+  --paper: #efe9df;
+  --paper-deep: #e5ddd0;
+  --ink: #2c2418;
+  --ink-soft: #4a4032;
+  --muted: #7a6e5c;
+  --line: rgba(44, 36, 24, 0.1);
+  --line-strong: rgba(44, 36, 24, 0.15);
+
+  --teal: #9a5a24;
+  --teal-soft: #c48945;
+  --teal-wash: rgba(154, 90, 36, 0.12);
+  --clay: #8f4654;
+  --clay-wash: rgba(143, 70, 84, 0.13);
+  --moss: #5a6e48;
+  --moss-wash: rgba(90, 110, 72, 0.14);
+
+  --bg: var(--paper);
+  --surface: #f7f2ea;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #fff8ef;
+  --shadow: rgba(44, 36, 24, 0.08);
+  --shadow-lift: rgba(44, 36, 24, 0.13);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 92%, #fff8ef);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 248, 239, 0.85) inset, 0 6px 18px var(--shadow);
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(154, 90, 36, 0.12), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(90, 70, 110, 0.07), transparent 52%),
+    linear-gradient(180deg, #f4efe6 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+:root[data-theme='dark'][data-palette='sangha'] {
+  --paper: #14110e;
+  --paper-deep: #0f0c0a;
+  --ink: #f0e6d6;
+  --ink-soft: #d4c4ae;
+  --muted: #a89882;
+  --line: rgba(240, 230, 214, 0.1);
+  --line-strong: rgba(240, 230, 214, 0.16);
+
+  --teal: #d4a05c;
+  --teal-soft: #e0b878;
+  --teal-wash: rgba(212, 160, 92, 0.16);
+  --clay: #d48896;
+  --clay-wash: rgba(212, 136, 150, 0.16);
+  --moss: #9bb57e;
+  --moss-wash: rgba(155, 181, 126, 0.16);
+
+  --bg: var(--paper);
+  --surface: #1e1914;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #1a120a;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-lift: rgba(0, 0, 0, 0.5);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 90%, #2a2218);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 230, 200, 0.05) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(212, 160, 92, 0.14), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(70, 55, 100, 0.12), transparent 52%),
+    linear-gradient(180deg, #1a1510 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+/* —— Lotus: petal rose / soft mauve —— */
+:root[data-palette='lotus'] {
+  --paper: #f3eef1;
+  --paper-deep: #ebe3e8;
+  --ink: #2a1f26;
+  --ink-soft: #4a3842;
+  --muted: #7a6570;
+  --line: rgba(42, 31, 38, 0.1);
+  --line-strong: rgba(42, 31, 38, 0.15);
+
+  --teal: #a85d78;
+  --teal-soft: #c47f98;
+  --teal-wash: rgba(168, 93, 120, 0.12);
+  --clay: #b45a4a;
+  --clay-wash: rgba(180, 90, 74, 0.13);
+  --moss: #5f7a5a;
+  --moss-wash: rgba(95, 122, 90, 0.14);
+
+  --bg: var(--paper);
+  --surface: #faf6f8;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #fff7fa;
+  --shadow: rgba(42, 31, 38, 0.08);
+  --shadow-lift: rgba(42, 31, 38, 0.13);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 92%, white);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 6px 18px var(--shadow);
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(168, 93, 120, 0.11), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(90, 100, 140, 0.06), transparent 52%),
+    linear-gradient(180deg, #f7f2f5 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+:root[data-theme='dark'][data-palette='lotus'] {
+  --paper: #151116;
+  --paper-deep: #100d12;
+  --ink: #f0e6ec;
+  --ink-soft: #d4c0ca;
+  --muted: #a8909c;
+  --line: rgba(240, 230, 236, 0.1);
+  --line-strong: rgba(240, 230, 236, 0.16);
+
+  --teal: #d4a0b4;
+  --teal-soft: #e0b8c8;
+  --teal-wash: rgba(212, 160, 180, 0.16);
+  --clay: #d48474;
+  --clay-wash: rgba(212, 132, 116, 0.16);
+  --moss: #8fb584;
+  --moss-wash: rgba(143, 181, 132, 0.16);
+
+  --bg: var(--paper);
+  --surface: #1e171c;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #1a1014;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-lift: rgba(0, 0, 0, 0.5);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 90%, #2a2026);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 230, 240, 0.04) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(212, 160, 180, 0.14), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(80, 70, 110, 0.1), transparent 52%),
+    linear-gradient(180deg, #1a1418 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+/* —— Indigo: lapis / deep temple blue —— */
+:root[data-palette='indigo'] {
+  --paper: #eef0f5;
+  --paper-deep: #e4e7ef;
+  --ink: #1a2233;
+  --ink-soft: #354056;
+  --muted: #667388;
+  --line: rgba(26, 34, 51, 0.1);
+  --line-strong: rgba(26, 34, 51, 0.15);
+
+  --teal: #3d5a80;
+  --teal-soft: #5a7aa0;
+  --teal-wash: rgba(61, 90, 128, 0.12);
+  --clay: #b45a4a;
+  --clay-wash: rgba(180, 90, 74, 0.12);
+  --moss: #4f7a62;
+  --moss-wash: rgba(79, 122, 98, 0.14);
+
+  --bg: var(--paper);
+  --surface: #f7f8fb;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #f2f6fb;
+  --shadow: rgba(26, 34, 51, 0.08);
+  --shadow-lift: rgba(26, 34, 51, 0.12);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 94%, white);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 6px 18px var(--shadow);
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(61, 90, 128, 0.11), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(90, 120, 150, 0.07), transparent 52%),
+    linear-gradient(180deg, #f3f5f9 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+:root[data-theme='dark'][data-palette='indigo'] {
+  --paper: #10141c;
+  --paper-deep: #0c0f15;
+  --ink: #e4eaf4;
+  --ink-soft: #b8c4d6;
+  --muted: #8494aa;
+  --line: rgba(228, 234, 244, 0.1);
+  --line-strong: rgba(228, 234, 244, 0.16);
+
+  --teal: #7aa0c8;
+  --teal-soft: #96b6d8;
+  --teal-wash: rgba(122, 160, 200, 0.16);
+  --clay: #d48474;
+  --clay-wash: rgba(212, 132, 116, 0.16);
+  --moss: #7eb89a;
+  --moss-wash: rgba(126, 184, 154, 0.16);
+
+  --bg: var(--paper);
+  --surface: #171d28;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #0e141c;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-lift: rgba(0, 0, 0, 0.5);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 90%, #243040);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(200, 220, 255, 0.04) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(122, 160, 200, 0.14), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(60, 80, 120, 0.12), transparent 52%),
+    linear-gradient(180deg, #141820 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+/* —— Bodhi: leaf / forest green —— */
+:root[data-palette='bodhi'] {
+  --paper: #eef1ea;
+  --paper-deep: #e4e9dc;
+  --ink: #1e2818;
+  --ink-soft: #3a4834;
+  --muted: #687860;
+  --line: rgba(30, 40, 24, 0.1);
+  --line-strong: rgba(30, 40, 24, 0.15);
+
+  --teal: #4f6b3c;
+  --teal-soft: #6d8c56;
+  --teal-wash: rgba(79, 107, 60, 0.12);
+  --clay: #a85a42;
+  --clay-wash: rgba(168, 90, 66, 0.12);
+  --moss: #5a7a52;
+  --moss-wash: rgba(90, 122, 82, 0.14);
+
+  --bg: var(--paper);
+  --surface: #f6f8f3;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #f4f8ef;
+  --shadow: rgba(30, 40, 24, 0.08);
+  --shadow-lift: rgba(30, 40, 24, 0.12);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 94%, white);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 6px 18px var(--shadow);
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(79, 107, 60, 0.11), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(100, 120, 80, 0.07), transparent 52%),
+    linear-gradient(180deg, #f3f6ee 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+:root[data-theme='dark'][data-palette='bodhi'] {
+  --paper: #11150e;
+  --paper-deep: #0d100b;
+  --ink: #e6eedc;
+  --ink-soft: #c2d0b0;
+  --muted: #8fa080;
+  --line: rgba(230, 238, 220, 0.1);
+  --line-strong: rgba(230, 238, 220, 0.16);
+
+  --teal: #9bb57e;
+  --teal-soft: #b4c898;
+  --teal-wash: rgba(155, 181, 126, 0.16);
+  --clay: #d48474;
+  --clay-wash: rgba(212, 132, 116, 0.16);
+  --moss: #8fb584;
+  --moss-wash: rgba(143, 181, 132, 0.16);
+
+  --bg: var(--paper);
+  --surface: #181e14;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #10150c;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-lift: rgba(0, 0, 0, 0.5);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 90%, #243020);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(220, 240, 200, 0.04) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(155, 181, 126, 0.14), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(70, 90, 60, 0.1), transparent 52%),
+    linear-gradient(180deg, #151a12 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+/* —— Dusk: ink / limestone slate —— */
+:root[data-palette='dusk'] {
+  --paper: #eef0f2;
+  --paper-deep: #e4e7ea;
+  --ink: #1e242a;
+  --ink-soft: #3c4650;
+  --muted: #6a7680;
+  --line: rgba(30, 36, 42, 0.1);
+  --line-strong: rgba(30, 36, 42, 0.15);
+
+  --teal: #5a6570;
+  --teal-soft: #78848e;
+  --teal-wash: rgba(90, 101, 112, 0.12);
+  --clay: #a85a4a;
+  --clay-wash: rgba(168, 90, 74, 0.12);
+  --moss: #5a7a5a;
+  --moss-wash: rgba(90, 122, 90, 0.14);
+
+  --bg: var(--paper);
+  --surface: #f7f8f9;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #f4f6f7;
+  --shadow: rgba(30, 36, 42, 0.08);
+  --shadow-lift: rgba(30, 36, 42, 0.12);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 94%, white);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 6px 18px var(--shadow);
+  --press-shadow:
+    0 14px 40px color-mix(in srgb, var(--shadow-lift) 88%, transparent),
+    0 4px 14px color-mix(in srgb, var(--shadow) 70%, transparent);
+  --press-shadow-active:
+    0 6px 20px color-mix(in srgb, var(--shadow) 65%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(90, 101, 112, 0.1), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(80, 90, 110, 0.06), transparent 52%),
+    linear-gradient(180deg, #f4f5f7 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+:root[data-theme='dark'][data-palette='dusk'] {
+  --paper: #121518;
+  --paper-deep: #0e1012;
+  --ink: #e6eaee;
+  --ink-soft: #c0c8d0;
+  --muted: #8e98a2;
+  --line: rgba(230, 234, 238, 0.1);
+  --line-strong: rgba(230, 234, 238, 0.16);
+
+  --teal: #a0aab4;
+  --teal-soft: #b8c0c8;
+  --teal-wash: rgba(160, 170, 180, 0.16);
+  --clay: #d48474;
+  --clay-wash: rgba(212, 132, 116, 0.16);
+  --moss: #8fb584;
+  --moss-wash: rgba(143, 181, 132, 0.16);
+
+  --bg: var(--paper);
+  --surface: #1a1e22;
+  --chip: var(--teal-wash);
+  --accent: var(--teal);
+  --accent-2: var(--teal-soft);
+  --on-accent: #101418;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --shadow-lift: rgba(0, 0, 0, 0.5);
+
+  --correct: var(--moss);
+  --correct-bg: var(--moss-wash);
+  --wrong: var(--clay);
+  --wrong-bg: var(--clay-wash);
+  --cream: var(--surface);
+  --cream-deep: var(--paper-deep);
+  --sage: var(--moss);
+  --rose: var(--clay);
+
+  --block-bg: color-mix(in srgb, var(--surface) 90%, #283038);
+  --block-border: var(--line-strong);
+  --block-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 22px var(--shadow);
+  --press-shadow:
+    0 16px 44px color-mix(in srgb, var(--shadow-lift) 75%, transparent),
+    0 4px 16px color-mix(in srgb, var(--shadow) 55%, transparent);
+  --press-shadow-active:
+    0 6px 22px color-mix(in srgb, var(--shadow) 50%, transparent);
+
+  background-image:
+    radial-gradient(ellipse 88% 58% at 8% -6%, rgba(160, 170, 180, 0.1), transparent 56%),
+    radial-gradient(ellipse 58% 44% at 100% 0%, rgba(70, 80, 100, 0.1), transparent 52%),
+    linear-gradient(180deg, #16191c 0%, var(--paper) 44%, var(--paper-deep) 100%);
+}
+
+/*
+ * Frosted / Liquid Glass fills — after theme packs.
+ * Specular + blur application lives in styles/liquid-glass.css.
+ */
+:root {
+  --block-bg: color-mix(in srgb, var(--surface) 42%, transparent);
+}
+
+:root[data-theme='dark'] {
+  --block-bg: color-mix(in srgb, var(--surface) 38%, transparent);
+  --glass-blur: 26px;
+  --glass-blur-soft: 16px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --block-bg: var(--surface);
+    --block-blur: none;
+    --block-blur-soft: none;
+  }
 }
 
 * {
@@ -151,6 +722,7 @@ body {
   min-height: 100svh;
   overflow-x: clip;
   max-width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
@@ -170,7 +742,7 @@ textarea {
   color: var(--ink);
 }
 
-/* Shared content blocks */
+/* Shared content blocks — glass finish applied in liquid-glass.css */
 .ui-block {
   background: var(--block-bg);
   border: 1px solid var(--block-border);
@@ -179,6 +751,82 @@ textarea {
 }
 
 .ui-block--soft {
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  background: color-mix(in srgb, var(--surface) 52%, transparent);
   box-shadow: none;
+}
+
+/*
+ * Devanagari top matras: reserve space so ई / ऐ / ओ etc. do not cover
+ * labels or neighbors sitting above the glyph.
+ * Inline text needs inline-block so padding affects layout.
+ */
+:is(
+  .teach-page__glyph--deva,
+  .practice__prompt--deva,
+  .practice__choice-script--deva,
+  .letter-card__similar-glyph--deva,
+  .tool__chip-glyph--deva,
+  .about__sample--deva,
+  .teach-page__track-sample--deva,
+  .tool__seg-preview,
+  .tool__mantra-step-deva,
+  .tool__mantra-focus-deva,
+  .glyph-reel--deva .glyph-reel__glyph
+) {
+  display: inline-block;
+  box-sizing: content-box;
+  padding-top: var(--deva-matra-clearance);
+  line-height: 1.2;
+  vertical-align: baseline;
+}
+
+/* Block / flex shells — padding only (do not override display). */
+:is(
+  .learn__tile-char--deva,
+  .learn__group-preview--deva,
+  .home__track-sample--deva,
+  .home__card-glyphs-deva,
+  .tool__corr-glyph--deva,
+  .tool__output--deva,
+  .tool__pair-glyph--deva
+) {
+  padding-top: max(var(--deva-matra-clearance), 0.14em);
+  line-height: 1.2;
+}
+
+.home__feed-glyph--deva {
+  box-sizing: border-box;
+  height: 3rem;
+  padding-top: 0.35rem;
+  place-items: end center;
+  line-height: 1.15;
+}
+
+.letter-card__hero--deva {
+  padding-top: max(0.32em, var(--deva-matra-clearance));
+}
+
+/*
+ * Noto Sans Siddham: glyph ink sits high with empty space below the baseline.
+ * Optical nudge applies only while that face is selected (see customScriptFonts).
+ */
+html[data-siddham-face='noto-siddham'] :is(
+  .learn__tile-char--siddham,
+  .learn__group-preview--siddham,
+  .letter-card__hero--siddham,
+  .letter-card__similar-glyph--siddham,
+  .teach-page__glyph--siddham,
+  .teach-page__track-sample--siddham,
+  .home__track-sample--siddham,
+  .home__feed-glyph--siddham,
+  .home__track--siddham .home__track-glyph,
+  .about__sample--siddham,
+  .practice__prompt--siddham,
+  .practice__choice-script--siddham,
+  .tool__chip-glyph--siddham,
+  .tool__output--siddham,
+  .tool__corr-glyph--siddham,
+  .tool__pair-glyph--siddham
+) {
+  translate: 0 var(--siddham-optical-nudge);
 }

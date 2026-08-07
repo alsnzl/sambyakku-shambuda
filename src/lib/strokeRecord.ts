@@ -17,7 +17,9 @@ export type RecordedStroke = {
   points: [number, number][]
 }
 
-type StoredEntry = GlyphStrokeData & { savedAt: string }
+type StoredEntry = GlyphStrokeData & { savedAt: string; note?: string }
+
+export const DEFAULT_TEACH_GUIDE_TIP = '펜으로 · 획 순서대로 · 윤곽을 충분히 덮기'
 
 type Store = Partial<Record<StrokeScript, Record<string, StoredEntry>>>
 
@@ -54,9 +56,15 @@ export function loadUserStrokes(
 ): GlyphStrokeData | null {
   const entry = readStore()[script]?.[letterId]
   if (!entry) return null
-  const { savedAt: _, ...data } = entry
-  void _
-  return data
+  return { d: entry.d, strokes: entry.strokes }
+}
+
+export function loadUserStrokesNote(
+  script: StrokeScript,
+  letterId: string,
+): string | null {
+  const note = readStore()[script]?.[letterId]?.note
+  return typeof note === 'string' && note.trim() ? note : null
 }
 
 export function loadUserStrokesMeta(
@@ -76,6 +84,8 @@ export type TeachingInfo = {
   strokeCount: number
   hasOfficial: boolean
   hasCloud: boolean
+  /** Guide tip / teaching note (cloud · bundled · local). */
+  note: string | null
 }
 
 export function getTeachingInfo(
@@ -87,7 +97,12 @@ export function getTeachingInfo(
   const official = getTaughtEntry(letterId, script)
   const local = loadUserStrokes(script, letterId)
   const localMeta = loadUserStrokesMeta(script, letterId)
+  const localNote = loadUserStrokesNote(script, letterId)
   const hasCloud = Boolean(cloud)
+  const resolvedNote =
+    localNote ??
+    (cloud?.note?.trim() ? cloud.note : null) ??
+    (official?.note?.trim() ? official.note : null)
 
   if (local) {
     return {
@@ -98,6 +113,7 @@ export function getTeachingInfo(
       strokeCount: local.strokes.length,
       hasOfficial: hasCloud || hasOfficial,
       hasCloud,
+      note: resolvedNote,
     }
   }
 
@@ -110,6 +126,7 @@ export function getTeachingInfo(
       strokeCount: cloud.strokes.length,
       hasOfficial: true,
       hasCloud: true,
+      note: resolvedNote,
     }
   }
 
@@ -122,6 +139,7 @@ export function getTeachingInfo(
       strokeCount: official.strokes.length,
       hasOfficial: true,
       hasCloud: false,
+      note: resolvedNote,
     }
   }
 
@@ -133,6 +151,7 @@ export function getTeachingInfo(
     strokeCount: 0,
     hasOfficial: false,
     hasCloud: false,
+    note: null,
   }
 }
 
@@ -140,10 +159,16 @@ export function saveUserStrokes(
   script: StrokeScript,
   letterId: string,
   data: GlyphStrokeData,
+  note?: string | null,
 ) {
   const store = readStore()
   if (!store[script]) store[script] = {}
-  store[script]![letterId] = { ...data, savedAt: new Date().toISOString() }
+  const trimmed = note?.trim()
+  store[script]![letterId] = {
+    ...data,
+    savedAt: new Date().toISOString(),
+    ...(trimmed ? { note: trimmed } : {}),
+  }
   writeStore(store)
 }
 

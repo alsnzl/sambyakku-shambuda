@@ -2,12 +2,15 @@ import { useEffect, useId, useRef, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
+import { getActiveScriptFontStack } from '../lib/customScriptFonts'
 import {
   clearUserStrokes,
+  DEFAULT_TEACH_GUIDE_TIP,
   defaultLabels,
   getTeachingInfo,
   saveUserStrokes,
 } from '../lib/strokeRecord'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import {
   cloudRepoLabel,
   hasCloudWriteToken,
@@ -38,12 +41,16 @@ import {
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
+import { FoldChevron } from './FoldChevron'
+import { startStrokeRevealPlayback } from '../lib/strokePlayback'
 import './StrokeTeachPanel.css'
 
 type Props = {
   letterId: string
   glyph: string
   track: ScriptTrack
+  iast?: string
+  hangulHint?: string
 }
 
 type TeachMode = 'draw' | 'watch'
@@ -58,19 +65,15 @@ type CloudUiStatus =
   | 'no-token'
   | 'error'
 
-const SPEED = 0.32
-const MIN_STROKE_MS = 220
-const LIFT_MS = 55
-const glide = (t: number) => 1 - (1 - t) ** 1.25
-
-export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
+export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: Props) {
+  useScriptFontEpoch()
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const generated = getGlyphStrokes(letterId, script)
   const labels = defaultLabels(letterId, track)
   const inkWidth = FREEHAND_INK_WIDTH
   const outlineD = generated?.d
-  /** Guide face from CSS vars (settings). Stroke order stays taught/generated paths. */
-  const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
+  /** Active face stack (settings). Stroke order stays taught/generated paths. */
+  const fontFamily = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
   const glyphX = STROKE_VIEWBOX / 2
   /** Baseline low enough for Devanagari top matras (ई, ऐ, …) inside the square. */
   const glyphY = STROKE_VIEWBOX * 0.7
@@ -94,15 +97,32 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
   const [saveAckLow, setSaveAckLow] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [labelDrafts, setLabelDrafts] = useState<string[]>(() => [...labels])
+  const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
 
   const maskId = `${useId()}-teach-mask`
   const svgRef = useRef<SVGSVGElement>(null)
   const revealRefs = useRef<(SVGPathElement | null)[]>([])
   const tipRef = useRef<SVGCircleElement | null>(null)
+  const advancedRef = useRef<HTMLDivElement>(null)
   const drawingRef = useRef(false)
   const pointsRef = useRef<FreehandPoint[]>([])
+  const recordedCountRef = useRef(0)
+  recordedCountRef.current = recorded.length
 
   const refresh = () => setTick((n) => n + 1)
+
+  function toggleAdvanced() {
+    setAdvancedOpen((v) => {
+      const next = !v
+      if (next) {
+        requestAnimationFrame(() => {
+          advancedRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        })
+      }
+      return next
+    })
+  }
 
   /** Prefer in-progress strokes; otherwise last saved/cloud taught data. */
   const previewStrokes =
@@ -121,6 +141,16 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     return true
   }
 
+  function buildLabelDrafts(strokes?: GlyphStroke[]): string[] {
+    const fromStrokes = strokes?.map((s) => s.label) ?? []
+    const base = defaultLabels(letterId, track)
+    const count = Math.max(base.length, fromStrokes.length, 1)
+    return Array.from({ length: count }, (_, i) => {
+      const raw = fromStrokes[i]?.trim() || base[i]?.trim()
+      return raw || `획 ${i + 1}`
+    })
+  }
+
   useEffect(() => {
     setRecorded([])
     setRedoStack([])
@@ -134,7 +164,10 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setSaveAckLow(false)
     drawingRef.current = false
     pointsRef.current = []
-  }, [letterId, script])
+    const nextInfo = getTeachingInfo(letterId, script)
+    setLabelDrafts(buildLabelDrafts(nextInfo.data?.strokes))
+    setGuideTip(nextInfo.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
+  }, [letterId, script, track])
 
   useEffect(() => {
     let cancelled = false
@@ -146,6 +179,12 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
           setCloudPhase('idle')
           setCloudError(null)
           refresh()
+          // Prefer cloud labels/note once pull finishes (canvas still empty).
+          if (recordedCountRef.current === 0) {
+            const next = getTeachingInfo(letterId, script)
+            setLabelDrafts(buildLabelDrafts(next.data?.strokes))
+            setGuideTip(next.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -165,6 +204,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
     let cancelled = false
     let raf = 0
+    let stopPlayback: (() => void) | null = null
     const strokeCount = previewStrokes.length
     const strokeSnapshot = previewStrokes.map((s) => ({ ...s }))
 
@@ -176,84 +216,24 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
         return
       }
 
-      const lengths = paths.map((el) => {
-        const len = el!.getTotalLength()
-        return len > 0.5 ? len : 1
-      })
-
-      const timeline = lengths.map((len) => ({
-        ms: Math.max(MIN_STROKE_MS, len / SPEED),
-      }))
-      let clock = 0
-      const starts = timeline.map((t) => {
-        const s = clock
-        clock += t.ms + LIFT_MS
-        return s
-      })
-      const totalMs = Math.max(clock - LIFT_MS, MIN_STROKE_MS)
-
-      paths.forEach((el, i) => {
-        el!.style.strokeDasharray = `${lengths[i]}`
-        el!.style.strokeDashoffset = `${lengths[i]}`
-      })
-      if (tipRef.current) tipRef.current.style.opacity = '0'
       setWatchDone(false)
       setActiveStep(0)
-
-      let lastStep = -1
-      const t0 = performance.now()
-
-      const frame = (now: number) => {
-        if (cancelled) return
-        const t = now - t0
-        let current = -1
-
-        paths.forEach((el, i) => {
-          const local = (t - starts[i]) / timeline[i].ms
-          const p = local <= 0 ? 0 : local >= 1 ? 1 : glide(local)
-          el!.style.strokeDashoffset = `${lengths[i] * (1 - p)}`
-          if (local > 0 && local < 1) current = i
-        })
-
-        const tip = tipRef.current
-        if (tip && current >= 0) {
-          const el = paths[current]!
-          const local = (t - starts[current]) / timeline[current].ms
-          const point = el.getPointAtLength(lengths[current] * glide(local))
-          tip.setAttribute('cx', `${point.x}`)
-          tip.setAttribute('cy', `${point.y}`)
-          tip.setAttribute('r', `${strokeSnapshot[current].width * 0.32}`)
-          tip.style.opacity = '1'
-        } else if (tip) {
-          tip.style.opacity = '0'
-        }
-
-        const step = current >= 0 ? current : t >= totalMs ? strokeCount : lastStep
-        if (step !== lastStep) {
-          lastStep = step
-          setActiveStep(step)
-        }
-
-        if (t < totalMs) {
-          raf = requestAnimationFrame(frame)
-          return
-        }
-
-        paths.forEach((el) => {
-          el!.style.strokeDashoffset = '0'
-        })
-        if (tip) tip.style.opacity = '0'
-        setActiveStep(strokeCount)
-        setWatchDone(true)
-      }
-
-      raf = requestAnimationFrame(frame)
+      stopPlayback = startStrokeRevealPlayback({
+        paths: paths as SVGPathElement[],
+        tip: tipRef.current,
+        strokeWidths: strokeSnapshot.map((s) => s.width),
+        onStep: setActiveStep,
+        onDone: () => {
+          if (!cancelled) setWatchDone(true)
+        },
+      })
     }
 
     raf = requestAnimationFrame(start)
     return () => {
       cancelled = true
       cancelAnimationFrame(raf)
+      stopPlayback?.()
     }
     // playId / stroke identity drive restarts; length is enough with playId bump on edits
   }, [mode, playId, letterId, script, previewStrokes.length])
@@ -307,7 +287,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     const index = recorded.length
     const stroke = commitFreehandStroke(
       pointsRef.current,
-      labels[index] ?? `획 ${index + 1}`,
+      labelDrafts[index]?.trim() || labels[index] || `획 ${index + 1}`,
       inkWidth,
       pressureSens,
     )
@@ -353,18 +333,37 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   }
 
   function renameStroke(index: number, label: string) {
+    setLabelDrafts((drafts) => {
+      const next = [...drafts]
+      while (next.length <= index) next.push(`획 ${next.length + 1}`)
+      next[index] = label
+      return next
+    })
     setRecorded((rs) => rs.map((s, i) => (i === index ? { ...s, label } : s)))
     setSaveAckLow(false)
   }
 
   function commitStrokeLabel(index: number) {
+    const fallback = labels[index] || `획 ${index + 1}`
+    setLabelDrafts((drafts) => {
+      const next = [...drafts]
+      while (next.length <= index) next.push(fallback)
+      const trimmed = next[index]?.trim()
+      next[index] = trimmed || fallback
+      return next
+    })
     setRecorded((rs) =>
       rs.map((s, i) => {
         if (i !== index) return s
         const next = s.label.trim()
-        return { ...s, label: next || labels[i] || `획 ${i + 1}` }
+        return { ...s, label: next || fallback }
       }),
     )
+  }
+
+  function commitGuideTip() {
+    const trimmed = guideTip.trim()
+    setGuideTip(trimmed || DEFAULT_TEACH_GUIDE_TIP)
   }
 
   function handleLoad() {
@@ -372,6 +371,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     if (!strokes?.length || saving) return
     exitWatch()
     setRecorded(strokes.map((s) => ({ ...s })))
+    setLabelDrafts(buildLabelDrafts(strokes))
+    setGuideTip(info.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
     setRedoStack([])
     setDrawing([])
     drawingRef.current = false
@@ -406,10 +407,18 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setSaveAckLow(false)
 
     const count = recorded.length
+    const tip = guideTip.trim() || DEFAULT_TEACH_GUIDE_TIP
     // Keep a path outline for playback fill when available; UI itself uses the face font.
-    const data = { d: outlineD || `M${glyphX} ${glyphY}`, strokes: recorded }
+    const data = {
+      d: outlineD || `M${glyphX} ${glyphY}`,
+      strokes: recorded.map((s, i) => ({
+        ...s,
+        label: s.label.trim() || labelDrafts[i]?.trim() || labels[i] || `획 ${i + 1}`,
+      })),
+    }
 
-    saveUserStrokes(script, letterId, data)
+    saveUserStrokes(script, letterId, data, tip)
+    setGuideTip(tip)
     refresh()
 
     const coverageNote =
@@ -426,13 +435,15 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setFlash('클라우드에 저장 중…')
     setCloudError(null)
     try {
-      await publishLetterToCloud(script, letterId, data)
+      await publishLetterToCloud(script, letterId, data, tip)
       clearUserStrokes(script, letterId)
       await refreshCloudStore({ force: true })
       refresh()
       setRecorded([])
       setRedoStack([])
       setDrawing([])
+      setLabelDrafts(buildLabelDrafts(data.strokes))
+      setGuideTip(tip)
       setCloudPhase('idle')
       setFlash(`${count}획 · ${coverageNote} · 클라우드 저장 완료`)
     } catch (err) {
@@ -485,6 +496,30 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   )
   void tick
 
+  const guideCount = Math.max(
+    labelDrafts.length,
+    labels.length,
+    mode === 'watch' ? previewStrokes.length : recorded.length + (mode === 'draw' ? 1 : 0),
+    1,
+  )
+  const guideSteps = Array.from({ length: guideCount }, (_, i) => {
+    const label =
+      labelDrafts[i] ||
+      recorded[i]?.label ||
+      previewStrokes[i]?.label ||
+      labels[i] ||
+      `획 ${i + 1}`
+    const done =
+      mode === 'watch'
+        ? watchDone || activeStep > i
+        : i < recorded.length
+    const current =
+      mode === 'watch'
+        ? !watchDone && activeStep === i
+        : i === recorded.length
+    return { label, done, current }
+  })
+
   return (
     <section className="teach is-open" aria-label="획 가르치기">
       <div className="teach__chrome">
@@ -513,6 +548,61 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       </div>
 
       <div className="teach__workspace">
+        <aside className="teach__guide" aria-label="획 기록 가이드">
+          <div className="teach__guide-letter">
+            <span className="teach__guide-glyph" lang="sa" style={{ fontFamily }}>
+              {glyph}
+            </span>
+            <div className="teach__guide-meta">
+              {iast ? <p className="teach__guide-iast">{iast}</p> : null}
+              {hangulHint ? <p className="teach__guide-hangul">{hangulHint}</p> : null}
+            </div>
+          </div>
+
+          <p className="teach__guide-title">획 가이드</p>
+          <ol className="teach__guide-steps">
+            {guideSteps.map((step, i) => (
+              <li
+                key={`guide-${letterId}-${i}`}
+                className={`teach__guide-step${step.done ? ' is-done' : ''}${
+                  step.current ? ' is-current' : ''
+                }`}
+              >
+                <span className="teach__guide-num" aria-hidden="true">
+                  {step.done ? '✓' : i + 1}
+                </span>
+                <div className="teach__guide-label-wrap">
+                  <input
+                    className="teach__guide-label-input"
+                    type="text"
+                    value={step.label}
+                    disabled={saving}
+                    aria-label={`${i + 1}번 획 설명`}
+                    onChange={(e) => renameStroke(i, e.target.value)}
+                    onBlur={() => commitStrokeLabel(i)}
+                  />
+                  {step.current ? (
+                    <span className="teach__guide-current-tag">그리는 중</span>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <label className="teach__guide-tip-field">
+            <span className="teach__guide-tip-label">기록 팁</span>
+            <textarea
+              className="teach__guide-tip-input"
+              rows={3}
+              value={guideTip}
+              disabled={saving}
+              aria-label="획 기록 팁"
+              onChange={(e) => setGuideTip(e.target.value)}
+              onBlur={commitGuideTip}
+            />
+          </label>
+        </aside>
+
         <div className="teach__main">
           {glyph ? (
             <div className="teach__canvas-row">
@@ -719,25 +809,36 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                     ))}
                     <li className="teach__step is-active">
                       <span className="teach__step-num">{recorded.length + 1}</span>
-                      <span className="teach__step-label">
-                        {labels[recorded.length] ?? `획 ${recorded.length + 1}`} (그리는 중)
-                      </span>
+                      <input
+                        className="teach__step-input"
+                        type="text"
+                        value={
+                          labelDrafts[recorded.length] ||
+                          labels[recorded.length] ||
+                          `획 ${recorded.length + 1}`
+                        }
+                        disabled={saving}
+                        aria-label={`${recorded.length + 1}번 획 이름 (그리는 중)`}
+                        onChange={(e) => renameStroke(recorded.length, e.target.value)}
+                        onBlur={() => commitStrokeLabel(recorded.length)}
+                      />
                     </li>
                   </>
                 )}
             </ol>
           ) : null}
 
-          <div className={`teach__advanced ${advancedOpen ? 'is-open' : ''}`}>
+          <div
+            ref={advancedRef}
+            className={`teach__advanced ${advancedOpen ? 'is-open' : ''}`}
+          >
             <button
               type="button"
               className="teach__advanced-summary motion-press"
               aria-expanded={advancedOpen}
-              onClick={() => setAdvancedOpen((v) => !v)}
+              onClick={toggleAdvanced}
             >
-              <span className={`fold-chevron ${advancedOpen ? 'is-open' : ''}`} aria-hidden="true">
-                ▸
-              </span>
+              <FoldChevron open={advancedOpen} />
               그리기 설정
             </button>
             <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>

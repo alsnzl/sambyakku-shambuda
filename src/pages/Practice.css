@@ -43,7 +43,7 @@
   display: block;
   height: 100%;
   background: var(--accent);
-  transition: width 0.45s var(--motion-ease, ease);
+  transition: width var(--motion-slow, 0.48s) var(--motion-ease, ease);
 }
 
 .practice__switch {
@@ -168,9 +168,9 @@
   text-align: left;
   cursor: pointer;
   transition:
-    transform 0.22s var(--motion-ease, ease),
-    background-color 0.22s ease,
-    border-color 0.22s ease;
+    transform var(--motion-press, 0.22s) var(--motion-ease, ease),
+    background-color var(--motion-press, 0.22s) var(--motion-soft, ease),
+    border-color var(--motion-press, 0.22s) var(--motion-soft, ease);
 }
 
 .practice__choice-script--deva {
@@ -209,7 +209,7 @@
 }
 
 .practice__cta--enter {
-  animation: motion-pop 0.42s var(--motion-ease, ease) both;
+  animation: motion-ios-sheet var(--motion-slow, 0.48s) var(--motion-ease, ease) both;
 }
 
 .practice__ready h2 {

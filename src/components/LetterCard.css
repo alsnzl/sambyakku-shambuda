@@ -217,7 +217,7 @@
   appearance: none;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 0.45rem 0.55rem;
+  padding: 0.55rem 0.55rem 0.45rem;
   background: var(--surface);
   cursor: pointer;
   min-width: 3.2rem;

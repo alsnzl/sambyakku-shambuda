@@ -18,8 +18,7 @@
     grid-template-areas:
       "hero hero"
       "learn teach"
-      "path settings"
-      "path feed";
+      "path side";
     gap: 0.75rem 1rem;
     align-content: start;
   }
@@ -38,21 +37,69 @@
     height: 100%;
   }
 
+  /* Keep path at content height — don't stretch with expanded feed */
   .home--gate > .home__card--path {
     grid-area: path;
-    height: 100%;
-  }
-
-  .home--gate > .home__feed {
-    grid-area: feed;
-    margin: 0;
+    height: auto;
     align-self: start;
   }
 
-  .home--gate > .home__settings-entry {
-    grid-area: settings;
-    margin: 0;
+  /* Keep 설정 + 오늘의 추천 stacked (no row gap when feed is collapsed) */
+  .home--gate > .home__side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    width: 100%;
     align-self: start;
+  }
+
+  .home--gate .home__feed {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .home--gate .home__settings-entry {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Match 설정 card so collapsed feed isn't a floating odd-width pill */
+  .home--gate .home__feed.is-collapsed .home__feed-toggle {
+    width: 100%;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--block-border);
+    border-radius: var(--radius-lg);
+    background: var(--block-bg);
+    box-shadow: var(--block-shadow);
+  }
+
+  .home--gate .home__feed.is-open {
+    padding: 0.2rem 0.9rem 0.95rem;
+    border: 1px solid var(--block-border);
+    border-radius: var(--radius-lg);
+    background: var(--block-bg);
+    box-shadow: var(--block-shadow);
+  }
+
+  .home--gate .home__feed.is-open .home__feed-toggle {
+    margin: 0 0 0.35rem;
+    padding: 0.7rem 0.15rem 0.25rem;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .home--gate .home__feed.is-open .home__feed-list {
+    padding: 0 0 0.1rem;
   }
 
   .home__hero--gate {
@@ -68,7 +115,8 @@
   .home__hero--gate .home__brand {
     grid-area: brand;
     margin: 0;
-    font-size: clamp(1.55rem, 3.2vw, 2rem);
+    font-size: clamp(1.2rem, 2.4vw, 1.55rem);
+    max-width: 14rem;
   }
 
   .home__hero--gate .home__lead {
@@ -106,15 +154,23 @@
   }
 
   .home--tracks > .home__track {
+    min-width: 0;
     min-height: 100%;
+  }
+
+  .home--tracks .glyph-reel {
+    min-width: 0;
+    width: 100%;
   }
 
   .home__tracks-bar {
     position: sticky;
     top: 0;
     z-index: 5;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(8px);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
     padding-block: 0.35rem;
   }
 
@@ -194,23 +250,30 @@
     font-size: 0.78rem;
   }
 
-  /* Canvas stays visually centered; rail floats on the right and does not push it left.
+  /* Canvas stays visually centered; rail sits in the right column (in-flow)
+     so opening 그리기 설정 grows height without shoving the canvas sideways.
      Higher specificity (.teach.is-open / .write) beats later component `display:flex` rules. */
   .write .write__workspace,
   .teach.is-open .teach__workspace {
     position: relative;
-    display: block;
+    display: grid;
+    grid-template-columns: var(--canvas-rail-w) minmax(0, 1fr) var(--canvas-rail-w);
+    column-gap: var(--canvas-rail-gap);
+    align-items: start;
     min-height: var(--canvas-max);
+    --canvas-rail-gap: 0.9rem;
+    --canvas-rail-w: clamp(12.75rem, 30%, 17.25rem);
+    overflow: visible;
   }
 
   .write .write__main,
   .teach.is-open .teach__main {
+    grid-column: 2;
     display: flex;
     justify-content: center;
     width: 100%;
     box-sizing: border-box;
-    /* Symmetric inset keeps the canvas on the true center line */
-    padding-inline: min(18rem, 32%);
+    padding: 0;
     min-width: 0;
   }
 
@@ -225,25 +288,233 @@
     width: min(100%, var(--canvas-max));
   }
 
+  /* Teach only: left guide fills the empty rail column (portrait keeps it hidden). */
+  .teach.is-open .teach__guide {
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+    min-width: 0;
+    max-height: min(92svh, calc(100dvh - 3.25rem));
+    padding: 0.7rem 0.75rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    border: 1px solid var(--block-border);
+    border-radius: var(--radius-lg);
+    background: var(--block-bg);
+    box-shadow: var(--block-shadow);
+  }
+
+  .teach.is-open .teach__guide-letter {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .teach.is-open .teach__guide-glyph {
+    flex-shrink: 0;
+    font-size: calc(1.85rem * var(--glyph-scale));
+    line-height: 1.2;
+    padding-top: var(--deva-matra-clearance);
+    color: var(--ink);
+  }
+
+  .teach.is-open .teach__guide-meta {
+    min-width: 0;
+  }
+
+  .teach.is-open .teach__guide-iast {
+    margin: 0;
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+
+  .teach.is-open .teach__guide-hangul {
+    margin: 0.1rem 0 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  .teach.is-open .teach__guide-title {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .teach.is-open .teach__guide-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .teach.is-open .teach__guide-step {
+    display: grid;
+    grid-template-columns: 1.35rem minmax(0, 1fr);
+    gap: 0.4rem;
+    align-items: start;
+    padding: 0.35rem 0.4rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .teach.is-open .teach__guide-step.is-done {
+    color: var(--muted);
+  }
+
+  .teach.is-open .teach__guide-step.is-current {
+    background: color-mix(in srgb, var(--teal) 12%, transparent);
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .teach.is-open .teach__guide-num {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .teach.is-open .teach__guide-step.is-done .teach__guide-num {
+    background: var(--moss-wash);
+    color: var(--moss);
+  }
+
+  .teach.is-open .teach__guide-step.is-current .teach__guide-num {
+    background: var(--teal-wash);
+    color: var(--teal);
+  }
+
+  .teach.is-open .teach__guide-label-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .teach.is-open .teach__guide-label-input {
+    width: 100%;
+    margin: 0;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+    color: inherit;
+    font: inherit;
+    font-size: 0.82rem;
+    line-height: 1.35;
+    word-break: keep-all;
+  }
+
+  .teach.is-open .teach__guide-label-input:hover:not(:disabled),
+  .teach.is-open .teach__guide-label-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+    background: var(--surface);
+  }
+
+  .teach.is-open .teach__guide-label-input:disabled {
+    opacity: 0.7;
+  }
+
+  .teach.is-open .teach__guide-current-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--teal);
+  }
+
+  .teach.is-open .teach__guide-tip-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: auto 0 0;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .teach.is-open .teach__guide-tip-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .teach.is-open .teach__guide-tip-input {
+    width: 100%;
+    margin: 0;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    resize: vertical;
+    min-height: 3.4rem;
+  }
+
+  .teach.is-open .teach__guide-tip-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    background: var(--surface);
+  }
+
+  .teach.is-open .teach__guide-tip-input:disabled {
+    opacity: 0.7;
+  }
+
   .write .write__rail,
   .teach.is-open .teach__rail {
-    position: absolute;
-    top: 0;
-    right: 0;
+    grid-column: 3;
+    justify-self: stretch;
+    position: static;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    width: min(18rem, 32%);
-    min-width: 13.5rem;
-    max-height: min(calc(var(--canvas-max) + 2.5rem), 78vh);
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    /* Tall 그리기 설정: scroll inside rail; workspace height follows the rail box */
+    max-height: min(92svh, calc(100dvh - 3.25rem));
     padding: 0.7rem 0.75rem;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     z-index: 2;
     box-sizing: border-box;
     border: 1px solid var(--block-border);
     border-radius: var(--radius-lg);
     background: var(--block-bg);
     box-shadow: var(--block-shadow);
+  }
+
+  .write .write__rail:has(.write__advanced.is-open),
+  .teach.is-open .teach__rail:has(.teach__advanced.is-open) {
+    max-height: min(94svh, calc(100dvh - 2.5rem));
   }
 
   .write .write__rail .stroke-history,
@@ -327,7 +598,7 @@
   }
 
   .teach-page__identity-row {
-    margin-top: 0.15rem;
+    margin-top: 0.5rem;
   }
 
   .teach-page__lead {
@@ -338,8 +609,10 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(8px);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
   /* —— Learn chart: denser + sticky —— */
@@ -347,8 +620,10 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(8px);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
     padding-block: 0.25rem;
     margin-bottom: 0.65rem;
   }
@@ -370,13 +645,26 @@
     top: 2.6rem;
     z-index: 4;
     padding: 0.35rem 0.15rem;
-    background: color-mix(in srgb, var(--block-bg) 94%, transparent);
-    backdrop-filter: blur(6px);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
-  .learn__sheet-panel {
+  .learn__focus {
+    width: 100%;
     max-width: min(58rem, 96vw);
     margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  .learn__focus > .script-font-bar,
+  .learn__focus > .learn__sheet,
+  .learn__focus .learn__sheet-panel {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    box-sizing: border-box;
   }
 
   /* —— Practice quiz —— */
@@ -413,8 +701,10 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(8px);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
   /* —— Tools / secondary pages —— */
@@ -449,7 +739,7 @@
 
   .write__rail,
   .teach__rail {
-    max-height: min(calc(var(--canvas-max) + 1.5rem), 72vh);
+    max-height: min(90svh, calc(100dvh - 2.75rem));
   }
 
   .teach-page__glyph {

@@ -3,6 +3,7 @@ import type { ScriptTrack } from '../types/track'
 import { getPathSnapshot } from '../lib/pathProgress'
 import { getHomeFeed } from '../lib/homeFeed'
 import { PATH_STAGES } from '../data/pathStages'
+import { FoldChevron } from '../components/FoldChevron'
 import './Home.css'
 
 export type OpenMode =
@@ -66,7 +67,7 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
   return (
     <main className="home home--gate">
       <header className="home__hero home__hero--gate">
-        <h1 className="home__brand">삼뱌꾸샴붓다</h1>
+        <h1 className="home__brand">붓다의 언어교실</h1>
         <p className="home__lead">산스크리트 · 실담 자모</p>
         <p className="home__hero-hint">글자를 보고, 듣고, 따라 써 보세요.</p>
         <button type="button" className="home__about motion-press" onClick={onAbout}>
@@ -84,9 +85,16 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
             <p className="home__card-kicker">시작하기</p>
             <p className="home__card-title">글자 배우기</p>
           </div>
-          <span className="home__card-glyphs" lang="sa" aria-hidden="true">
-            <span className="home__card-glyphs-deva">अ</span>
-            <span className="home__card-glyphs-siddham">अ</span>
+          <span className="home__card-glyphs home__card-glyphs--learn" aria-hidden="true">
+            <svg className="home__card-glyphs-icon" viewBox="0 0 24 24" width="22" height="22" fill="none">
+              <path
+                d="M14.06 4.42 19.58 9.94M4 20h4.5L18.88 9.62a1.5 1.5 0 0 0 0-2.12L16.5 5.12a1.5 1.5 0 0 0-2.12 0L4 15.5V20Z"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </span>
         </div>
         <p className="home__card-verse">산스크리트와 실담 글자를 고르고 학습합니다.</p>
@@ -139,76 +147,71 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
         {path.dueHint ? <p className="home__card-hint">{path.dueHint}</p> : null}
       </button>
 
-      <section
-        className={`home__feed ${feedOpen ? 'is-open' : 'is-collapsed'}`}
-        aria-label="오늘의 추천"
-      >
+      <div className="home__side">
         <button
           type="button"
-          className="home__feed-toggle motion-press"
-          aria-expanded={feedOpen}
-          onClick={() => setFeedOpen((v) => !v)}
+          className="home__settings-entry motion-press"
+          onClick={() => onOpenGlobal('settings')}
         >
-          <span className="home__feed-toggle-main">
-            <span
-              className={`home__feed-chevron fold-chevron ${feedOpen ? 'is-open' : ''}`}
-              aria-hidden="true"
-            >
-              ▸
-            </span>
-            <span>
-              <span className="home__feed-toggle-title">오늘의 추천</span>
-              <span className="home__feed-toggle-sub">
-                {feedOpen
-                  ? '원하는 것만 눌러 보세요.'
-                  : `${feed.length}개 · 눌러서 펼치기`}
+          <span className="home__settings-entry-title">설정</span>
+          <span className="home__settings-entry-sub">글자 크기 · 화면 밝기 · 색감 · 클라우드 토큰</span>
+        </button>
+
+        <section
+          className={`home__feed ${feedOpen ? 'is-open' : 'is-collapsed'}`}
+          aria-label="오늘의 추천"
+        >
+          <button
+            type="button"
+            className="home__feed-toggle motion-press"
+            aria-expanded={feedOpen}
+            onClick={() => setFeedOpen((v) => !v)}
+          >
+            <span className="home__feed-toggle-main">
+              <FoldChevron open={feedOpen} className="home__feed-chevron" />
+              <span>
+                <span className="home__feed-toggle-title">오늘의 추천</span>
+                <span className="home__feed-toggle-sub">
+                  {feedOpen ? '원하는 것만 눌러 보세요.' : `${feed.length}개`}
+                </span>
               </span>
             </span>
-          </span>
-        </button>
-        <div className={`fold-panel ${feedOpen ? 'is-expanded' : ''}`}>
-          <div className="fold-panel__inner">
-            <ul className="home__feed-list">
-              {feed.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="home__feed-item motion-press"
-                    onClick={() => openFeedTarget(item.target)}
-                    tabIndex={feedOpen ? 0 : -1}
-                  >
-                    {item.glyph ? (
-                      <span
-                        className={`home__feed-glyph home__feed-glyph--${item.script ?? 'deva'}`}
-                        lang="sa"
-                        aria-hidden="true"
-                      >
-                        {item.glyph}
+          </button>
+          <div className={`fold-panel ${feedOpen ? 'is-expanded' : ''}`}>
+            <div className="fold-panel__inner">
+              <ul className="home__feed-list">
+                {feed.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className="home__feed-item motion-press"
+                      onClick={() => openFeedTarget(item.target)}
+                      tabIndex={feedOpen ? 0 : -1}
+                    >
+                      {item.glyph ? (
+                        <span
+                          className={`home__feed-glyph home__feed-glyph--${item.script ?? 'deva'}`}
+                          lang="sa"
+                          aria-hidden="true"
+                        >
+                          {item.glyph}
+                        </span>
+                      ) : (
+                        <span className="home__feed-dot" aria-hidden="true" />
+                      )}
+                      <span className="home__feed-body">
+                        <span className="home__feed-kicker">{item.kicker}</span>
+                        <span className="home__feed-title">{item.title}</span>
+                        <span className="home__feed-text">{item.body}</span>
                       </span>
-                    ) : (
-                      <span className="home__feed-dot" aria-hidden="true" />
-                    )}
-                    <span className="home__feed-body">
-                      <span className="home__feed-kicker">{item.kicker}</span>
-                      <span className="home__feed-title">{item.title}</span>
-                      <span className="home__feed-text">{item.body}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-      </section>
-
-      <button
-        type="button"
-        className="home__settings-entry motion-press"
-        onClick={() => onOpenGlobal('settings')}
-      >
-        <span className="home__settings-entry-title">설정</span>
-        <span className="home__settings-entry-sub">글자 크기 · 화면 밝기 · 클라우드 토큰</span>
-      </button>
+        </section>
+      </div>
     </main>
   )
 }

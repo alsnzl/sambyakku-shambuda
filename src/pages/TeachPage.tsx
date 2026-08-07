@@ -5,6 +5,7 @@ import { StrokeTeachPanel } from '../components/StrokeTeachPanel'
 import { TheoryTipPanel } from '../components/TheoryTipPanel'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
+import { getActiveScriptFontStack } from '../lib/customScriptFonts'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
@@ -24,7 +25,7 @@ export function TeachPage({ onBack }: Props) {
   const [track, setTrack] = useState<ScriptTrack>('sanskrit')
   const [letter, setLetter] = useState<Letter | null>(null)
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
-  useScriptFontEpoch()
+  const fontEpoch = useScriptFontEpoch()
 
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
@@ -32,6 +33,7 @@ export function TeachPage({ onBack }: Props) {
     ? 'learn__tile-char learn__tile-char--deva'
     : 'learn__tile-char learn__tile-char--siddham'
   const heroClass = isSanskrit ? 'teach-page__glyph--deva' : 'teach-page__glyph--siddham'
+  const scriptStack = getActiveScriptFontStack(isSanskrit ? 'deva' : 'siddham')
 
   function pickTrack(next: ScriptTrack) {
     setTrack(next)
@@ -123,7 +125,12 @@ export function TeachPage({ onBack }: Props) {
               <div className="teach-page__identity">
                 <p className="teach-page__script">{meta.scriptLabel}</p>
                 <div className="teach-page__identity-row">
-                  <span className={`teach-page__glyph ${heroClass}`} lang="sa">
+                  <span
+                    key={`glyph-${fontEpoch}`}
+                    className={`teach-page__glyph ${heroClass}`}
+                    lang="sa"
+                    style={{ fontFamily: scriptStack }}
+                  >
                     {glyph}
                   </span>
                   <div>
@@ -135,7 +142,13 @@ export function TeachPage({ onBack }: Props) {
                   글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
                 </p>
               </div>
-              <StrokeTeachPanel letterId={letter.id} glyph={glyph} track={track} />
+              <StrokeTeachPanel
+                letterId={letter.id}
+                glyph={glyph}
+                track={track}
+                iast={letter.iast}
+                hangulHint={letter.hangulHint}
+              />
               <TheoryTipPanel letterId={letter.id} editable />
             </article>
           </MotionPage>
@@ -180,7 +193,10 @@ export function TeachPage({ onBack }: Props) {
                     {group.type === 'vowel' ? '모음' : '자음'} · {group.letters.length}자
                   </span>
                 </div>
-                <ul className="learn__grid learn__grid--chart motion-stagger">
+                <ul
+                  key={`teach-chart-${fontEpoch}`}
+                  className="learn__grid learn__grid--chart motion-stagger"
+                >
                   {group.letters.map((item) => (
                     <li key={item.id} className="learn__cell">
                       <button
@@ -189,7 +205,7 @@ export function TeachPage({ onBack }: Props) {
                         onClick={() => openLetter(item)}
                       >
                         <span className="learn__tile-glyph" aria-hidden="true">
-                          <span className={charClass} lang="sa">
+                          <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
                             {glyphForTrack(item, track)}
                           </span>
                         </span>
@@ -226,7 +242,11 @@ export function TeachPage({ onBack }: Props) {
         >
           <span className="teach-page__track-kicker">데바나가리</span>
           <span className="teach-page__track-title">산스크리트</span>
-          <span className="teach-page__track-sample" lang="sa" aria-hidden="true">
+          <span
+            className="teach-page__track-sample teach-page__track-sample--deva"
+            lang="sa"
+            aria-hidden="true"
+          >
             अ आ इ ई क
           </span>
           <span className="teach-page__track-cta">글자 고르기 →</span>

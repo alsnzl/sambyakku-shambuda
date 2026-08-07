@@ -61,14 +61,18 @@
 
 .teach-page__track-sample {
   margin-top: 0.55rem;
-  font-family: var(--deva);
   font-size: calc(1.45rem * var(--glyph-scale));
-  line-height: 1;
+  line-height: 1.2;
   color: var(--ink-soft);
 }
 
+.teach-page__track-sample--deva {
+  font-family: var(--deva);
+}
+
 .teach-page__track-sample--siddham {
-  font-family: var(--siddham);
+  /* Track picker demo: always Muktamsiddham, not the settings face. */
+  font-family: 'Muktamsiddham', sans-serif;
 }
 
 .teach-page__track-cta {
@@ -135,18 +139,21 @@
   font-weight: 700;
   color: var(--clay);
   letter-spacing: 0.03em;
+  position: relative;
+  z-index: 1;
+  line-height: 1.35;
 }
 
 .teach-page__identity-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
-  margin-top: 0.35rem;
+  margin-top: 0.55rem;
 }
 
 .teach-page__glyph {
   font-size: calc(2.55rem * var(--glyph-scale));
-  line-height: 1;
+  line-height: 1.2;
   color: var(--ink);
 }
 

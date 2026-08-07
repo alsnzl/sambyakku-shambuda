@@ -10,14 +10,22 @@ import { installHardwareBackListener } from './lib/hardwareBack'
 import App from './App.tsx'
 /* After App so landscape overrides win over component CSS in the bundle. */
 import './styles/landscape.css'
+/* Liquid Glass — after landscape so glass tokens/surfaces apply app-wide. */
+import './styles/liquid-glass.css'
+/* After landscape/glass so press shadows win over fold-toggle box-shadow: none. */
+import './styles/press.css'
 
 initPrefs()
 installHardwareBackListener()
 
-void restoreCustomScriptFonts().finally(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  )
-})
+void restoreCustomScriptFonts()
+  .catch(() => {
+    /* font restore must never block the web app */
+  })
+  .finally(() => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    )
+  })

@@ -8,6 +8,8 @@ import {
 export type GlyphSize = 'sm' | 'md' | 'lg'
 export type ThemePref = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
+/** Color mood — independent of light/dark brightness. */
+export type PalettePref = 'study' | 'sangha' | 'lotus' | 'indigo' | 'bodhi' | 'dusk'
 export type { BrushKind }
 
 const STORAGE_KEY = 'sambyakku-prefs-v1'
@@ -16,6 +18,7 @@ const SIZES: GlyphSize[] = ['sm', 'md', 'lg']
 type Prefs = {
   glyphSize: GlyphSize
   theme: ThemePref
+  palette: PalettePref
   brush: BrushKind
   /** Reject finger/palm on teach & write canvases (S Pen / mouse only). */
   penOnly: boolean
@@ -26,6 +29,7 @@ type Prefs = {
 const DEFAULTS: Prefs = {
   glyphSize: 'md',
   theme: 'system',
+  palette: 'study',
   brush: 'brush',
   penOnly: true,
   pressureSens: PRESSURE_SENS_DEFAULT,
@@ -39,6 +43,17 @@ function isGlyphSize(value: unknown): value is GlyphSize {
 
 function isThemePref(value: unknown): value is ThemePref {
   return value === 'light' || value === 'dark' || value === 'system'
+}
+
+function isPalettePref(value: unknown): value is PalettePref {
+  return (
+    value === 'study' ||
+    value === 'sangha' ||
+    value === 'lotus' ||
+    value === 'indigo' ||
+    value === 'bodhi' ||
+    value === 'dusk'
+  )
 }
 
 function isBrushKind(value: unknown): value is BrushKind {
@@ -58,6 +73,7 @@ function load(): Prefs {
     return {
       glyphSize: isGlyphSize(parsed.glyphSize) ? parsed.glyphSize : DEFAULTS.glyphSize,
       theme: isThemePref(parsed.theme) ? parsed.theme : DEFAULTS.theme,
+      palette: isPalettePref(parsed.palette) ? parsed.palette : DEFAULTS.palette,
       brush: isBrushKind(parsed.brush) ? parsed.brush : DEFAULTS.brush,
       penOnly: typeof parsed.penOnly === 'boolean' ? parsed.penOnly : DEFAULTS.penOnly,
       pressureSens: clampPressureSens(parsed.pressureSens),
@@ -93,6 +109,10 @@ export function applyTheme(pref: ThemePref) {
   document.documentElement.style.colorScheme = resolved
 }
 
+export function applyPalette(palette: PalettePref) {
+  document.documentElement.dataset.palette = palette
+}
+
 function bindSystemThemeListener(pref: ThemePref) {
   const mq = window.matchMedia('(prefers-color-scheme: dark)')
   if (systemListener) mq.removeEventListener('change', systemListener)
@@ -122,6 +142,17 @@ export function setThemePref(theme: ThemePref): ThemePref {
   save({ ...load(), theme: next })
   applyTheme(next)
   bindSystemThemeListener(next)
+  return next
+}
+
+export function getPalettePref(): PalettePref {
+  return load().palette
+}
+
+export function setPalettePref(palette: PalettePref): PalettePref {
+  const next = isPalettePref(palette) ? palette : DEFAULTS.palette
+  save({ ...load(), palette: next })
+  applyPalette(next)
   return next
 }
 
@@ -158,6 +189,7 @@ export function initPrefs() {
   const prefs = load()
   applyGlyphSize(prefs.glyphSize)
   applyTheme(prefs.theme)
+  applyPalette(prefs.palette)
   bindSystemThemeListener(prefs.theme)
 }
 
@@ -171,6 +203,21 @@ export const THEME_OPTIONS: { id: ThemePref; label: string; hint: string }[] = [
   { id: 'light', label: '밝게', hint: '낮 공부' },
   { id: 'dark', label: '어둡게', hint: '밤 공부' },
   { id: 'system', label: '시스템', hint: '기기 설정' },
+]
+
+export const PALETTE_OPTIONS: {
+  id: PalettePref
+  label: string
+  hint: string
+  /** Accent preview (light mode tone). */
+  swatch: string
+}[] = [
+  { id: 'study', label: '공부실', hint: '청록', swatch: '#2c6b66' },
+  { id: 'sangha', label: '산사', hint: '가사·사프란', swatch: '#9a5a24' },
+  { id: 'lotus', label: '연꽃', hint: '분홍·연보', swatch: '#a85d78' },
+  { id: 'indigo', label: '청금', hint: '쪽빛·남색', swatch: '#3d5a80' },
+  { id: 'bodhi', label: '보리', hint: '잎·숲', swatch: '#4f6b3c' },
+  { id: 'dusk', label: '묵향', hint: '먹·석회', swatch: '#5a6570' },
 ]
 
 export function cycleGlyphSize(current: GlyphSize): GlyphSize {

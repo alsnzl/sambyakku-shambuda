@@ -5,11 +5,13 @@ import {
   SIDDHAM_FONT_OPTIONS,
   getActiveScriptFontLabel,
   getScriptFontChoice,
+  scriptFontErrorMessage,
   setScriptFontChoice,
   type ScriptFontChoice,
   type ScriptFontSlot,
 } from '../lib/customScriptFonts'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
+import { FoldChevron } from './FoldChevron'
 import './ScriptFontQuickBar.css'
 
 type Props = {
@@ -25,9 +27,9 @@ function bundledForSlot(slot: ScriptFontSlot) {
 }
 
 /**
- * Collapsible bundled-font switcher for teach / write.
- * Siddham: Muktamsiddham | Noto Sans Siddham. Deva: Noto (single). No user-upload.
- * Always visible so the control is findable on every track.
+ * Collapsible bundled-font switcher for teach / learn / practice / write.
+ * Deva: Noto Sans Devanagari | Tiro Devanagari Sanskrit.
+ * Siddham: Muktamsiddham | Noto Sans Siddham.
  */
 export function ScriptFontQuickBar({ track }: Props) {
   useScriptFontEpoch()
@@ -36,6 +38,9 @@ export function ScriptFontQuickBar({ track }: Props) {
   const choice = getScriptFontChoice(slot)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (options.length < 2) return null
 
   const activeLabel =
     options.find((o) => o.id === choice)?.label ?? getActiveScriptFontLabel(slot)
@@ -43,8 +48,11 @@ export function ScriptFontQuickBar({ track }: Props) {
   async function pick(next: ScriptFontChoice) {
     if (next === choice || busy) return
     setBusy(true)
+    setError(null)
     try {
       await setScriptFontChoice(slot, next)
+    } catch (err) {
+      setError(scriptFontErrorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -62,7 +70,7 @@ export function ScriptFontQuickBar({ track }: Props) {
           <span className="script-font-bar__title">폰트</span>
           <span className="script-font-bar__current">{activeLabel}</span>
         </span>
-        <span className="script-font-bar__count">{open ? '접기' : '펴기'}</span>
+        <FoldChevron open={open} />
       </button>
       <div className={`fold-panel ${open ? 'is-expanded' : ''}`}>
         <div className="fold-panel__inner">
@@ -77,7 +85,9 @@ export function ScriptFontQuickBar({ track }: Props) {
                 onClick={() => void pick(opt.id)}
               >
                 <span
-                  className="script-font-bar__sample"
+                  className={`script-font-bar__sample${
+                    opt.id === 'noto-siddham' ? ' script-font-bar__sample--noto' : ''
+                  }`}
                   lang="sa"
                   style={{ fontFamily: `"${opt.family}", sans-serif` }}
                   aria-hidden="true"
@@ -87,6 +97,7 @@ export function ScriptFontQuickBar({ track }: Props) {
                 <span className="script-font-bar__opt-label">{opt.label}</span>
               </button>
             ))}
+            {error ? <p className="script-font-bar__error">{error}</p> : null}
           </div>
         </div>
       </div>

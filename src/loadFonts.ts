@@ -19,6 +19,13 @@ style.textContent = `
     url('${base}fonts/NotoSansDevanagari.ttf') format('truetype');
 }
 @font-face {
+  font-family: 'Tiro Devanagari Sanskrit';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('${base}fonts/TiroDevanagariSanskrit-Regular.ttf') format('truetype');
+}
+@font-face {
   font-family: 'Muktamsiddham';
   font-style: normal;
   font-display: swap;

@@ -32,7 +32,11 @@ import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
+import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptFontQuickBar } from './ScriptFontQuickBar'
+import { FoldChevron } from './FoldChevron'
+import { startStrokeRevealPlayback } from '../lib/strokePlayback'
 import './WritePractice.css'
 
 type Props = {
@@ -44,12 +48,8 @@ type Props = {
 
 type PracticeMode = 'trace' | 'watch'
 
-const SPEED = 0.32
-const MIN_STROKE_MS = 220
-const LIFT_MS = 55
-const glide = (t: number) => 1 - (1 - t) ** 1.25
-
 export function WritePractice({ letterId, glyph, track, onClose }: Props) {
+  useScriptFontEpoch()
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const taughtData = getTaughtGlyphStrokes(letterId, script)
   const data = getEffectiveGlyphStrokes(letterId, script)
@@ -85,8 +85,21 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
   const revealRefs = useRef<(SVGPathElement | null)[]>([])
   const tipRef = useRef<SVGCircleElement | null>(null)
+  const advancedRef = useRef<HTMLDivElement>(null)
   const drawingRef = useRef(false)
   const pointsRef = useRef<FreehandPoint[]>([])
+
+  function toggleAdvanced() {
+    setAdvancedOpen((v) => {
+      const next = !v
+      if (next) {
+        requestAnimationFrame(() => {
+          advancedRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        })
+      }
+      return next
+    })
+  }
 
   const resetTrace = useCallback(() => {
     setDrawn([])
@@ -116,6 +129,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
     let cancelled = false
     let raf = 0
+    let stopPlayback: (() => void) | null = null
     const strokeCount = taughtData.strokes.length
     const strokeSnapshot = taughtData.strokes.map((s) => ({ ...s }))
 
@@ -127,88 +141,28 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
         return
       }
 
-      const lengths = paths.map((el) => {
-        const len = el!.getTotalLength()
-        return len > 0.5 ? len : 1
-      })
-
-      const timeline = lengths.map((len) => ({
-        ms: Math.max(MIN_STROKE_MS, len / SPEED),
-      }))
-      let clock = 0
-      const starts = timeline.map((t) => {
-        const s = clock
-        clock += t.ms + LIFT_MS
-        return s
-      })
-      const totalMs = Math.max(clock - LIFT_MS, MIN_STROKE_MS)
-
-      paths.forEach((el, i) => {
-        el!.style.strokeDasharray = `${lengths[i]}`
-        el!.style.strokeDashoffset = `${lengths[i]}`
-      })
-      if (tipRef.current) tipRef.current.style.opacity = '0'
       setWatchDone(false)
       setActiveStep(0)
-
-      let lastStep = -1
-      const t0 = performance.now()
-
-      const frame = (now: number) => {
-        if (cancelled) return
-        const t = now - t0
-        let current = -1
-
-        paths.forEach((el, i) => {
-          const local = (t - starts[i]) / timeline[i].ms
-          const p = local <= 0 ? 0 : local >= 1 ? 1 : glide(local)
-          el!.style.strokeDashoffset = `${lengths[i] * (1 - p)}`
-          if (local > 0 && local < 1) current = i
-        })
-
-        const tip = tipRef.current
-        if (tip && current >= 0) {
-          const el = paths[current]!
-          const local = (t - starts[current]) / timeline[current].ms
-          const point = el.getPointAtLength(lengths[current] * glide(local))
-          tip.setAttribute('cx', `${point.x}`)
-          tip.setAttribute('cy', `${point.y}`)
-          tip.setAttribute('r', `${strokeSnapshot[current].width * 0.32}`)
-          tip.style.opacity = '1'
-        } else if (tip) {
-          tip.style.opacity = '0'
-        }
-
-        const step = current >= 0 ? current : t >= totalMs ? strokeCount : lastStep
-        if (step !== lastStep) {
-          lastStep = step
-          setActiveStep(step)
-        }
-
-        if (t < totalMs) {
-          raf = requestAnimationFrame(frame)
-          return
-        }
-
-        paths.forEach((el) => {
-          el!.style.strokeDashoffset = '0'
-        })
-        if (tip) tip.style.opacity = '0'
-        setActiveStep(strokeCount)
-        setWatchDone(true)
-      }
-
-      raf = requestAnimationFrame(frame)
+      stopPlayback = startStrokeRevealPlayback({
+        paths: paths as SVGPathElement[],
+        tip: tipRef.current,
+        strokeWidths: strokeSnapshot.map((s) => s.width),
+        onStep: setActiveStep,
+        onDone: () => {
+          if (!cancelled) setWatchDone(true)
+        },
+      })
     }
 
     raf = requestAnimationFrame(start)
     return () => {
       cancelled = true
       cancelAnimationFrame(raf)
+      stopPlayback?.()
     }
   }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d])
 
-  const fontFamily = track === 'sanskrit' ? 'var(--deva)' : 'var(--siddham)'
+  const fontFamily = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !outlineD) return
@@ -470,16 +424,17 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           ) : null}
 
           {mode === 'trace' ? (
-            <div className={`write__advanced ${advancedOpen ? 'is-open' : ''}`}>
+            <div
+              ref={advancedRef}
+              className={`write__advanced ${advancedOpen ? 'is-open' : ''}`}
+            >
               <button
                 type="button"
                 className="write__advanced-summary motion-press"
                 aria-expanded={advancedOpen}
-                onClick={() => setAdvancedOpen((v) => !v)}
+                onClick={toggleAdvanced}
               >
-                <span className={`fold-chevron ${advancedOpen ? 'is-open' : ''}`} aria-hidden="true">
-                  ▸
-                </span>
+                <FoldChevron open={advancedOpen} />
                 그리기 설정
               </button>
               <div className={`fold-panel ${advancedOpen ? 'is-expanded' : ''}`}>

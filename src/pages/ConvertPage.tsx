@@ -40,7 +40,7 @@ export function ConvertPage({ onBack, backLabel = '← 학습' }: Props) {
           {result.dewa || '…'}
         </div>
         <div className="tool__output tool__output--siddham" lang="sa">
-          {result.dewa || '…'}
+          {result.siddham || '…'}
         </div>
       </section>
 

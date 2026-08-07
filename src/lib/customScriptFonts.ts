@@ -1,6 +1,6 @@
 /**
  * Per-device script font selection.
- * - Devanagari: Noto Sans Devanagari | user upload
+ * - Devanagari: Noto Sans Devanagari | Tiro Devanagari Sanskrit | user upload
  * - Siddham: Muktamsiddham | Noto Sans Siddham | user upload
  *
  * Siddham UI strings are Devanagari codepoints except when Noto Sans Siddham
@@ -10,7 +10,7 @@
 
 export type ScriptFontSlot = 'deva' | 'siddham'
 
-export type DevaFontChoice = 'noto-deva' | 'user'
+export type DevaFontChoice = 'noto-deva' | 'tiro-deva' | 'user'
 export type SiddhamFontChoice = 'muktam' | 'noto-siddham' | 'user'
 export type ScriptFontChoice = DevaFontChoice | SiddhamFontChoice
 
@@ -74,6 +74,12 @@ export const DEVA_FONT_OPTIONS: BundledOpt[] = [
     label: 'Noto Sans Devanagari',
     stack: "'Noto Sans Devanagari', sans-serif",
   },
+  {
+    id: 'tiro-deva',
+    family: 'Tiro Devanagari Sanskrit',
+    label: 'Tiro Devanagari Sanskrit',
+    stack: "'Tiro Devanagari Sanskrit', 'Noto Sans Devanagari', sans-serif",
+  },
 ]
 
 export const SIDDHAM_FONT_OPTIONS: BundledOpt[] = [
@@ -90,6 +96,16 @@ export const SIDDHAM_FONT_OPTIONS: BundledOpt[] = [
     stack: "'Noto Sans Siddham', sans-serif",
   },
 ]
+
+/** Bundled face → file under `public/` (BASE_URL-prefixed at load time). */
+const BUNDLED_FONT_FILE: Partial<Record<ScriptFontChoice, string>> = {
+  'noto-deva': 'fonts/NotoSansDevanagari.ttf',
+  'tiro-deva': 'fonts/TiroDevanagariSanskrit-Regular.ttf',
+  muktam: 'fonts/Muktamsiddham.otf',
+  'noto-siddham': 'fonts/NotoSansSiddham-Regular.ttf',
+}
+
+const bundledFaceCache = new Map<string, FontFace>()
 
 const DEFAULT_CHOICE: Record<ScriptFontSlot, ScriptFontChoice> = {
   deva: 'noto-deva',
@@ -183,7 +199,7 @@ export function getScriptFontMeta(slot: ScriptFontSlot): ScriptFontMeta | null {
 }
 
 function isDevaChoice(value: unknown): value is DevaFontChoice {
-  return value === 'noto-deva' || value === 'user'
+  return value === 'noto-deva' || value === 'tiro-deva' || value === 'user'
 }
 
 function isSiddhamChoice(value: unknown): value is SiddhamFontChoice {
@@ -232,7 +248,11 @@ export function getUserScriptFontFamily(slot: ScriptFontSlot): string {
 }
 
 export function getBundledScriptFontFamily(slot: ScriptFontSlot): string {
-  if (slot === 'deva') return 'Noto Sans Devanagari'
+  if (slot === 'deva') {
+    const choice = getScriptFontChoice('deva')
+    const opt = DEVA_FONT_OPTIONS.find((o) => o.id === choice)
+    return opt?.family ?? 'Noto Sans Devanagari'
+  }
   const choice = getScriptFontChoice('siddham')
   if (choice === 'noto-siddham') return 'Noto Sans Siddham'
   return 'Muktamsiddham'
@@ -247,7 +267,9 @@ export function getActiveScriptFontLabel(slot: ScriptFontSlot): string {
   if (choice === 'user') {
     return getScriptFontMeta(slot)?.fileName ?? '사용자 폰트'
   }
-  if (slot === 'deva') return 'Noto Sans Devanagari'
+  if (slot === 'deva') {
+    return DEVA_FONT_OPTIONS.find((o) => o.id === choice)?.label ?? 'Noto Sans Devanagari'
+  }
   if (choice === 'noto-siddham') return 'Noto Sans Siddham'
   return 'Muktamsiddham'
 }
@@ -271,14 +293,119 @@ function stackForChoice(slot: ScriptFontSlot, choice: ScriptFontChoice): string 
         : SIDDHAM_FONT_OPTIONS[0]!.stack
     return `'${USER_FAMILY[slot]}', ${fallback}`
   }
-  if (slot === 'deva') return DEVA_FONT_OPTIONS[0]!.stack
+  if (slot === 'deva') {
+    const opt = DEVA_FONT_OPTIONS.find((o) => o.id === choice)
+    return opt?.stack ?? DEVA_FONT_OPTIONS[0]!.stack
+  }
   const opt = SIDDHAM_FONT_OPTIONS.find((o) => o.id === choice)
   return opt?.stack ?? SIDDHAM_FONT_OPTIONS[0]!.stack
 }
 
+/** Resolved `font-family` stack for the active choice (for inline styles / load). */
+export function getActiveScriptFontStack(slot: ScriptFontSlot): string {
+  return stackForChoice(slot, getScriptFontChoice(slot))
+}
+
+function primaryFamilyForChoice(slot: ScriptFontSlot, choice: ScriptFontChoice): string {
+  if (choice === 'user') return USER_FAMILY[slot]
+  if (slot === 'deva') {
+    return DEVA_FONT_OPTIONS.find((o) => o.id === choice)?.family ?? 'Noto Sans Devanagari'
+  }
+  return SIDDHAM_FONT_OPTIONS.find((o) => o.id === choice)?.family ?? 'Muktamsiddham'
+}
+
+function bundledFontUrl(choice: ScriptFontChoice): string | null {
+  const rel = BUNDLED_FONT_FILE[choice]
+  if (!rel) return null
+  // Resolve against the page URL so `base: './'` (Capacitor) and `/` (Pages) both work.
+  try {
+    return new URL(rel, new URL(import.meta.env.BASE_URL || './', window.location.href)).href
+  } catch {
+    const base = import.meta.env.BASE_URL || '/'
+    const prefix = base.endsWith('/') ? base : `${base}/`
+    return `${prefix}${rel}`
+  }
+}
+
+/**
+ * Ensure the chosen bundled (or already-installed user) face is actually usable.
+ * CSS @font-face alone silently falls back when the file is missing from the
+ * Capacitor asset bundle — which looked like “font switch does nothing”.
+ */
+async function ensureFaceReady(slot: ScriptFontSlot, choice: ScriptFontChoice): Promise<void> {
+  if (choice === 'user') {
+    const ok = await ensureUserFaceLoaded(slot)
+    if (!ok) {
+      throw new ScriptFontError('unavailable', '먼저 사용자 폰트 파일을 올려 주세요.')
+    }
+    return
+  }
+  if (typeof document === 'undefined' || !document.fonts) {
+    throw new ScriptFontError('unavailable', '이 환경에서는 폰트를 바꿀 수 없습니다.')
+  }
+
+  const family = primaryFamilyForChoice(slot, choice)
+  const probe = `64px "${family}"`
+
+  try {
+    await document.fonts.load(probe)
+  } catch {
+    /* try explicit FontFace below */
+  }
+
+  // fonts.check is enough here — canvas probing is flaky on Android WebView.
+  if (document.fonts.check(probe)) {
+    return
+  }
+
+  const url = bundledFontUrl(choice)
+  if (!url) {
+    throw new ScriptFontError('unavailable', `${family} 폰트를 찾을 수 없습니다.`)
+  }
+
+  try {
+    let face = bundledFaceCache.get(family)
+    if (!face) {
+      const format = url.endsWith('.otf') ? 'opentype' : 'truetype'
+      face = new FontFace(family, `url("${url}") format("${format}")`)
+      await face.load()
+      document.fonts.add(face)
+      bundledFaceCache.set(family, face)
+    } else if (face.status !== 'loaded') {
+      await face.load()
+      if (![...document.fonts].includes(face)) document.fonts.add(face)
+    }
+    await document.fonts.load(probe)
+  } catch {
+    throw new ScriptFontError(
+      'load',
+      `${family} 파일을 불러오지 못했습니다. (웹: /fonts 경로 확인)`,
+    )
+  }
+
+  if (!document.fonts.check(probe)) {
+    throw new ScriptFontError(
+      'glyphs',
+      `${family}가 적용되지 않았습니다. 폰트 파일이 앱에 포함됐는지 확인해 주세요.`,
+    )
+  }
+}
+
 function applySlotCss(slot: ScriptFontSlot) {
   const choice = getScriptFontChoice(slot)
-  document.documentElement.style.setProperty(CSS_VAR[slot], stackForChoice(slot, choice))
+  const stack = stackForChoice(slot, choice)
+  document.documentElement.style.setProperty(CSS_VAR[slot], stack)
+  if (slot === 'deva') {
+    document.documentElement.dataset.devaFace = choice
+  }
+  if (slot === 'siddham') {
+    document.documentElement.dataset.siddhamFace = choice
+    // Noto Sans Siddham ink sits high in the em box — optical nudge for all UI glyphs.
+    document.documentElement.style.setProperty(
+      '--siddham-optical-nudge',
+      choice === 'noto-siddham' ? '0.18em' : '0',
+    )
+  }
 }
 
 export function applyActiveScriptFonts() {
@@ -420,12 +547,8 @@ export async function setScriptFontChoice(
   if (slot === 'deva' && !isDevaChoice(choice)) return
   if (slot === 'siddham' && !isSiddhamChoice(choice)) return
 
-  if (choice === 'user') {
-    const ok = await ensureUserFaceLoaded(slot)
-    if (!ok) {
-      throw new ScriptFontError('unavailable', '먼저 사용자 폰트 파일을 올려 주세요.')
-    }
-  }
+  // Load + verify before persisting so a missing Tiro file cannot look “selected”.
+  await ensureFaceReady(slot, choice)
 
   const next = readChoices()
   if (slot === 'deva') next.deva = choice as DevaFontChoice
@@ -527,7 +650,24 @@ async function restoreScriptFontSlot(slot: ScriptFontSlot): Promise<void> {
       return
     }
   }
-  applySlotCss(slot)
+
+  const active = getScriptFontChoice(slot)
+  try {
+    await ensureFaceReady(slot, active)
+    applySlotCss(slot)
+  } catch {
+    // Missing bundled file (e.g. Tiro not copied into Capacitor assets) — fall back.
+    const choices = readChoices()
+    if (slot === 'deva') choices.deva = 'noto-deva'
+    else choices.siddham = 'muktam'
+    writeChoices(choices)
+    try {
+      await ensureFaceReady(slot, choices[slot])
+    } catch {
+      /* keep CSS default */
+    }
+    applySlotCss(slot)
+  }
 }
 
 /** Boot: load any saved user faces, then apply current choices. */

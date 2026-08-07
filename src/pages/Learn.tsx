@@ -4,8 +4,11 @@ import { LetterCard } from '../components/LetterCard'
 import { MotionPage } from '../components/MotionPage'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
+import { getActiveScriptFontStack } from '../lib/customScriptFonts'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
+import { ScriptFontQuickBar } from '../components/ScriptFontQuickBar'
 import './Learn.css'
 
 type Props = {
@@ -39,6 +42,7 @@ export function Learn({
   )
   const [fromTools] = useState(() => Boolean(initialLetterId))
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
+  const fontEpoch = useScriptFontEpoch()
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
 
@@ -83,6 +87,7 @@ export function Learn({
   const charClass = isSanskrit
     ? 'learn__tile-char learn__tile-char--deva'
     : 'learn__tile-char learn__tile-char--siddham'
+  const scriptStack = getActiveScriptFontStack(isSanskrit ? 'deva' : 'siddham')
 
   useHardwareBack(() => {
     if (view === 'letter') {
@@ -126,27 +131,30 @@ export function Learn({
           </h1>
         </header>
 
-        <div className="learn__sheet motion-sheet" role="dialog" aria-modal="true">
-          <div className="learn__sheet-backdrop" aria-hidden="true" />
-          <MotionPage
-            motionKey={letter.id}
-            variant={slide}
-            className={
-              slide === 'pop'
-                ? 'learn__sheet-panel motion-sheet__panel'
-                : 'learn__sheet-panel learn__sheet-panel--slide'
-            }
-          >
-            <LetterCard
-              letter={letter}
-              track={track}
-              onOpenLetter={(item) => openLetter(item, letterReturn)}
-              hasPrev={Boolean(prev)}
-              hasNext={Boolean(next)}
-              onPrev={prev ? () => goPrev(prev) : undefined}
-              onNext={next ? () => goNext(next) : undefined}
-            />
-          </MotionPage>
+        <div className="learn__focus">
+          <div className="learn__focus-backdrop" aria-hidden="true" />
+          <ScriptFontQuickBar track={track} />
+          <div className="learn__sheet motion-sheet" role="dialog" aria-modal="true">
+            <MotionPage
+              motionKey={letter.id}
+              variant={slide}
+              className={
+                slide === 'pop'
+                  ? 'learn__sheet-panel motion-sheet__panel'
+                  : 'learn__sheet-panel learn__sheet-panel--slide'
+              }
+            >
+              <LetterCard
+                letter={letter}
+                track={track}
+                onOpenLetter={(item) => openLetter(item, letterReturn)}
+                hasPrev={Boolean(prev)}
+                hasNext={Boolean(next)}
+                onPrev={prev ? () => goPrev(prev) : undefined}
+                onNext={next ? () => goNext(next) : undefined}
+              />
+            </MotionPage>
+          </div>
         </div>
       </main>
     )
@@ -166,7 +174,8 @@ export function Learn({
             </button>
             <h1>{activeGroup.labelKo}</h1>
           </header>
-          <ul className="learn__grid motion-stagger">
+          <ScriptFontQuickBar track={track} />
+          <ul key={`learn-group-${fontEpoch}`} className="learn__grid motion-stagger">
             {activeGroup.letters.map((item) => (
               <li key={item.id} className="learn__cell">
                 <button
@@ -175,7 +184,7 @@ export function Learn({
                   onClick={() => openLetter(item, 'group')}
                 >
                   <span className="learn__tile-glyph" aria-hidden="true">
-                    <span className={charClass} lang="sa">
+                    <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
                       {glyphForTrack(item, track)}
                     </span>
                   </span>
@@ -203,6 +212,7 @@ export function Learn({
             </button>
             <h1>전체 문자</h1>
           </header>
+          <ScriptFontQuickBar track={track} />
           <p className="learn__intro">
             {meta.scriptLabel} 전체 자모입니다. 계열은 얇은 선으로 구분됩니다.
           </p>
@@ -225,7 +235,10 @@ export function Learn({
                     {group.letters.length}자
                   </span>
                 </div>
-                <ul className="learn__grid learn__grid--chart motion-stagger">
+                <ul
+                  key={`learn-chart-${fontEpoch}`}
+                  className="learn__grid learn__grid--chart motion-stagger"
+                >
                   {group.letters.map((item) => (
                     <li key={item.id} className="learn__cell">
                       <button
@@ -234,7 +247,7 @@ export function Learn({
                         onClick={() => openLetter(item, 'chart')}
                       >
                         <span className="learn__tile-glyph" aria-hidden="true">
-                          <span className={charClass} lang="sa">
+                          <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
                             {glyphForTrack(item, track)}
                           </span>
                         </span>
@@ -259,6 +272,7 @@ export function Learn({
         </button>
         <h1>{meta.title} 학습</h1>
       </header>
+      <ScriptFontQuickBar track={track} />
       <p className="learn__intro">
         {meta.subtitle} 모음부터 보고, 자음은 조음 위치 계열(varga) 단위로
         익혀 보세요.

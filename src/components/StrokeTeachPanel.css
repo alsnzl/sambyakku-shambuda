@@ -130,7 +130,12 @@
 .teach__workspace {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 1rem;
+}
+
+/* Landscape-only (see landscape.css). Portrait: keep canvas + right rail flow. */
+.teach__guide {
+  display: none;
 }
 
 .teach__rail {
@@ -278,7 +283,6 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
-  overflow: hidden;
 }
 
 .teach__advanced-summary {
@@ -289,6 +293,7 @@
   width: 100%;
   margin: 0;
   border: none;
+  border-radius: var(--radius);
   background: transparent;
   cursor: pointer;
   padding: 0.7rem 0.9rem;
@@ -299,8 +304,12 @@
   text-align: left;
 }
 
+.teach__advanced.is-open .teach__advanced-summary {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
 .teach__advanced-body {
-  padding: 0 0.9rem 0.85rem;
+  padding: 0.55rem 0.9rem 0.85rem;
 }
 
 .teach__svg--watch {
@@ -411,7 +420,7 @@
 
 .teach__glyph-ink {
   fill: var(--accent);
-  transition: fill 0.35s ease;
+  transition: fill var(--motion-base, 0.35s) var(--motion-ease, ease);
 }
 
 .teach__glyph-ink--under-arrows {
@@ -423,7 +432,7 @@
 }
 
 .teach__settle {
-  transition: opacity 0.28s ease;
+  transition: opacity var(--motion-fast, 0.28s) var(--motion-ease, ease);
 }
 
 .teach__stroke-ghost {

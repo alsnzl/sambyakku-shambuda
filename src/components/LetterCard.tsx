@@ -9,6 +9,7 @@ import {
   toggleFavorite,
 } from '../lib/learnerStore'
 import { getSimilarLetters } from '../data/similarLetters'
+import { getActiveScriptFontStack } from '../lib/customScriptFonts'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
@@ -35,7 +36,7 @@ export function LetterCard({
   hasPrev = false,
   hasNext = false,
 }: Props) {
-  useScriptFontEpoch()
+  const fontEpoch = useScriptFontEpoch()
   const glyph = glyphForTrack(letter, track)
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
@@ -44,6 +45,7 @@ export function LetterCard({
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
   const heroClass =
     track === 'sanskrit' ? 'letter-card__hero--deva' : 'letter-card__hero--siddham'
+  const scriptStack = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
 
   useEffect(() => {
     markLetterSeen(track, letter.id)
@@ -97,7 +99,13 @@ export function LetterCard({
               </button>
 
               <div className="letter-card__hero-frame">
-                <p className={`letter-card__hero ${heroClass}`} lang="sa" aria-label={letter.iast}>
+                <p
+                  key={`hero-${fontEpoch}`}
+                  className={`letter-card__hero ${heroClass}`}
+                  lang="sa"
+                  aria-label={letter.iast}
+                  style={{ fontFamily: scriptStack }}
+                >
                   {glyph}
                 </p>
               </div>

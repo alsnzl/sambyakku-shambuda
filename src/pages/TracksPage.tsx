@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import type { OpenMode } from './Home'
+import { letters } from '../data/letters'
+import { FoldChevron } from '../components/FoldChevron'
+import { GlyphReel } from '../components/GlyphReel'
 import './Home.css'
 
 type Props = {
@@ -11,88 +14,35 @@ type Props = {
   ) => void
 }
 
-const SANSKRIT_SETS = [
-  ['अ', 'आ', 'इ', 'ई', 'क', 'ख', 'ग'],
-  ['च', 'छ', 'ज', 'झ', 'ट', 'ठ', 'ड'],
-  ['त', 'थ', 'द', 'ध', 'प', 'फ', 'ब'],
-  ['य', 'र', 'ल', 'व', 'श', 'ष', 'स'],
-  ['उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ'],
-]
-
-/* Muktamsiddham uses Devanagari codepoints for Siddhaṃ shapes. */
-const SIDDHAM_SETS = [
-  ['अ', 'आ', 'इ', 'ई', 'क', 'ख', 'ग'],
-  ['च', 'छ', 'ज', 'झ', 'ट', 'ठ', 'ड'],
-  ['त', 'थ', 'द', 'ध', 'प', 'फ', 'ब'],
-  ['य', 'र', 'ल', 'व', 'श', 'ष', 'स'],
-  ['उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ'],
-]
-
-const CYCLE_MS = 6000
-const STAGGER_S = 0.07
-
-function SampleRow({
-  chars,
-  scriptClass,
-}: {
-  chars: string[]
-  scriptClass: string
-}) {
-  const durationS = CYCLE_MS / 1000 - (chars.length - 1) * STAGGER_S
-
-  return (
-    <p className={`home__track-sample ${scriptClass}`} lang="sa" aria-hidden="true">
-      {chars.map((char, index) => (
-        <span
-          key={`${char}-${index}`}
-          className="home__track-glyph"
-          style={{
-            animationDelay: `${index * STAGGER_S}s`,
-            animationDuration: `${durationS}s`,
-          }}
-        >
-          {char}
-        </span>
-      ))}
-    </p>
-  )
-}
+/** All base letters for the infinite reel (Muktam/Deva share Devanagari codepoints). */
+const REEL_GLYPHS = letters.map((letter) => letter.dewa)
 
 function TrackCard({
   track,
   title,
   subtitle,
-  chars,
   sampleClass,
   variant,
-  delay,
   onOpen,
 }: {
   track: ScriptTrack
   title: string
   subtitle: string
-  chars: string[]
   sampleClass: string
   variant?: 'siddham'
-  delay?: string
   onOpen: (track: ScriptTrack, mode: OpenMode) => void
 }) {
   const [toolsOpen, setToolsOpen] = useState(false)
 
   return (
     <section
-      className={`home__track ${variant === 'siddham' ? 'home__track--siddham' : ''} motion-page`}
-      style={delay ? { animationDelay: delay } : undefined}
+      className={`home__track ${variant === 'siddham' ? 'home__track--siddham' : ''}`}
       aria-labelledby={`track-${track}`}
     >
       <div className="home__track-head">
         <h2 id={`track-${track}`}>{title}</h2>
         <p>{subtitle}</p>
-        <SampleRow
-          key={`${track}-${chars.join('')}`}
-          chars={chars}
-          scriptClass={sampleClass}
-        />
+        <GlyphReel chars={REEL_GLYPHS} className={sampleClass} />
       </div>
 
       <button
@@ -105,7 +55,7 @@ function TrackCard({
 
       <div className="home__track-links">
         <button type="button" className="home__link motion-press" onClick={() => onOpen(track, 'practice')}>
-          따라 쓰기
+          문제풀기
         </button>
         <span aria-hidden="true">·</span>
         <button type="button" className="home__link motion-press" onClick={() => onOpen(track, 'chart')}>
@@ -121,10 +71,7 @@ function TrackCard({
           onClick={() => setToolsOpen((v) => !v)}
         >
           <span>
-            <span className={`fold-chevron ${toolsOpen ? 'is-open' : ''}`} aria-hidden="true">
-              ▸
-            </span>{' '}
-            더 보기
+            <FoldChevron open={toolsOpen} /> 더 보기
           </span>
           <span className="home__track-more-hint">복습 · 진도 · 즐겨찾기</span>
         </button>
@@ -180,15 +127,7 @@ function TrackCard({
 }
 
 export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
-  const [setIndex, setSetIndex] = useState(0)
   const [extraOpen, setExtraOpen] = useState(false)
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setSetIndex((prev) => (prev + 1) % SANSKRIT_SETS.length)
-    }, CYCLE_MS)
-    return () => window.clearInterval(id)
-  }, [])
 
   return (
     <main className="home home--tracks">
@@ -204,8 +143,7 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
         track="sanskrit"
         title="산스크리트"
         subtitle="데바나가리 문자"
-        chars={SANSKRIT_SETS[setIndex]}
-        sampleClass="home__track-sample--deva"
+        sampleClass="glyph-reel--deva"
         onOpen={onOpen}
       />
 
@@ -213,10 +151,8 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
         track="siddham"
         title="실담"
         subtitle="Siddhaṃ 문자"
-        chars={SIDDHAM_SETS[setIndex]}
-        sampleClass="home__track-sample--siddham"
+        sampleClass="glyph-reel--siddham"
         variant="siddham"
-        delay="0.08s"
         onOpen={onOpen}
       />
 
@@ -228,10 +164,7 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
           onClick={() => setExtraOpen((v) => !v)}
         >
           <span>
-            <span className={`fold-chevron ${extraOpen ? 'is-open' : ''}`} aria-hidden="true">
-              ▸
-            </span>{' '}
-            공통 도구
+            <FoldChevron open={extraOpen} /> 공통 도구
           </span>
           <span>대응 · 합자 · 구절 · 변환</span>
         </button>
@@ -257,18 +190,26 @@ export function TracksPage({ onBack, onOpen, onOpenGlobal }: Props) {
               <button
                 type="button"
                 className="home__tool motion-press"
-                onClick={() => onOpenGlobal('convert')}
-                tabIndex={extraOpen ? 0 : -1}
-              >
-                IAST 변환
-              </button>
-              <button
-                type="button"
-                className="home__tool motion-press"
                 onClick={() => onOpenGlobal('mantras')}
                 tabIndex={extraOpen ? 0 : -1}
               >
                 짧은 구절
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('convert')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                로마자 변환
+              </button>
+              <button
+                type="button"
+                className="home__tool motion-press"
+                onClick={() => onOpenGlobal('settings')}
+                tabIndex={extraOpen ? 0 : -1}
+              >
+                설정
               </button>
             </div>
           </div>

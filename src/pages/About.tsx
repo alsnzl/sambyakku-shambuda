@@ -18,8 +18,8 @@ export function About({ onBack }: Props) {
         <section className="about__section" aria-labelledby="about-app">
           <h2 id="about-app">이 앱은</h2>
           <p>
-            <strong>삼뱌꾸샴붓다</strong>는 산스크리트와 실담(Siddhaṃ) 자모를 트랙별로
-            보고, 쓰고, 익히는 학습 앱입니다. 문장·문법보다 먼저{' '}
+            <strong>붓다의 언어교실</strong>은 산스크리트와 실담(Siddhaṃ) 자모를
+            트랙별로 보고, 쓰고, 익히는 학습 앱입니다. 문장·문법보다 먼저{' '}
             <strong>글자 모양과 쓰기 순서</strong>에 익숙해지는 것을 목표로 합니다.
           </p>
         </section>

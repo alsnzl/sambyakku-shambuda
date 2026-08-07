@@ -1,0 +1,146 @@
+/**
+ * Soft rounded press shadows — loaded last so page/landscape
+ * box-shadow rules (esp. fold toggles) do not override hover/active.
+ * Transforms follow iOS UIControl scale (see motion.css).
+ */
+@media (hover: hover) and (pointer: fine) {
+  .motion-press:not(:disabled):hover {
+    transform: translate3d(0, -1px, 0);
+    box-shadow: var(--press-shadow);
+    -webkit-backdrop-filter: var(--block-blur-soft);
+    backdrop-filter: var(--block-blur-soft);
+  }
+
+  :is(
+    .learn__back,
+    .tool__back,
+    .practice__back,
+    .about__back,
+    .home__tracks-back,
+    .write__back
+  ).motion-press:not(:disabled):hover {
+    transform: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.motion-press:not(:disabled):active {
+  transform: translate3d(0, 0, 0) scale(0.97);
+  box-shadow: var(--press-shadow-active);
+}
+
+/* Text back links (← 홈): give a rounded hit area so press shadow is visible */
+.learn__back,
+.tool__back,
+.practice__back,
+.about__back,
+.home__tracks-back,
+.write__back {
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
+  margin-inline: -0.35rem 0;
+}
+
+.home__link {
+  border-radius: var(--radius);
+  padding: 0.35rem 0.55rem;
+}
+
+.learn__back.motion-press:not(:disabled):hover,
+.tool__back.motion-press:not(:disabled):hover,
+.practice__back.motion-press:not(:disabled):hover,
+.about__back.motion-press:not(:disabled):hover,
+.home__tracks-back.motion-press:not(:disabled):hover,
+.write__back.motion-press:not(:disabled):hover {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  opacity: 0.72;
+}
+
+.app-home-fab.motion-press:not(:disabled):hover,
+.app-home-fab.motion-press:not(:disabled):focus-visible {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border-color: color-mix(in srgb, var(--line-strong) 55%, transparent);
+  box-shadow: var(--press-shadow);
+}
+
+.learn__back.motion-press:not(:disabled):active,
+.tool__back.motion-press:not(:disabled):active,
+.practice__back.motion-press:not(:disabled):active,
+.about__back.motion-press:not(:disabled):active,
+.home__tracks-back.motion-press:not(:disabled):active,
+.write__back.motion-press:not(:disabled):active {
+  box-shadow: none;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  opacity: 0.55;
+}
+
+.app-home-fab.motion-press:not(:disabled):active {
+  box-shadow: var(--press-shadow-active);
+}
+
+/*
+ * Fold headers while expanded: soft press shadows bleed over the panel below.
+ * Kill hover/active lift+shadow; keep the header visually flat against content.
+ */
+:is(
+  .write__advanced,
+  .teach__advanced,
+  .script-font-bar,
+  .home__feed,
+  .home__track-more,
+  .home__shared--fold,
+  .tool__labs
+).is-open
+  :is(
+    .write__advanced-summary,
+    .teach__advanced-summary,
+    .script-font-bar__toggle,
+    .home__feed-toggle,
+    .home__track-more-toggle,
+    .home__shared-toggle,
+    .tool__labs-toggle
+  ).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
+  box-shadow: none;
+  transform: none;
+}
+
+/* Expanded panel paints above the header so any residual blur stays underneath. */
+:is(
+  .write__advanced,
+  .teach__advanced,
+  .script-font-bar,
+  .home__feed,
+  .home__track-more,
+  .home__shared--fold,
+  .tool__labs
+).is-open
+  > .fold-panel.is-expanded,
+:is(
+  .write__advanced,
+  .teach__advanced,
+  .script-font-bar,
+  .home__feed,
+  .home__track-more,
+  .home__shared--fold,
+  .tool__labs
+).is-open
+  .fold-panel.is-expanded {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-press:not(:disabled):hover,
+  .motion-press:not(:disabled):active {
+    box-shadow: none;
+    transform: none;
+  }
+}

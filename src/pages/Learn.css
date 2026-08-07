@@ -110,12 +110,29 @@
   gap: 0.65rem;
 }
 
+/* Category menu: 2-up until landscape; landscape shows up to 4. */
+.learn__groups {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.learn__groups > li {
+  min-width: 0;
+}
+
+@media (orientation: landscape) and (min-width: 600px) {
+  .learn__groups {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem 0.65rem;
+  }
+}
+
 .learn__grid--chart {
   gap: 0.45rem;
 }
 
 .learn__group {
   width: 100%;
+  height: 100%;
   text-align: left;
   appearance: none;
   border: 1px solid var(--block-border);
@@ -128,12 +145,15 @@
   flex-direction: column;
   gap: 0.2rem;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .learn__group-label {
   font-weight: 700;
   font-size: 1.02rem;
+  line-height: 1.3;
   color: var(--ink);
+  word-break: keep-all;
 }
 
 .learn__group-meta {
@@ -142,16 +162,18 @@
 }
 
 .learn__group-preview {
-  margin-top: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.45rem;
   display: block;
   overflow: hidden;
   letter-spacing: 0.08em;
   color: var(--teal);
-  font-size: calc(clamp(1.12rem, 4.6vw, 1.32rem) * var(--glyph-scale));
+  font-size: calc(1.22rem * var(--glyph-scale));
   /* Devanagari shirorekha needs room above the em box on mobile. */
   line-height: 1.55;
-  padding-top: 0.28em;
-  padding-bottom: 0.12em;
+  padding-block: 0.28em 0.12em;
+  white-space: nowrap;
+  text-overflow: clip;
 }
 
 .learn__group-preview--deva {
@@ -214,7 +236,7 @@
   width: 100%;
   /* Room for larger glyphs + diacritics; keep tight to IAST below */
   height: calc(3.55rem * var(--glyph-scale));
-  padding: 0.4rem 0.08rem 0.08rem;
+  padding: 0.5rem 0.08rem 0.08rem;
   overflow: hidden;
   line-height: 1;
   contain: paint;
@@ -260,27 +282,57 @@
   transform: translateZ(0) scale(0.985);
 }
 
+/* Font bar + letter card share one wash so the fold doesn't sit on bare paper. */
+.learn__focus {
+  position: relative;
+  margin-top: 0.15rem;
+  padding: 0.55rem 0.5rem 0.65rem;
+  overflow-x: clip;
+}
+
+.learn__focus-backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--teal) 12%, transparent),
+    color-mix(in srgb, var(--teal) 4%, transparent) 42%,
+    transparent 78%
+  );
+  animation: motion-fade var(--motion-base, 0.35s) var(--motion-soft, ease) both;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.learn__focus > .script-font-bar,
+.learn__focus > .learn__sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.learn__focus > .script-font-bar {
+  margin-bottom: 0.55rem;
+  border-color: color-mix(in srgb, var(--line) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 48%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, white 55%, transparent) inset;
+}
+
+.learn__focus .learn__sheet-panel {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .learn__sheet {
   position: relative;
-  margin-top: 0.2rem;
+  margin-top: 0;
   overflow-x: clip;
 }
 
 .learn__sheet-panel--slide {
   will-change: transform, opacity;
-}
-
-.learn__sheet-backdrop {
-  position: absolute;
-  inset: -0.4rem;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--teal) 10%, transparent),
-    transparent 70%
-  );
-  animation: motion-fade 0.35s var(--motion-soft, ease) both;
-  pointer-events: none;
 }
 
 .learn__sheet-panel {

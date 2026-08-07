@@ -1,12 +1,16 @@
 import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import {
   GLYPH_SIZE_OPTIONS,
+  PALETTE_OPTIONS,
   THEME_OPTIONS,
   getGlyphSize,
+  getPalettePref,
   getThemePref,
   setGlyphSize,
+  setPalettePref,
   setThemePref,
   type GlyphSize,
+  type PalettePref,
   type ThemePref,
 } from '../lib/prefsStore'
 import {
@@ -35,6 +39,7 @@ import {
   type ScriptFontChoice,
   type ScriptFontSlot,
 } from '../lib/customScriptFonts'
+import { FoldChevron } from '../components/FoldChevron'
 import './tools.css'
 
 type Props = {
@@ -64,6 +69,7 @@ function emptyFontUi(slot: ScriptFontSlot): FontSlotUi {
 export function SettingsPage({ onBack }: Props) {
   const [glyphSize, setGlyphSizeState] = useState<GlyphSize>(() => getGlyphSize())
   const [theme, setThemeState] = useState<ThemePref>(() => getThemePref())
+  const [palette, setPaletteState] = useState<PalettePref>(() => getPalettePref())
   const [devaFont, setDevaFont] = useState<FontSlotUi>(() => emptyFontUi('deva'))
   const [siddhamFont, setSiddhamFont] = useState<FontSlotUi>(() => emptyFontUi('siddham'))
   const [previewTick, setPreviewTick] = useState(0)
@@ -254,7 +260,7 @@ export function SettingsPage({ onBack }: Props) {
             >
               <p className="tool__font-pane-label">{opt.label}</p>
               <p
-                className="tool__font-preview"
+                className={`tool__font-preview${opt.id === 'noto-siddham' ? ' tool__font-preview--noto-siddham' : ''}`}
                 lang="sa"
                 style={{ fontFamily: `"${opt.family}", sans-serif` }}
               >
@@ -335,7 +341,7 @@ export function SettingsPage({ onBack }: Props) {
         </button>
         <h1>설정</h1>
       </header>
-      <p className="tool__lead">글자 크기와 화면 밝기를 조절합니다. 값은 이 기기에 저장됩니다.</p>
+      <p className="tool__lead">글자 크기·화면 밝기·색감을 조절합니다. 값은 이 기기에 저장됩니다.</p>
 
       <section className="tool__block" aria-label="글자 크기">
         <h2>글자 크기</h2>
@@ -381,6 +387,32 @@ export function SettingsPage({ onBack }: Props) {
         </div>
       </section>
 
+      <section className="tool__block" aria-label="색감">
+        <h2>색감</h2>
+        <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
+          밝기(라이트·다크)와 따로 적용됩니다. 각 색감은 밝은·어두운 모드 모두에 맞춰져 있습니다.
+        </p>
+        <div className="tool__seg tool__seg--palette" role="group" aria-label="색감 선택">
+          {PALETTE_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`tool__seg-btn motion-press ${palette === opt.id ? 'is-active' : ''}`}
+              aria-pressed={palette === opt.id}
+              onClick={() => setPaletteState(setPalettePref(opt.id))}
+            >
+              <span
+                className="tool__palette-swatch"
+                style={{ background: opt.swatch }}
+                aria-hidden="true"
+              />
+              <span className="tool__seg-title">{opt.label}</span>
+              <span className="tool__seg-hint">{opt.hint}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className={`tool__block tool__labs ${labsOpen ? 'is-open' : ''}`} aria-label="실험용">
         <button
           type="button"
@@ -389,15 +421,12 @@ export function SettingsPage({ onBack }: Props) {
           onClick={() => setLabsOpen((v) => !v)}
         >
           <span className="tool__labs-toggle-main">
-            <span className={`fold-chevron ${labsOpen ? 'is-open' : ''}`} aria-hidden="true">
-              ▸
-            </span>
+            <FoldChevron open={labsOpen} />
             <span>
               <span className="tool__labs-title">실험용</span>
               <span className="tool__labs-hint">불안정할 수 있는 기능</span>
             </span>
           </span>
-          <span className="tool__labs-count">{labsOpen ? '접기' : '펼치기'}</span>
         </button>
         <div className={`fold-panel ${labsOpen ? 'is-expanded' : ''}`}>
           <div className="fold-panel__inner">
@@ -408,7 +437,14 @@ export function SettingsPage({ onBack }: Props) {
                 모두 바뀝니다. 획 순서는 기록값 그대로입니다. 최대{' '}
                 {SCRIPT_FONT_MAX_BYTES / (1024 * 1024)}MB. 사용권이 있는 파일만 올려 주세요.
               </p>
-              {renderFontSlot('deva', '산스크리트 (데바나가리)', devaFont, devaInputId, devaInputRef)}
+              {renderFontSlot(
+                'deva',
+                '산스크리트 (데바나가리)',
+                devaFont,
+                devaInputId,
+                devaInputRef,
+                'Noto Sans Devanagari는 기본 산스크리트 표시용입니다. Tiro Devanagari Sanskrit는 전통 문학·산스크리트용 공개 폰트입니다. 사용자 폰트는 데바나가리 글자(अ आ क)를 담은 파일을 올려 주세요. 획 순서는 기록값 그대로입니다.',
+              )}
               {renderFontSlot(
                 'siddham',
                 '실담',

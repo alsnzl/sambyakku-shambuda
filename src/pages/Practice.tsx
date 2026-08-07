@@ -10,6 +10,8 @@ import {
 } from '../lib/quiz'
 import { recordQuizResult } from '../lib/learnerStore'
 import { MotionPage } from '../components/MotionPage'
+import { ScriptFontQuickBar } from '../components/ScriptFontQuickBar'
+import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import './Practice.css'
@@ -63,6 +65,7 @@ const COUNT_OPTIONS: { id: QuizCountMode; label: string }[] = [
 ]
 
 export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
+  const fontEpoch = useScriptFontEpoch()
   const [phase, setPhase] = useState<Phase>('ready')
   const [direction, setDirection] = useState<QuizDirection>('glyph-to-iast')
   const [countMode, setCountMode] = useState<QuizCountMode>(10)
@@ -142,6 +145,7 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
             </button>
             <h1>{meta.title} 연습</h1>
           </header>
+          <ScriptFontQuickBar track={track} />
           <section className="practice__ready motion-sheet__panel">
             <h2>{meta.scriptLabel} 퀴즈</h2>
             <p>문제 수와 출제 방향을 고른 뒤 시작하세요.</p>
@@ -250,6 +254,8 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
         </h1>
       </header>
 
+      <ScriptFontQuickBar track={track} />
+
       <div className="practice__progress" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </div>
@@ -275,7 +281,7 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
       </div>
 
       <MotionPage motionKey={`${direction}-${current.id}`} variant="slide-left">
-        <div className="practice__prompt-block">
+        <div key={`prompt-${fontEpoch}`} className="practice__prompt-block">
           <p className="practice__mode">{current.modeLabel}</p>
           <p
             className={scriptClass(current.promptScript, 'prompt')}
@@ -285,7 +291,7 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
           </p>
         </div>
 
-        <ul className="practice__choices motion-stagger">
+        <ul key={`choices-${fontEpoch}`} className="practice__choices motion-stagger">
           {current.choices.map((choice) => {
             let state = ''
             let flash = ''
