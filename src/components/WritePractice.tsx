@@ -8,6 +8,7 @@ import {
   defaultLabels,
   getEffectiveGlyphStrokes,
   getStrokeSource,
+  getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
   appendPoint,
@@ -35,11 +36,13 @@ const glide = (t: number) => 1 - (1 - t) ** 1.25
 
 export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
+  const taughtData = getTaughtGlyphStrokes(letterId, script)
   const data = getEffectiveGlyphStrokes(letterId, script)
   const fallback = getGlyphStrokes(letterId, script)
   const canvasData = data ?? fallback
   const outlineD = canvasData?.d
   const inkWidth = avgStrokeWidth(canvasData)
+  const canWatchStrokes = Boolean(taughtData?.strokes.length)
 
   const [mode, setMode] = useState<PracticeMode>('trace')
   const [playId, setPlayId] = useState(0)
@@ -49,6 +52,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [drawing, setDrawing] = useState<[number, number][]>([])
   const [traceDone, setTraceDone] = useState(false)
   const [grade, setGrade] = useState<WritingGrade | null>(null)
+  const [watchBlocked, setWatchBlocked] = useState(false)
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
@@ -77,6 +81,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
   useEffect(() => {
     setMode('trace')
+    setWatchBlocked(false)
     resetTrace()
   }, [letterId, script, resetTrace])
 
@@ -85,14 +90,14 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     resetTrace()
   }, [mode, resetTrace])
 
-  /** Watch animation — don't restart when activeStep updates */
+  /** Watch animation — taught strokes only; don't restart when activeStep updates */
   useEffect(() => {
-    if (mode !== 'watch' || !data?.strokes.length) return
+    if (mode !== 'watch' || !taughtData?.strokes.length) return
 
     let cancelled = false
     let raf = 0
-    const strokeCount = data.strokes.length
-    const strokeSnapshot = data.strokes.map((s) => ({ ...s }))
+    const strokeCount = taughtData.strokes.length
+    const strokeSnapshot = taughtData.strokes.map((s) => ({ ...s }))
 
     const start = () => {
       if (cancelled) return
@@ -258,7 +263,10 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           <button
             type="button"
             className={`write__btn write__btn--ghost motion-press ${mode === 'trace' ? 'is-active' : ''}`}
-            onClick={() => setMode('trace')}
+            onClick={() => {
+              setWatchBlocked(false)
+              setMode('trace')
+            }}
           >
             따라 쓰기
           </button>
@@ -266,6 +274,12 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
             type="button"
             className={`write__btn write__btn--ghost motion-press ${mode === 'watch' ? 'is-active' : ''}`}
             onClick={() => {
+              if (!canWatchStrokes) {
+                setWatchBlocked(true)
+                setMode('trace')
+                return
+              }
+              setWatchBlocked(false)
               setMode('watch')
               setPlayId((n) => n + 1)
             }}
@@ -280,6 +294,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
             <button
               type="button"
               className="write__replay motion-press"
+              disabled={!canWatchStrokes}
               onClick={() => setPlayId((n) => n + 1)}
             >
               다시 보기
@@ -287,6 +302,13 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {watchBlocked ? (
+        <p className="write__hint write__hint--warn" role="alert">
+          이 글자의 획이 아직 가르쳐지지 않았습니다. 아래에서 「획 가르치기」로 이론값을 먼저
+          저장해 주세요.
+        </p>
+      ) : null}
 
       {mode === 'trace' && !traceDone && (
         <p className="write__hint">
@@ -399,12 +421,12 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
               <path className="write__glyph-guide" d={outlineD} />
               <path className="write__glyph-ink" d={outlineD} mask={`url(#${maskId})`} />
             </>
-          ) : canvasData ? (
+          ) : mode === 'watch' && taughtData ? (
             <>
               <defs>
                 <mask id={`${maskId}-watch`} maskUnits="userSpaceOnUse">
                   <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                  {canvasData.strokes.map((s, i) => (
+                  {taughtData.strokes.map((s, i) => (
                     <path
                       key={`${letterId}-${playId}-${i}`}
                       ref={(el) => {
@@ -421,15 +443,15 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                 </mask>
               </defs>
 
-              <path className="write__glyph-guide" d={canvasData.d} />
+              <path className="write__glyph-guide" d={taughtData.d} />
               <path
                 className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                d={canvasData.d}
+                d={taughtData.d}
                 mask={`url(#${maskId}-watch)`}
               />
               <StrokeArrowLayer
-                strokes={canvasData.strokes}
-                revealCount={watchDone ? canvasData.strokes.length : Math.max(activeStep + 1, 1)}
+                strokes={taughtData.strokes}
+                revealCount={watchDone ? taughtData.strokes.length : Math.max(activeStep + 1, 1)}
                 emphasizeLatest={!watchDone}
               />
               <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />

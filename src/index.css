@@ -42,7 +42,8 @@
   --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
   --sans: 'Noto Sans KR', sans-serif;
   --deva: 'Noto Sans Devanagari', sans-serif;
-  --siddham: 'Muktam Siddham', 'Noto Sans Siddham', 'Noto Sans Devanagari', sans-serif;
+  /* UI Siddhaṃ only — stroke outlines stay on taught/Noto data, not this face. */
+  --siddham: 'Muktam Siddham', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   /* One shared corner radius for blocks, chips, and controls. */

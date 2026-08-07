@@ -154,16 +154,23 @@ export function clearUserStrokes(script: StrokeScript, letterId: string) {
   writeStore(store)
 }
 
-export function getEffectiveGlyphStrokes(
+/** Mother/teacher recorded theory only (cloud → bundled → local draft). */
+export function getTaughtGlyphStrokes(
   letterId: string,
   script: StrokeScript,
 ): GlyphStrokeData | null {
   return (
     getCloudTaughtStrokes(letterId, script) ??
     getTaughtStrokes(letterId, script) ??
-    loadUserStrokes(script, letterId) ??
-    getGlyphStrokes(letterId, script)
+    loadUserStrokes(script, letterId)
   )
+}
+
+export function getEffectiveGlyphStrokes(
+  letterId: string,
+  script: StrokeScript,
+): GlyphStrokeData | null {
+  return getTaughtGlyphStrokes(letterId, script) ?? getGlyphStrokes(letterId, script)
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100

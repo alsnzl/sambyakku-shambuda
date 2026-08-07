@@ -83,6 +83,15 @@
   color: var(--muted);
 }
 
+.write__hint--warn {
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--clay) 35%, var(--line));
+  background: var(--clay-wash);
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 .write__flash {
   color: var(--accent);
 }
