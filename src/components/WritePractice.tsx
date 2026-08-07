@@ -4,16 +4,17 @@ import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import {
   avgStrokeWidth,
-  clientToSvgPoint,
   defaultLabels,
   getEffectiveGlyphStrokes,
   getStrokeSource,
   getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
-  appendPoint,
+  appendSamples,
+  collectFreehandSamples,
   commitFreehandStroke,
-  freehandPreviewPath,
+  freehandPressureSegments,
+  type FreehandPoint,
 } from '../lib/freehandStroke'
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
@@ -49,7 +50,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
   const [drawn, setDrawn] = useState<GlyphStroke[]>([])
-  const [drawing, setDrawing] = useState<[number, number][]>([])
+  const [redoStack, setRedoStack] = useState<GlyphStroke[]>([])
+  const [drawing, setDrawing] = useState<FreehandPoint[]>([])
   const [traceDone, setTraceDone] = useState(false)
   const [grade, setGrade] = useState<WritingGrade | null>(null)
   const [watchBlocked, setWatchBlocked] = useState(false)
@@ -67,10 +69,11 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const revealRefs = useRef<(SVGPathElement | null)[]>([])
   const tipRef = useRef<SVGCircleElement | null>(null)
   const drawingRef = useRef(false)
-  const pointsRef = useRef<[number, number][]>([])
+  const pointsRef = useRef<FreehandPoint[]>([])
 
   const resetTrace = useCallback(() => {
     setDrawn([])
+    setRedoStack([])
     setDrawing([])
     setActiveStep(0)
     setTraceDone(false)
@@ -193,6 +196,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !outlineD) return
     if (theoryCount > 0 && drawn.length >= theoryCount) return
+    if (e.pointerType === 'pen' && e.buttons === 0) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -201,17 +205,18 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     drawingRef.current = true
     setActiveStep(drawn.length)
 
-    const pt = clientToSvgPoint(svg, e.clientX, e.clientY)
-    pointsRef.current = [pt]
-    setDrawing([pt])
+    const samples = collectFreehandSamples(e, svg)
+    pointsRef.current = samples
+    setDrawing(samples)
   }
 
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (!drawingRef.current || mode !== 'trace') return
+    if (e.pointerType === 'pen' && e.buttons === 0) return
     const svg = svgRef.current
     if (!svg) return
-    const pt = clientToSvgPoint(svg, e.clientX, e.clientY)
-    pointsRef.current = appendPoint(pointsRef.current, pt)
+    const samples = collectFreehandSamples(e, svg)
+    pointsRef.current = appendSamples(pointsRef.current, samples)
     setDrawing(pointsRef.current)
   }
 
@@ -234,8 +239,28 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
     if (stroke) {
       setDrawn((ds) => [...ds, stroke])
+      setRedoStack([])
       setActiveStep(index + 1)
     }
+  }
+
+  function undoStroke() {
+    if (mode !== 'trace' || traceDone || drawingRef.current || drawn.length === 0) return
+    const last = drawn[drawn.length - 1]
+    setDrawn((ds) => ds.slice(0, -1))
+    setRedoStack((stack) => [...stack, last])
+    setActiveStep(drawn.length - 1)
+    setGrade(null)
+  }
+
+  function redoStroke() {
+    if (mode !== 'trace' || traceDone || drawingRef.current || redoStack.length === 0) return
+    if (theoryCount > 0 && drawn.length >= theoryCount) return
+    const next = redoStack[redoStack.length - 1]
+    setRedoStack((stack) => stack.slice(0, -1))
+    setDrawn((ds) => [...ds, next])
+    setActiveStep(drawn.length + 1)
+    setGrade(null)
   }
 
   function gradeWriting() {
@@ -246,7 +271,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     recordWriteScore(track, letterId, result.average)
   }
 
-  const previewPath = freehandPreviewPath(drawing)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth)
 
   return (
     <section className="write" aria-label="쓰기 연습">
@@ -287,9 +312,33 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
             보기
           </button>
           {mode === 'trace' ? (
-            <button type="button" className="write__replay motion-press" onClick={resetTrace}>
-              다시
-            </button>
+            <>
+              <button
+                type="button"
+                className="write__btn write__btn--ghost motion-press"
+                disabled={drawn.length === 0 || traceDone}
+                onClick={undoStroke}
+                aria-label="이전 획 취소"
+              >
+                ← 뒤로
+              </button>
+              <button
+                type="button"
+                className="write__btn write__btn--ghost motion-press"
+                disabled={
+                  redoStack.length === 0 ||
+                  traceDone ||
+                  (theoryCount > 0 && drawn.length >= theoryCount)
+                }
+                onClick={redoStroke}
+                aria-label="취소한 획 다시"
+              >
+                앞으로 →
+              </button>
+              <button type="button" className="write__replay motion-press" onClick={resetTrace}>
+                다시
+              </button>
+            </>
           ) : (
             <button
               type="button"
@@ -406,16 +455,19 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                       fill="none"
                     />
                   ))}
-                  {previewPath && (
-                    <path
-                      d={previewPath}
+                  {liveSegments.map((seg) => (
+                    <line
+                      key={`mask-live-${seg.i}`}
+                      x1={seg.x1}
+                      y1={seg.y1}
+                      x2={seg.x2}
+                      y2={seg.y2}
                       stroke="white"
-                      strokeWidth={inkWidth}
+                      strokeWidth={seg.width}
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      fill="none"
                     />
-                  )}
+                  ))}
                 </mask>
               </defs>
               <path className="write__glyph-guide" d={outlineD} />

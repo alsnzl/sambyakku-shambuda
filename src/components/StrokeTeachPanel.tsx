@@ -5,7 +5,6 @@ import { STROKE_VIEWBOX, getGlyphStrokes } from '../data/glyphStrokes'
 import {
   avgStrokeWidth,
   clearUserStrokes,
-  clientToSvgPoint,
   defaultLabels,
   getTeachingInfo,
   saveUserStrokes,
@@ -17,9 +16,11 @@ import {
   refreshCloudStore,
 } from '../lib/strokeCloud'
 import {
-  appendPoint,
+  appendSamples,
+  collectFreehandSamples,
   commitFreehandStroke,
-  freehandPreviewPath,
+  freehandPressureSegments,
+  type FreehandPoint,
 } from '../lib/freehandStroke'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './StrokeTeachPanel.css'
@@ -69,7 +70,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const info = getTeachingInfo(letterId, script)
 
   const [recorded, setRecorded] = useState<GlyphStroke[]>([])
-  const [drawing, setDrawing] = useState<[number, number][]>([])
+  const [redoStack, setRedoStack] = useState<GlyphStroke[]>([])
+  const [drawing, setDrawing] = useState<FreehandPoint[]>([])
   const [saving, setSaving] = useState(false)
   const [cloudPhase, setCloudPhase] = useState<'checking' | 'idle' | 'error'>('checking')
   const [cloudError, setCloudError] = useState<string | null>(null)
@@ -78,12 +80,13 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const maskId = `${useId()}-teach-mask`
   const svgRef = useRef<SVGSVGElement>(null)
   const drawingRef = useRef(false)
-  const pointsRef = useRef<[number, number][]>([])
+  const pointsRef = useRef<FreehandPoint[]>([])
 
   const refresh = () => setTick((n) => n + 1)
 
   useEffect(() => {
     setRecorded([])
+    setRedoStack([])
     setDrawing([])
     setFlash(null)
     setCloudError(null)
@@ -118,6 +121,8 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (!glyph || saving) return
+    // Ignore pure hover from S Pen until tip contacts the screen
+    if (e.pointerType === 'pen' && e.buttons === 0) return
     e.preventDefault()
 
     const svg = svgRef.current
@@ -125,17 +130,18 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     svg.setPointerCapture(e.pointerId)
     drawingRef.current = true
 
-    const pt = clientToSvgPoint(svg, e.clientX, e.clientY)
-    pointsRef.current = [pt]
-    setDrawing([pt])
+    const samples = collectFreehandSamples(e, svg)
+    pointsRef.current = samples
+    setDrawing(samples)
   }
 
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (!drawingRef.current) return
+    if (e.pointerType === 'pen' && e.buttons === 0) return
     const svg = svgRef.current
     if (!svg) return
-    const pt = clientToSvgPoint(svg, e.clientX, e.clientY)
-    pointsRef.current = appendPoint(pointsRef.current, pt)
+    const samples = collectFreehandSamples(e, svg)
+    pointsRef.current = appendSamples(pointsRef.current, samples)
     setDrawing(pointsRef.current)
   }
 
@@ -157,13 +163,31 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
     if (stroke) {
       setRecorded((rs) => [...rs, stroke])
+      setRedoStack([])
       setFlash(null)
     }
+  }
+
+  function undoStroke() {
+    if (saving || drawingRef.current || recorded.length === 0) return
+    const last = recorded[recorded.length - 1]
+    setRecorded((rs) => rs.slice(0, -1))
+    setRedoStack((stack) => [...stack, last])
+    setFlash(null)
+  }
+
+  function redoStroke() {
+    if (saving || drawingRef.current || redoStack.length === 0) return
+    const next = redoStack[redoStack.length - 1]
+    setRedoStack((stack) => stack.slice(0, -1))
+    setRecorded((rs) => [...rs, next])
+    setFlash(null)
   }
 
   function handleEdit() {
     clearUserStrokes(script, letterId)
     setRecorded([])
+    setRedoStack([])
     setDrawing([])
     drawingRef.current = false
     pointsRef.current = []
@@ -194,6 +218,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       await refreshCloudStore({ force: true })
       refresh()
       setRecorded([])
+      setRedoStack([])
       setDrawing([])
       setCloudPhase('idle')
       setFlash(`${count}획 · 클라우드 저장 완료`)
@@ -241,7 +266,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     error: 'teach__status--warn',
   }
 
-  const previewPath = freehandPreviewPath(drawing)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth)
   void tick
 
   return (
@@ -266,6 +291,24 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       </p>
 
       <div className="teach__bar teach__bar--simple">
+        <button
+          type="button"
+          className="teach__btn"
+          disabled={recorded.length === 0 || saving}
+          onClick={undoStroke}
+          aria-label="이전 획 취소"
+        >
+          ← 뒤로
+        </button>
+        <button
+          type="button"
+          className="teach__btn"
+          disabled={redoStack.length === 0 || saving}
+          onClick={redoStroke}
+          aria-label="취소한 획 다시"
+        >
+          앞으로 →
+        </button>
         <button
           type="button"
           className="teach__btn teach__btn--primary"
@@ -311,16 +354,19 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                     fill="none"
                   />
                 ))}
-                {previewPath && (
-                  <path
-                    d={previewPath}
+                {liveSegments.map((seg) => (
+                  <line
+                    key={`mask-live-${seg.i}`}
+                    x1={seg.x1}
+                    y1={seg.y1}
+                    x2={seg.x2}
+                    y2={seg.y2}
                     stroke="white"
-                    strokeWidth={inkWidth}
+                    strokeWidth={seg.width}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    fill="none"
                   />
-                )}
+                ))}
               </mask>
             </defs>
             <text
