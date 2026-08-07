@@ -15,13 +15,18 @@ import {
   refreshCloudStore,
 } from '../lib/strokeCloud'
 import {
+  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
   freehandPressureSegments,
+  glyphStrokeMaskSegments,
+  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
+import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
+import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import './StrokeTeachPanel.css'
 
@@ -87,6 +92,9 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
+  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
+  const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
+  const [saveAckLow, setSaveAckLow] = useState(false)
 
   const maskId = `${useId()}-teach-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -101,11 +109,17 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
   const previewStrokes =
     recorded.length > 0 ? recorded : (info.data?.strokes ?? [])
   const canWatch = previewStrokes.length > 0
+  const canLoadSaved = Boolean(info.data?.strokes?.length)
 
   function exitWatch() {
     setMode('draw')
     setWatchDone(false)
     setActiveStep(0)
+  }
+
+  function allowPointer(e: React.PointerEvent) {
+    if (penOnly && e.pointerType === 'touch') return false
+    return true
   }
 
   useEffect(() => {
@@ -118,6 +132,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setMode('draw')
     setWatchDone(false)
     setActiveStep(0)
+    setSaveAckLow(false)
     drawingRef.current = false
     pointsRef.current = []
   }, [letterId, script])
@@ -251,6 +266,10 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       exitWatch()
       return
     }
+    if (!allowPointer(e)) {
+      setFlash('손바닥·손가락은 무시합니다. S Pen으로 그려 주세요. (펜만 켜짐)')
+      return
+    }
     // Ignore pure hover from S Pen until tip contacts the screen
     if (e.pointerType === 'pen' && e.buttons === 0) return
     // Tip only — block S Pen button / right-click / eraser side
@@ -261,6 +280,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     if (!svg) return
     svg.setPointerCapture(e.pointerId)
     drawingRef.current = true
+    setSaveAckLow(false)
 
     const samples = collectFreehandSamples(e, svg)
     pointsRef.current = samples
@@ -269,6 +289,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
 
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'draw' || !drawingRef.current) return
+    if (!allowPointer(e)) return
     if (e.pointerType === 'pen' && e.buttons === 0) return
     const svg = svgRef.current
     if (!svg) return
@@ -331,6 +352,34 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setFlash(null)
   }
 
+  function renameStroke(index: number, label: string) {
+    setRecorded((rs) => rs.map((s, i) => (i === index ? { ...s, label } : s)))
+    setSaveAckLow(false)
+  }
+
+  function commitStrokeLabel(index: number) {
+    setRecorded((rs) =>
+      rs.map((s, i) => {
+        if (i !== index) return s
+        const next = s.label.trim()
+        return { ...s, label: next || labels[i] || `획 ${i + 1}` }
+      }),
+    )
+  }
+
+  function handleLoad() {
+    const strokes = info.data?.strokes
+    if (!strokes?.length || saving) return
+    exitWatch()
+    setRecorded(strokes.map((s) => ({ ...s })))
+    setRedoStack([])
+    setDrawing([])
+    drawingRef.current = false
+    pointsRef.current = []
+    setSaveAckLow(false)
+    setFlash(`${strokes.length}획을 불러왔어요. 고친 뒤 저장하세요.`)
+  }
+
   function handleEdit() {
     exitWatch()
     clearUserStrokes(script, letterId)
@@ -339,13 +388,23 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     setDrawing([])
     drawingRef.current = false
     pointsRef.current = []
-    setFlash('다시 그을 수 있어요. 그린 뒤 저장을 눌러 주세요.')
+    setSaveAckLow(false)
+    setFlash('캔버스를 비웠어요. 그린 뒤 저장을 눌러 주세요.')
     refresh()
   }
 
   async function handleSave() {
     if (!glyph || recorded.length === 0 || saving) return
     exitWatch()
+
+    const coverage = assessTeachCoverage(recorded, outlineD)
+    if (coverage.level === 'bad' && !saveAckLow) {
+      setSaveAckLow(true)
+      setFlash(`${coverage.message} 한 번 더 「저장」을 누르면 그대로 올립니다.`)
+      return
+    }
+    setSaveAckLow(false)
+
     const count = recorded.length
     // Keep a path outline for playback fill when available; UI itself uses the face font.
     const data = { d: outlineD || `M${glyphX} ${glyphY}`, strokes: recorded }
@@ -353,8 +412,13 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     saveUserStrokes(script, letterId, data)
     refresh()
 
+    const coverageNote =
+      coverage.level === 'ok'
+        ? `맞춤 ${coverage.score}점`
+        : `맞춤 ${coverage.score}점(주의)`
+
     if (!hasCloudWriteToken()) {
-      setFlash(`${count}획을 이 기기에만 저장했어요. (설정에서 토큰을 저장하세요)`)
+      setFlash(`${count}획 · ${coverageNote} · 이 기기에만 저장 (설정에서 토큰을 저장하세요)`)
       return
     }
 
@@ -370,7 +434,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
       setRedoStack([])
       setDrawing([])
       setCloudPhase('idle')
-      setFlash(`${count}획 · 클라우드 저장 완료`)
+      setFlash(`${count}획 · ${coverageNote} · 클라우드 저장 완료`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setCloudPhase('error')
@@ -415,7 +479,10 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
     error: 'teach__status--warn',
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
+  const recordedMaskSegs = recorded.flatMap((s, i) =>
+    glyphStrokeMaskSegments(s, brush, i * 1000),
+  )
   void tick
 
   return (
@@ -443,6 +510,30 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
               : '글자 위에 바로 그려 주세요'}
       </p>
 
+      <div className="teach__brush" role="group" aria-label="브러시">
+        {BRUSH_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={`teach__brush-btn ${brush === opt.id ? 'is-active' : ''}`}
+            title={opt.hint}
+            disabled={saving}
+            onClick={() => setBrush(setBrushKind(opt.id))}
+          >
+            {opt.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={`teach__brush-btn ${penOnly ? 'is-active' : ''}`}
+          title="손바닥·손가락 입력 무시 (S Pen만)"
+          disabled={saving}
+          onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+        >
+          펜만
+        </button>
+      </div>
+
       <div className="teach__bar teach__bar--simple">
         <button
           type="button"
@@ -466,12 +557,21 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
           type="button"
           className="teach__btn teach__btn--primary"
           disabled={recorded.length === 0 || saving}
-          onClick={handleSave}
+          onClick={() => void handleSave()}
         >
-          {saving ? '저장 중…' : '저장'}
+          {saving ? '저장 중…' : saveAckLow ? '그래도 저장' : '저장'}
+        </button>
+        <button
+          type="button"
+          className="teach__btn"
+          disabled={!canLoadSaved || saving}
+          onClick={handleLoad}
+          title="저장된 획을 캔버스로 불러와 수정"
+        >
+          불러오기
         </button>
         <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
-          수정
+          새로
         </button>
         <button
           type="button"
@@ -554,15 +654,17 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                 <defs>
                   <mask id={maskId} maskUnits="userSpaceOnUse">
                     <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                    {recorded.map((s, i) => (
-                      <path
-                        key={`mask-rec-${i}`}
-                        d={s.d}
+                    {recordedMaskSegs.map((seg) => (
+                      <line
+                        key={`mask-rec-${seg.i}`}
+                        x1={seg.x1}
+                        y1={seg.y1}
+                        x2={seg.x2}
+                        y2={seg.y2}
                         stroke="white"
-                        strokeWidth={s.width}
-                        strokeLinecap="round"
+                        strokeWidth={seg.width}
+                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                         strokeLinejoin="round"
-                        fill="none"
                       />
                     ))}
                     {liveSegments.map((seg) => (
@@ -574,7 +676,7 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                         y2={seg.y2}
                         stroke="white"
                         strokeWidth={seg.width}
-                        strokeLinecap="round"
+                        strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                         strokeLinejoin="round"
                       />
                     ))}
@@ -621,7 +723,15 @@ export function StrokeTeachPanel({ letterId, glyph, track }: Props) {
                   {recorded.map((s, i) => (
                     <li key={`teach-${letterId}-${i}`} className="teach__step is-done">
                       <span className="teach__step-num">{i + 1}</span>
-                      <span className="teach__step-label">{s.label}</span>
+                      <input
+                        className="teach__step-input"
+                        type="text"
+                        value={s.label}
+                        disabled={saving}
+                        aria-label={`${i + 1}번 획 이름`}
+                        onChange={(e) => renameStroke(i, e.target.value)}
+                        onBlur={() => commitStrokeLabel(i)}
+                      />
                     </li>
                   ))}
                   <li className="teach__step is-active">

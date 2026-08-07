@@ -212,6 +212,30 @@
   -webkit-touch-callout: none;
 }
 
+.write__brush {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.55rem;
+}
+
+.write__brush-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.32rem 0.7rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.write__brush-btn.is-active {
+  background: var(--teal-wash);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
 .write__stroke-ghost {
   fill: none;
   stroke: color-mix(in srgb, var(--accent) 30%, transparent);

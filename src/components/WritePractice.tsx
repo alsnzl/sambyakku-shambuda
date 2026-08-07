@@ -9,13 +9,17 @@ import {
   getTaughtGlyphStrokes,
 } from '../lib/strokeRecord'
 import {
+  BRUSH_OPTIONS,
   FREEHAND_INK_WIDTH,
   appendSamples,
   collectFreehandSamples,
   commitFreehandStroke,
   freehandPressureSegments,
+  glyphStrokeMaskSegments,
+  type BrushKind,
   type FreehandPoint,
 } from '../lib/freehandStroke'
+import { getBrushKind, getPenOnly, setBrushKind, setPenOnly } from '../lib/prefsStore'
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
@@ -55,6 +59,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   const [traceDone, setTraceDone] = useState(false)
   const [grade, setGrade] = useState<WritingGrade | null>(null)
   const [watchBlocked, setWatchBlocked] = useState(false)
+  const [brush, setBrush] = useState<BrushKind>(() => getBrushKind())
+  const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
@@ -196,6 +202,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !outlineD) return
     if (theoryCount > 0 && drawn.length >= theoryCount) return
+    if (penOnly && e.pointerType === 'touch') return
     if (e.pointerType === 'pen' && e.buttons === 0) return
     // Tip only — block S Pen button / right-click / eraser side
     if (e.pointerType !== 'touch' && e.button !== 0) return
@@ -214,6 +221,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
 
   function pointerMove(e: React.PointerEvent<SVGSVGElement>) {
     if (!drawingRef.current || mode !== 'trace') return
+    if (penOnly && e.pointerType === 'touch') return
     if (e.pointerType === 'pen' && e.buttons === 0) return
     const svg = svgRef.current
     if (!svg) return
@@ -273,7 +281,8 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
     recordWriteScore(track, letterId, result.average)
   }
 
-  const liveSegments = freehandPressureSegments(drawing, inkWidth)
+  const liveSegments = freehandPressureSegments(drawing, inkWidth, brush)
+  const drawnMaskSegs = drawn.flatMap((s, i) => glyphStrokeMaskSegments(s, brush, i * 1000))
 
   return (
     <section className="write" aria-label="쓰기 연습">
@@ -353,6 +362,30 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {mode === 'trace' ? (
+        <div className="write__brush" role="group" aria-label="브러시">
+          {BRUSH_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              className={`write__brush-btn motion-press ${brush === opt.id ? 'is-active' : ''}`}
+              title={opt.hint}
+              onClick={() => setBrush(setBrushKind(opt.id))}
+            >
+              {opt.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`write__brush-btn motion-press ${penOnly ? 'is-active' : ''}`}
+            title="손바닥·손가락 입력 무시 (S Pen만)"
+            onClick={() => setPenOnlyState(setPenOnly(!penOnly))}
+          >
+            펜만
+          </button>
+        </div>
+      ) : null}
 
       {watchBlocked ? (
         <p className="write__hint write__hint--warn" role="alert">
@@ -447,15 +480,17 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
               <defs>
                 <mask id={maskId} maskUnits="userSpaceOnUse">
                   <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                  {drawn.map((s, i) => (
-                    <path
-                      key={`mask-${i}`}
-                      d={s.d}
+                  {drawnMaskSegs.map((seg) => (
+                    <line
+                      key={`mask-${seg.i}`}
+                      x1={seg.x1}
+                      y1={seg.y1}
+                      x2={seg.x2}
+                      y2={seg.y2}
                       stroke="white"
-                      strokeWidth={s.width}
-                      strokeLinecap="round"
+                      strokeWidth={seg.width}
+                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                       strokeLinejoin="round"
-                      fill="none"
                     />
                   ))}
                   {liveSegments.map((seg) => (
@@ -467,7 +502,7 @@ export function WritePractice({ letterId, glyph, track, onClose }: Props) {
                       y2={seg.y2}
                       stroke="white"
                       strokeWidth={seg.width}
-                      strokeLinecap="round"
+                      strokeLinecap={brush === 'brush' ? 'butt' : 'round'}
                       strokeLinejoin="round"
                     />
                   ))}
