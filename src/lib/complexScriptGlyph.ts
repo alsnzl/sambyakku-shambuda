@@ -9,8 +9,8 @@ export function glyphHasCombiningMarks(glyph: string): boolean {
 
 /**
  * Only iPhone/iPad WebKit needs HTML foreignObject for combining marks.
- * Desktop/Android SVG <text> at STROKE_GUIDE_Y stays aligned with taught strokes.
- * On iOS, SvgHtmlGlyph pins the HTML line box to that same baseline Y.
+ * Desktop/Android use SVG <text>. Taught path outlines are preferred for
+ * stroke intro/watch when available (see LetterCard / teach / write).
  */
 export function needsIosHtmlCombiningGlyph(): boolean {
   if (typeof navigator === 'undefined') return false

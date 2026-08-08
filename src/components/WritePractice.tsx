@@ -43,7 +43,6 @@ import {
   getActiveScriptFontStack,
   getScriptFontChoice,
   getScriptFontStack,
-  matchesGeneratedOutlineFont,
   parseScriptFontChoice,
 } from '../lib/customScriptFonts'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
@@ -91,10 +90,8 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
-  const useWatchPathGuide =
-    Boolean(taughtData?.d) &&
-    !recordedFontChoice &&
-    matchesGeneratedOutlineFont(fontSlot, fontChoice)
+  /** Prefer saved taught outline so watch reveal aligns with strokes (aṃ/aḥ). */
+  const useWatchPathGuide = Boolean(taughtData?.d)
   const glyphX = STROKE_GUIDE_X
   const glyphY = STROKE_GUIDE_Y
   const watchFontKey = `${fontEpoch}-${watchFontFamily}`

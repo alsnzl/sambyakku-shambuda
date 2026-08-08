@@ -7,9 +7,7 @@ import { trackMeta } from '../types/track'
 import { playLetterPronunciation } from '../lib/audio'
 import {
   getActiveScriptFontStack,
-  getScriptFontChoice,
   getScriptFontStack,
-  matchesGeneratedOutlineFont,
   parseScriptFontChoice,
 } from '../lib/customScriptFonts'
 import {
@@ -113,11 +111,8 @@ export function LetterCard({
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(script, recordedFontChoice)
     : scriptStack
-  const usePathGuide =
-    Boolean(taughtData?.d) &&
-    !recordedFontChoice &&
-    matchesGeneratedOutlineFont(script, getScriptFontChoice(script))
-  /* Combining marks use ScriptCanvasGlyph (foreignObject) — safe to animate on iOS. */
+  /** Use saved taught outline when present — matches stroke paths (incl. aṃ/aḥ). */
+  const usePathGuide = Boolean(taughtData?.d)
   const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
   const slideReady = slideReadyKey === introKey

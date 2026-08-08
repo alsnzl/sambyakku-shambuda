@@ -177,14 +177,10 @@ export function StrokeTeachPanel({
   const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
 
   /**
-   * Draw always uses live SVG text so font switches update immediately.
-   * Watch uses path only for legacy cloud entries (no fontFace) that match Noto outlines.
+   * Watch: prefer saved taught outline so stroke reveal matches the glyph
+   * (critical for aṃ/aḥ on iOS where HTML foreignObject + mask is fragile).
    */
-  const usePathGuide =
-    mode === 'watch' &&
-    Boolean(outlineD) &&
-    !recordedFontChoice &&
-    matchesGeneratedOutlineFont(fontSlot, fontChoice)
+  const usePathGuide = mode === 'watch' && Boolean(info.data?.d)
   const canvasFontFamily = mode === 'watch' ? watchFontFamily : fontFamily
   const canvasFontKey = `${fontEpoch}-${canvasFontFamily}-${mode}`
 
