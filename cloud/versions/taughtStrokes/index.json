@@ -1,9 +1,21 @@
 {
   "meta": {
     "description": "획 기록 버전 인덱스 — 라이브 taughtStrokes.json 과 별도. 복원·미리보기용.",
-    "updatedAt": "2026-08-08T14:22:18.224Z"
+    "updatedAt": "2026-08-08T14:24:20.692Z"
   },
   "versions": [
+    {
+      "id": "2026-08-08T14-24-20-692Z_deva_u_noto-deva",
+      "createdAt": "2026-08-08T14:24:20.692Z",
+      "script": "deva",
+      "letterId": "u",
+      "fontFace": "noto-deva",
+      "fontLabel": "Noto Sans Devanagari",
+      "strokeCount": 3,
+      "path": "cloud/versions/taughtStrokes/2026-08-08T14-24-20-692Z_deva_u_noto-deva.json",
+      "message": "teach: deva/u@noto-deva (3 strokes, Noto Sans Devanagari)",
+      "kind": "auto-publish"
+    },
     {
       "id": "2026-08-08T14-22-18-224Z_deva_i_noto-deva",
       "createdAt": "2026-08-08T14:22:18.224Z",
