@@ -146,21 +146,161 @@
   backdrop-filter: var(--block-blur-soft);
 }
 
-/* —— Sticky / floating chrome: no glass slab behind titles —— */
-:is(
-  .learn__bar,
-  .practice__bar,
-  .home__tracks-bar,
-  .about__bar,
-  .tool__bar,
-  .teach-page .learn__bar,
-  .learn__chart-head
-) {
+/* —— Section heads stay clear (not sticky chrome) —— */
+.learn__chart-head {
   background: transparent;
   border: 0;
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/*
+ * Landscape sticky top chrome.
+ * Frost breaks out to the viewport (100vw) so L/R edges sit at the screen
+ * edge — short in-content side fades looked blurry; shell-edge cuts looked sharp.
+ */
+@media (orientation: landscape) and (min-width: 600px) {
+  :root {
+    /* Sync fixed ⌂ with sticky bar padding-top extra (0.35rem) */
+    --home-fab-nudge: 0.35rem;
+  }
+
+  :is(
+    .learn__bar,
+    .practice__bar,
+    .home__tracks-bar,
+    .tool__bar,
+    .teach-page .learn__bar
+  ) {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    isolation: auto;
+    overflow: visible;
+    margin-top: calc(-1 * var(--page-pad-y));
+    margin-inline: calc(-1 * var(--page-pad-x));
+    padding-top: calc(var(--page-pad-y) + 0.35rem);
+    padding-inline: var(--page-pad-x);
+    padding-bottom: 1.45rem;
+    margin-bottom: 0;
+  }
+
+  :is(
+    .learn__bar,
+    .practice__bar,
+    .home__tracks-bar,
+    .tool__bar,
+    .teach-page .learn__bar
+  )::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    bottom: 0;
+    /* Viewport-centered full bleed (no transform — keeps backdrop-filter alive) */
+    left: 50%;
+    width: 100vw;
+    margin-left: -50vw;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 0;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--bg) 97%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 94%, transparent) 40%,
+      color-mix(in srgb, var(--bg) 70%, transparent) 66%,
+      color-mix(in srgb, var(--bg) 32%, transparent) 84%,
+      transparent 100%
+    );
+    -webkit-backdrop-filter: blur(40px) saturate(1.7);
+    backdrop-filter: blur(40px) saturate(1.7);
+    /*
+     * Soften only near the physical screen edges + bottom.
+     * Long side ramps (3.5rem) sit outside the title/back control column.
+     */
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0,
+        #000 3.5rem,
+        #000 calc(100% - 3.5rem),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 52%,
+        rgba(0, 0, 0, 0.72) 74%,
+        rgba(0, 0, 0, 0.28) 90%,
+        transparent 100%
+      );
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0,
+        #000 3.5rem,
+        #000 calc(100% - 3.5rem),
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 52%,
+        rgba(0, 0, 0, 0.72) 74%,
+        rgba(0, 0, 0, 0.28) 90%,
+        transparent 100%
+      );
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  .app-shell:has(.app-home-fab) :is(
+    .learn__bar,
+    .practice__bar,
+    .home__tracks-bar,
+    .tool__bar,
+    .teach-page .learn__bar
+  ) {
+    padding-inline-end: calc(var(--page-pad-x) + var(--touch-min) + var(--space-3));
+  }
+}
+
+/* Portrait: no sticky glass slab behind titles */
+@media (orientation: portrait) {
+  :is(
+    .learn__bar,
+    .practice__bar,
+    .home__tracks-bar,
+    .about__bar,
+    .tool__bar,
+    .teach-page .learn__bar
+  ) {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :is(
+    .learn__bar,
+    .practice__bar,
+    .home__tracks-bar,
+    .about__bar,
+    .tool__bar,
+    .teach-page .learn__bar
+  )::before {
+    content: none;
+  }
 }
 
 /* Text back links stay clear — glass only on real controls */

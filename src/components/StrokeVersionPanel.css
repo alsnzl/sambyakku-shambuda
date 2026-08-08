@@ -1,5 +1,5 @@
 .stroke-version {
-  margin-top: var(--space-2);
+  margin-top: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2%, transparent);

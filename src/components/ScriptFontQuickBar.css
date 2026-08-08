@@ -145,25 +145,34 @@
   line-height: 1.4;
 }
 
-/* Teach “기록 폰트” — collapsed shows name + stroke count; expand to pick font. */
+/* Teach “기록 폰트” — always open; color badge shows saved / empty stroke state. */
 .script-font-bar--record {
-  margin: 0 0 var(--space-2);
+  margin: 0;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--block-border));
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
 }
 
-.script-font-bar--record .script-font-bar__toggle {
-  align-items: center;
-  min-height: 0;
-  padding: 0.55rem 0.75rem;
-  gap: 0.45rem;
+.script-font-bar--record.script-font-bar--always-open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem 0.6rem;
+  box-sizing: border-box;
+}
+
+.script-font-bar--record .script-font-bar__record-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem 0.65rem;
+  min-width: 0;
 }
 
 .script-font-bar--record .script-font-bar__record-main {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.2rem 0.55rem;
+  gap: 0.15rem 0.5rem;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -177,7 +186,7 @@
 }
 
 .script-font-bar--record .script-font-bar__current {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 750;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -185,7 +194,7 @@
 
 .script-font-bar--record .script-font-bar__stroke-state {
   flex: 0 0 auto;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-sm);
@@ -207,14 +216,30 @@
   background: color-mix(in srgb, var(--clay) 8%, transparent);
 }
 
-.script-font-bar--record .script-font-bar__toggle .fold-chevron {
-  margin-top: 0;
-  flex: 0 0 auto;
-  color: var(--accent);
-  align-self: center;
+.script-font-bar--record .script-font-bar__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  padding: 0;
 }
 
-.script-font-bar--record .script-font-bar__body {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+.script-font-bar--record .script-font-bar__opt {
+  min-height: 2.35rem;
+  padding: 0.3rem 0.45rem;
+  column-gap: 0.45rem;
+  grid-template-columns: 1.85rem minmax(0, 1fr);
+}
+
+.script-font-bar--record .script-font-bar__sample {
+  width: 1.85rem;
+  height: 1.85rem;
+  font-size: 1.2rem;
+}
+
+.script-font-bar--record .script-font-bar__opt-label {
+  font-size: 0.78rem;
+}
+
+.script-font-bar--record .script-font-bar__error {
+  grid-column: 1 / -1;
 }

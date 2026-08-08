@@ -6,14 +6,14 @@
 /* Tablet portrait: widen past the phone shell so rotate/resize clearly reflows. */
 @media (min-width: 600px) and (orientation: portrait) {
   :root {
-    --shell-max: min(40rem, 100%);
+    --shell-max: min(40rem, 100vw);
     --stage-max: min(34rem, 100%);
   }
 }
 
 @media (orientation: landscape) and (min-width: 600px) {
   :root {
-    --shell-max: min(64rem, 100%);
+    --shell-max: min(64rem, 100vw);
     --canvas-max: min(42vh, 46vmin, 360px);
     --stage-max: min(40rem, 100%);
     --page-pad-y: 0.85rem;
@@ -162,17 +162,6 @@
     width: 100%;
   }
 
-  .home__tracks-bar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-    padding-block: 0.35rem;
-  }
-
   /* —— Letter card: view | rail —— */
   .letter-card {
     display: grid;
@@ -250,15 +239,14 @@
   }
 
   .teach__chrome .teach__meta {
-    margin: 0 0 var(--space-4);
+    margin: 0 0 var(--space-2);
     font-size: 0.78rem;
   }
 
   /* Canvas stays visually centered; rail sits in the right column (in-flow)
      so opening 그리기 설정 grows height without shoving the canvas sideways.
      Higher specificity (.teach.is-open / .write) beats later component `display:flex` rules. */
-  .write .write__workspace,
-  .teach.is-open .teach__workspace {
+  .write .write__workspace {
     position: relative;
     display: grid;
     grid-template-columns: var(--canvas-rail-w) minmax(0, 1fr) var(--canvas-rail-w);
@@ -267,6 +255,24 @@
     min-height: var(--canvas-draw-max);
     --canvas-rail-gap: 0.9rem;
     --canvas-rail-w: clamp(12.75rem, 30%, 17.25rem);
+    overflow: visible;
+  }
+
+  .teach.is-open .teach__workspace {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--canvas-rail-w) minmax(0, 1fr) var(--canvas-rail-w);
+    column-gap: var(--canvas-rail-gap);
+    align-items: stretch;
+    --canvas-rail-gap: 0.65rem;
+    --canvas-rail-w: clamp(11.5rem, 28%, 16.5rem);
+    --teach-center-gap: 0.5rem;
+    /* Compact band under canvas — matches “아” stable layout; not letter-dependent. */
+    --teach-record-font-h: 5.1rem;
+    --teach-col-h: calc(var(--canvas-draw-max) + var(--teach-record-font-h) + var(--teach-center-gap));
+    height: var(--teach-col-h);
+    min-height: var(--teach-col-h);
+    max-height: var(--teach-col-h);
     overflow: visible;
   }
 
@@ -281,16 +287,114 @@
     min-width: 0;
   }
 
+  .teach.is-open .teach__main {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
+    gap: 0;
+  }
+
+  .teach.is-open .teach__center-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    gap: var(--teach-center-gap);
+  }
+
   .write .write__canvas-row,
   .teach.is-open .teach__canvas-row {
     justify-content: center;
   }
 
+  /* Stable square — same size for every letter (matches --canvas-draw-max / “아”). */
+  .teach.is-open .teach__canvas-row {
+    flex: 0 0 auto;
+    width: min(100%, var(--canvas-draw-max));
+    max-width: var(--canvas-draw-max);
+    aspect-ratio: 1;
+    height: auto;
+    display: block;
+    align-self: center;
+  }
+
   .write .write__canvas-row .write__svg,
   .teach.is-open .teach__canvas-row .teach__svg {
     margin: 0;
+  }
+
+  .write .write__canvas-row .write__svg {
     width: min(100%, var(--canvas-draw-max));
     max-width: var(--canvas-draw-max);
+  }
+
+  .teach.is-open .teach__canvas-row .teach__svg {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+  }
+
+  .teach.is-open .teach__center-stack > .script-font-bar--record {
+    order: 1;
+    flex: 0 0 auto;
+    width: min(100%, var(--canvas-draw-max));
+    max-width: var(--canvas-draw-max);
+    margin: 0;
+    height: var(--teach-record-font-h);
+    min-height: var(--teach-record-font-h);
+    align-self: center;
+  }
+
+  .teach.is-open .script-font-bar--record.script-font-bar--always-open {
+    gap: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    height: 100%;
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__record-head {
+    align-items: center;
+    flex: 0 0 auto;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__record-main {
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__title {
+    flex: 0 0 auto;
+    font-size: 0.62rem;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__current {
+    font-size: 0.82rem;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__stroke-state {
+    font-size: 0.68rem;
+    padding: 0.12rem 0.38rem;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__body {
+    flex: 1 1 auto;
+    gap: 0.35rem;
+    align-content: center;
+    min-height: 0;
+  }
+
+  .teach.is-open .script-font-bar--record .script-font-bar__opt {
+    min-height: 2rem;
+    padding: 0.22rem 0.38rem;
   }
 
   /* Teach only: left guide fills the empty rail column (portrait keeps it hidden). */
@@ -301,12 +405,11 @@
     gap: 0.55rem;
     width: 100%;
     min-width: 0;
-    max-height: min(92svh, calc(100dvh - 3.25rem));
-    padding: 0.7rem 0.75rem;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
+    padding: 0.55rem 0.65rem;
+    overflow: hidden;
     box-sizing: border-box;
     border: 1px solid var(--block-border);
     border-radius: var(--radius-lg);
@@ -318,7 +421,21 @@
     display: flex;
     align-items: center;
     gap: 0.55rem;
+    flex: 0 0 auto;
     min-width: 0;
+  }
+
+  /* Only the stroke list (title + steps) scrolls; letter + tip stay pinned. */
+  .teach.is-open .teach__guide-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .teach.is-open .teach__guide-glyph {
@@ -351,6 +468,7 @@
 
   .teach.is-open .teach__guide-title {
     margin: 0.15rem 0 0;
+    flex: 0 0 auto;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -365,6 +483,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    flex: 0 0 auto;
   }
 
   .teach.is-open .teach__guide-step {
@@ -453,7 +572,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    margin: auto 0 0;
+    flex: 0 0 auto;
+    margin: 0;
     padding-top: 0.45rem;
     border-top: 1px solid var(--line);
   }
@@ -493,18 +613,17 @@
 
   .write .write__rail,
   .teach.is-open .teach__rail {
+    --teach-rail-gap: var(--space-3);
     grid-column: 3;
     justify-self: stretch;
     position: static;
     display: flex;
     flex-direction: column;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     width: 100%;
     min-width: 0;
     margin-left: 0;
-    /* Tall 그리기 설정: scroll inside rail; workspace height follows the rail box */
-    max-height: min(92svh, calc(100dvh - 3.25rem));
-    padding: var(--space-3);
+    padding: var(--teach-rail-gap);
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -517,18 +636,36 @@
     box-shadow: var(--block-shadow);
   }
 
+  .write .write__rail {
+    max-height: min(92svh, calc(100dvh - 3.25rem));
+  }
+
+  .teach.is-open .teach__rail {
+    --teach-rail-gap: 0.55rem;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    align-self: stretch;
+    padding: 0.55rem;
+  }
+
   .write .write__rail:has(.write__advanced.is-open),
   .teach.is-open .teach__rail:has(.teach__advanced.is-open) {
     max-height: min(94svh, calc(100dvh - 2.5rem));
+  }
+
+  .teach.is-open .teach__rail:has(.teach__advanced.is-open) {
+    max-height: none;
   }
 
   .write .write__rail .stroke-history,
   .teach.is-open .teach__rail .stroke-history {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     flex-direction: row;
     padding: 0;
+    margin: 0;
   }
 
   .write .write__rail .stroke-history__btn,
@@ -541,7 +678,7 @@
   .teach.is-open .teach__rail .teach__actions-stack {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     margin: 0;
     width: 100%;
   }
@@ -549,13 +686,14 @@
   .teach.is-open .teach__rail .teach__letter-nav {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     order: 0;
+    margin: 0;
   }
 
   .teach.is-open .teach__rail .teach__rail-rule {
     order: 1;
-    margin: var(--space-2) 0 var(--space-3);
+    margin: 0;
     border-top: 1px solid color-mix(in srgb, var(--line-strong) 55%, transparent);
   }
 
@@ -563,7 +701,7 @@
     order: 2;
     display: flex;
     flex-direction: column;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     min-width: 0;
   }
 
@@ -575,7 +713,7 @@
   .teach.is-open .teach__rail .teach__actions-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--gap-tight);
+    gap: var(--teach-rail-gap);
     margin: 0;
   }
 
@@ -587,18 +725,16 @@
     justify-content: center;
   }
 
-  .teach.is-open .teach__rail .teach__message {
+  .teach.is-open .teach__rail .teach__message,
+  .teach.is-open .teach__rail .teach__steps,
+  .teach.is-open .teach__rail .teach__advanced,
+  .teach.is-open .teach__rail .stroke-version {
     margin: 0;
+  }
+
+  .teach.is-open .teach__rail .teach__message {
     font-size: 0.78rem;
     line-height: 1.4;
-  }
-
-  .teach.is-open .teach__rail .teach__steps {
-    margin: 0;
-  }
-
-  .teach.is-open .teach__rail .teach__advanced {
-    margin: 0;
   }
 
   .write .write__rail .write__advanced,
@@ -633,26 +769,8 @@
     margin-top: var(--space-2);
   }
 
-  .teach-page .learn__bar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-  }
-
-  /* —— Learn chart: denser + sticky —— */
+  /* —— Learn chart: denser —— */
   .learn__bar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-    padding-block: 0.25rem;
     margin-bottom: 0.65rem;
   }
 
@@ -731,14 +849,19 @@
     gap: 0.55rem;
   }
 
-  .practice__bar {
+  /*
+   * Sticky top chrome position only.
+   * Frost / full-bleed / FAB clearance: liquid-glass.css (loads after this file).
+   */
+  :is(
+    .home__tracks-bar,
+    .learn__bar,
+    .practice__bar,
+    .tool__bar
+  ) {
     position: sticky;
-    top: 0;
-    z-index: 5;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
   }
 
   /* —— Tools / secondary pages —— */

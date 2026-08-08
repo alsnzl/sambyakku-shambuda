@@ -729,11 +729,6 @@ export function StrokeTeachPanel({
                 ? `이 폰트 저장 ${info.strokeCount}획 · 불러오기로 수정`
                 : '이 폰트에는 아직 획이 없습니다 · 펜으로 그려 주세요'}
         </p>
-        <ScriptFontQuickBar
-          track={track}
-          variant="record"
-          strokeCount={info.strokeCount}
-        />
       </div>
 
       <div className="teach__workspace">
@@ -752,35 +747,37 @@ export function StrokeTeachPanel({
             </div>
           </div>
 
-          <p className="teach__guide-title">획 가이드</p>
-          <ol className="teach__guide-steps">
-            {guideSteps.map((step, i) => (
-              <li
-                key={`guide-${letterId}-${i}`}
-                className={`teach__guide-step${step.done ? ' is-done' : ''}${
-                  step.current ? ' is-current' : ''
-                }`}
-              >
-                <span className="teach__guide-num" aria-hidden="true">
-                  {step.done ? '✓' : i + 1}
-                </span>
-                <div className="teach__guide-label-wrap">
-                  <input
-                    className="teach__guide-label-input"
-                    type="text"
-                    value={step.label}
-                    disabled={saving}
-                    aria-label={`${i + 1}번 획 설명`}
-                    onChange={(e) => renameStroke(i, e.target.value)}
-                    onBlur={() => commitStrokeLabel(i)}
-                  />
-                  {step.current ? (
-                    <span className="teach__guide-current-tag">그리는 중</span>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ol>
+          <div className="teach__guide-scroll">
+            <p className="teach__guide-title">획 가이드</p>
+            <ol className="teach__guide-steps">
+              {guideSteps.map((step, i) => (
+                <li
+                  key={`guide-${letterId}-${i}`}
+                  className={`teach__guide-step${step.done ? ' is-done' : ''}${
+                    step.current ? ' is-current' : ''
+                  }`}
+                >
+                  <span className="teach__guide-num" aria-hidden="true">
+                    {step.done ? '✓' : i + 1}
+                  </span>
+                  <div className="teach__guide-label-wrap">
+                    <input
+                      className="teach__guide-label-input"
+                      type="text"
+                      value={step.label}
+                      disabled={saving}
+                      aria-label={`${i + 1}번 획 설명`}
+                      onChange={(e) => renameStroke(i, e.target.value)}
+                      onBlur={() => commitStrokeLabel(i)}
+                    />
+                    {step.current ? (
+                      <span className="teach__guide-current-tag">그리는 중</span>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
 
           <label className="teach__guide-tip-field">
             <span className="teach__guide-tip-label">기록 팁</span>
@@ -807,7 +804,8 @@ export function StrokeTeachPanel({
           }
         >
           {glyph ? (
-            <div className="teach__canvas-row">
+            <div className="teach__center-stack">
+              <div className="teach__canvas-row">
               <svg
                 ref={svgRef}
                 className={`teach__svg ${mode === 'draw' ? 'teach__svg--trace' : 'teach__svg--watch'}`}
@@ -948,6 +946,12 @@ export function StrokeTeachPanel({
                   </>
                 )}
               </svg>
+            </div>
+              <ScriptFontQuickBar
+                track={track}
+                variant="record"
+                strokeCount={info.strokeCount}
+              />
             </div>
           ) : (
             <p className="teach__message teach__message--warn">

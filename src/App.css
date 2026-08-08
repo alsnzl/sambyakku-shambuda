@@ -15,25 +15,37 @@
   transition: max-width var(--motion-base) var(--motion-ease-out);
 }
 
+:root {
+  /* Extra top offset so fixed ⌂ lines up with sticky bar controls (landscape sets 0.35rem) */
+  --home-fab-nudge: 0px;
+}
+
 .app-home-fab {
   appearance: none;
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y));
-  right: calc(env(safe-area-inset-right, 0px) + var(--page-pad-x));
-  z-index: 50;
+  /* Stay in the sticky header band while the page scrolls */
+  position: fixed;
+  /* Align with sticky bar control row (back / ◀ ▶) */
+  top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y) + var(--home-fab-nudge));
+  /* Far right of the centered shell (not the raw viewport when shell is narrow) */
+  right: calc(
+    env(safe-area-inset-right, 0px) + var(--page-pad-x) + max(0px, (100vw - var(--shell-max)) / 2)
+  );
+  z-index: 60;
   width: var(--touch-min);
   height: var(--touch-min);
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
   border-radius: var(--radius-capsule);
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  background: var(--glass-fill-strong, color-mix(in srgb, var(--surface) 62%, transparent));
   color: var(--ink-soft);
   cursor: pointer;
   display: grid;
   place-items: center;
-  -webkit-backdrop-filter: var(--block-blur-soft);
-  backdrop-filter: var(--block-blur-soft);
-  box-shadow: var(--glass-specular, none);
+  -webkit-backdrop-filter: var(--block-blur);
+  backdrop-filter: var(--block-blur);
+  box-shadow:
+    var(--glass-specular, none),
+    0 8px 22px color-mix(in srgb, var(--shadow) 22%, transparent);
   overflow: visible;
   isolation: isolate;
 }
@@ -50,15 +62,14 @@
   transform: translateY(-0.05rem);
 }
 
-/* Keep letter prev/next clear of the floating home control, same row height */
+/*
+ * Sticky bars already pad for the FAB slot. Only leave a tight gap between
+ * ▶ and ⌂ — do not reserve another full button width (that made a huge hole).
+ */
 .app-shell:has(.app-home-fab) .teach-page__nav {
-  margin-right: calc(var(--touch-min) + var(--space-2));
+  margin-right: var(--space-2);
   min-height: var(--touch-min);
-}
-
-/* Pin home FAB to the same top band as teach prev/next circles */
-.app-shell:has(.teach-page__nav) .app-home-fab {
-  top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y));
+  gap: var(--gap-tight);
 }
 
 .teach-page .learn__bar {

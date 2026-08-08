@@ -804,14 +804,16 @@ body {
 }
 
 body {
-  overflow-x: clip;
+  overflow-x: visible;
   overflow-y: visible;
 }
 
 #root {
   min-height: 100svh;
   min-height: var(--app-height, 100dvh);
-  overflow-x: clip;
+  /* Keep visible so sticky chrome backdrop-filter can sample scrolling content.
+     Horizontal clip stays on html. */
+  overflow-x: visible;
   max-width: 100%;
 }
 

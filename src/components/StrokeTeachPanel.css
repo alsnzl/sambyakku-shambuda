@@ -68,8 +68,8 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink);
-  flex: 0 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .teach__status-row {
@@ -78,6 +78,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-1);
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -165,6 +166,31 @@
   gap: var(--space-4);
 }
 
+.teach__main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.teach__center-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.teach__center-stack > .script-font-bar--record {
+  /* Portrait: above canvas. Landscape resets order in landscape.css. */
+  order: -1;
+  width: 100%;
+  max-width: var(--canvas-draw-max, 100%);
+  margin-inline: auto;
+}
+
 /* Landscape-only (see landscape.css). Portrait: keep canvas + right rail flow. */
 .teach__guide {
   display: none;
@@ -213,16 +239,17 @@
 }
 
 .teach__rail {
+  --teach-rail-gap: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap);
   min-width: 0;
 }
 
 .teach__rail-rule {
   flex: 0 0 auto;
   height: 0;
-  margin: var(--space-2) 0;
+  margin: 0;
   border: 0;
   border-top: 1px solid var(--line);
 }
@@ -230,14 +257,15 @@
 .teach__rail-body {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap);
   min-width: 0;
 }
 
 .teach__rail .stroke-history {
   flex-direction: row;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap);
   padding-top: 0;
+  margin: 0;
 }
 
 .teach__rail .stroke-history__btn {
@@ -254,7 +282,7 @@
 .teach__bar--simple {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap, var(--gap-tight));
   margin-bottom: 0;
 }
 
@@ -262,18 +290,20 @@
 .teach__actions-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap, var(--gap-tight));
   width: 100%;
   min-width: 0;
+  margin: 0;
 }
 
 .teach__letter-nav {
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap, var(--gap-tight));
   width: 100%;
   min-width: 0;
+  margin: 0;
 }
 
 .teach__letter-nav .teach__btn--letter-nav {
@@ -322,9 +352,10 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
-  gap: var(--gap-tight);
+  gap: var(--teach-rail-gap, var(--gap-tight));
   width: 100%;
   min-width: 0;
+  margin: 0;
 }
 
 .teach__actions-row .teach__btn {
@@ -453,7 +484,7 @@
 }
 
 .teach__advanced {
-  margin-top: var(--space-3);
+  margin-top: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
@@ -472,7 +503,7 @@
   border-radius: var(--radius);
   background: transparent;
   cursor: pointer;
-  padding: var(--space-3) var(--space-4);
+  padding: 0.65rem 0.75rem;
   font-size: 0.88rem;
   font-weight: 650;
   color: var(--ink-soft);
@@ -536,7 +567,7 @@
 
 .teach__hint,
 .teach__message {
-  margin: 0 0 var(--space-2);
+  margin: 0;
   font-size: 0.82rem;
   line-height: 1.55;
   color: var(--muted);

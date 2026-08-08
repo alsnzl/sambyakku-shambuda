@@ -17,7 +17,7 @@ import './ScriptFontQuickBar.css'
 type Props = {
   track: ScriptTrack
   /**
-   * `record`: teach “기록 폰트” badge + fold-out picker.
+   * `record`: teach “기록 폰트” — always expanded picker + stroke badge.
    * Default: compact top bar used on chart / learn / practice.
    */
   variant?: 'default' | 'record'
@@ -34,7 +34,7 @@ function bundledForSlot(slot: ScriptFontSlot) {
 }
 
 /**
- * Collapsible bundled-font switcher for teach / learn / practice / write.
+ * Bundled-font switcher for teach / learn / practice / write.
  * Deva: Noto Sans Devanagari | Tiro Devanagari Sanskrit.
  * Siddham: Muktamsiddham | Noto Sans Siddham.
  */
@@ -68,12 +68,58 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
     }
   }
 
+  const optionButtons = (
+    <div className="script-font-bar__body" role="group" aria-label="기본 폰트 선택">
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          className={`script-font-bar__opt motion-press ${choice === opt.id ? 'is-active' : ''}`}
+          aria-pressed={choice === opt.id}
+          disabled={busy}
+          onClick={() => void pick(opt.id)}
+        >
+          <span
+            className={`script-font-bar__sample${
+              opt.id === 'noto-siddham' ? ' script-font-bar__sample--noto' : ''
+            }`}
+            lang="sa"
+            style={{ fontFamily: `"${opt.family}", sans-serif` }}
+            aria-hidden="true"
+          >
+            {slot === 'siddham' && opt.id === 'noto-siddham' ? '𑖀' : 'अ'}
+          </span>
+          <span className="script-font-bar__opt-label">{opt.label}</span>
+        </button>
+      ))}
+      {error ? <p className="script-font-bar__error">{error}</p> : null}
+    </div>
+  )
+
+  /* Teach record: always open — no fold/chevron */
+  if (isRecord) {
+    return (
+      <div className="script-font-bar script-font-bar--record script-font-bar--always-open is-open">
+        <div className="script-font-bar__record-head">
+          <span className="script-font-bar__record-main">
+            <span className="script-font-bar__title">기록 폰트</span>
+            <strong className="script-font-bar__current">{activeLabel}</strong>
+          </span>
+          <span
+            className={`script-font-bar__stroke-state${
+              strokeCount > 0 ? ' is-saved' : ' is-empty'
+            }`}
+          >
+            {strokeLabel}
+          </span>
+        </div>
+        {optionButtons}
+      </div>
+    )
+  }
+
   return (
-    <div
-      className={`script-font-bar ${isRecord ? 'script-font-bar--record' : ''} ${
-        open ? 'is-open' : ''
-      }`}
-    >
+    <div className={`script-font-bar ${open ? 'is-open' : ''}`}>
       <button
         type="button"
         className="script-font-bar__toggle motion-press"
@@ -81,59 +127,14 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
       >
-        {isRecord ? (
-          <>
-            <FoldChevron open={open} />
-            <span className="script-font-bar__record-main">
-              <span className="script-font-bar__title">기록 폰트</span>
-              <strong className="script-font-bar__current">{activeLabel}</strong>
-            </span>
-            <span
-              className={`script-font-bar__stroke-state${
-                strokeCount > 0 ? ' is-saved' : ' is-empty'
-              }`}
-            >
-              {strokeLabel}
-            </span>
-          </>
-        ) : (
-          <>
-            <FoldChevron open={open} />
-            <span className="script-font-bar__toggle-main">
-              <span className="script-font-bar__title">폰트</span>
-              <span className="script-font-bar__current">{activeLabel}</span>
-            </span>
-          </>
-        )}
+        <FoldChevron open={open} />
+        <span className="script-font-bar__toggle-main">
+          <span className="script-font-bar__title">폰트</span>
+          <span className="script-font-bar__current">{activeLabel}</span>
+        </span>
       </button>
       <div id={panelId} className={`fold-panel ${open ? 'is-expanded' : ''}`}>
-        <div className="fold-panel__inner">
-          <div className="script-font-bar__body" role="group" aria-label="기본 폰트 선택">
-            {options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`script-font-bar__opt motion-press ${choice === opt.id ? 'is-active' : ''}`}
-                aria-pressed={choice === opt.id}
-                disabled={busy}
-                onClick={() => void pick(opt.id)}
-              >
-                <span
-                  className={`script-font-bar__sample${
-                    opt.id === 'noto-siddham' ? ' script-font-bar__sample--noto' : ''
-                  }`}
-                  lang="sa"
-                  style={{ fontFamily: `"${opt.family}", sans-serif` }}
-                  aria-hidden="true"
-                >
-                  {slot === 'siddham' && opt.id === 'noto-siddham' ? '𑖀' : 'अ'}
-                </span>
-                <span className="script-font-bar__opt-label">{opt.label}</span>
-              </button>
-            ))}
-            {error ? <p className="script-font-bar__error">{error}</p> : null}
-          </div>
-        </div>
+        <div className="fold-panel__inner">{optionButtons}</div>
       </div>
     </div>
   )

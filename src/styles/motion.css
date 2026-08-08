@@ -43,6 +43,8 @@
   will-change: auto;
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
+  transform: none;
+  filter: none;
 }
 
 .motion-page--fade-up {
