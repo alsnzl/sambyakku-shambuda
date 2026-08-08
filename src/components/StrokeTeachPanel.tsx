@@ -52,6 +52,7 @@ import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
 import { FoldChevron } from './FoldChevron'
 import { ScriptFontQuickBar } from './ScriptFontQuickBar'
+import { StrokeVersionPanel } from './StrokeVersionPanel'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './StrokeTeachPanel.css'
@@ -1106,6 +1107,24 @@ export function StrokeTeachPanel({
               </div>
             </div>
           </div>
+
+          <StrokeVersionPanel
+            script={script}
+            letterId={letterId}
+            fontFace={getScriptFontChoice(script)}
+            disabled={saving}
+            onRestored={() => {
+              void (async () => {
+                await refreshCloudStore({ force: true })
+                refresh()
+                setRecorded([])
+                setRedoStack([])
+                setDrawing([])
+                setFlash('이전 버전으로 복원했습니다')
+                onSyncChange?.()
+              })()
+            }}
+          />
           </div>
         </div>
       </div>

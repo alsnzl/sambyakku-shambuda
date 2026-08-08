@@ -10,6 +10,8 @@ import {
   strokeFontLabel,
 } from './strokeFontScope'
 import { recordAutoStrokeVersion } from './strokeVersionsStore'
+import type { StrokeVersionSnapshot } from './strokeVersionsStore'
+import { saveStrokeVersionSnapshot } from './strokeVersionsStore'
 
 const CACHE_KEY = 'sambyakku-stroke-cloud-cache'
 const TOKEN_KEY = 'sambyakku-stroke-cloud-token'
@@ -481,4 +483,66 @@ export async function publishLetterToCloud(
 export function cloudRepoLabel(): string {
   const cfg = getCloudConfig()
   return `${cfg.owner}/${cfg.repo}`
+}
+
+/**
+ * Restore one letter/font entry from a version snapshot into live taughtStrokes.json.
+ * Snapshots the current live entry first (pre-restore) when present.
+ */
+export async function restoreLetterFromVersion(
+  snapshot: StrokeVersionSnapshot,
+): Promise<TaughtEntry> {
+  const token = getCloudToken()
+  if (!token) {
+    throw new Error(
+      '클라우드 저장 토큰이 없습니다. 설정에서 GitHub 토큰을 먼저 저장하세요.',
+    )
+  }
+
+  const cfg = getCloudConfig()
+  const { script, letterId, fontFace } = snapshot
+  const face = resolveStrokeFontFace(script, fontFace || snapshot.entry.fontFace)
+  const label = strokeFontLabel(script, face, snapshot.fontLabel || snapshot.entry.fontLabel)
+
+  const latest = await fetchViaContentsApi(cfg, token)
+  const store = latest?.store ?? emptyStore()
+  const sha = latest?.sha ?? null
+  const current = getFontMapEntry(script, store[script][letterId], face)
+
+  if (current) {
+    await saveStrokeVersionSnapshot({
+      script,
+      letterId,
+      entry: current,
+      message: `pre-restore before ${snapshot.meta.createdAt}`,
+      kind: 'pre-restore',
+    })
+  }
+
+  const entry: TaughtEntry = {
+    ...snapshot.entry,
+    taughtAt: new Date().toISOString(),
+    fontFace: face,
+    fontLabel: label,
+    note: snapshot.entry.note,
+  }
+
+  setTaughtFontEntry(store[script], letterId, script, entry)
+  recount(store)
+
+  const message = `restore: ${script}/${letterId}@${face} from ${snapshot.meta.createdAt}`
+  const result = await putTaughtStore(cfg, token, store, sha, message)
+  if (!result.ok) {
+    throw new Error(formatCloudWriteError(result.status, result.body))
+  }
+
+  writeCloudCache(store, result.sha)
+  void recordAutoStrokeVersion({
+    script,
+    letterId,
+    entry,
+    message,
+    kind: 'manual',
+  })
+  return entry
 }
