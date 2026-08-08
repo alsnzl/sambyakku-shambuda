@@ -7,8 +7,6 @@ import { trackMeta } from '../types/track'
 import { playLetterPronunciation } from '../lib/audio'
 import {
   getActiveScriptFontStack,
-  getScriptFontStack,
-  parseScriptFontChoice,
 } from '../lib/customScriptFonts'
 import {
   getEffectiveHangulHint,
@@ -22,7 +20,7 @@ import {
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { refreshCloudStore } from '../lib/strokeCloud'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
-import { getTaughtGlyphStrokes, getTeachingInfo } from '../lib/strokeRecord'
+import { getTaughtGlyphStrokes } from '../lib/strokeRecord'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
@@ -102,15 +100,10 @@ export function LetterCard({
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
   const scriptStack = getActiveScriptFontStack(script)
-  const teachInfo = getTeachingInfo(letter.id, script)
   const taughtData = getTaughtGlyphStrokes(letter.id, script)
   void cloudTick
   const hasRecordedStrokes = Boolean(taughtData?.strokes.length)
   const introKey = `${letter.id}|${script}|${fontEpoch}|${taughtData?.d ?? ''}|${taughtData?.strokes.length ?? 0}`
-  const recordedFontChoice = parseScriptFontChoice(script, teachInfo.fontFace)
-  const watchFontFamily = recordedFontChoice
-    ? getScriptFontStack(script, recordedFontChoice)
-    : scriptStack
   const usePathGuide = Boolean(taughtData?.d)
   const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
@@ -331,14 +324,16 @@ export function LetterCard({
                       ) : (
                         <>
                           <ScriptCanvasGlyph
+                            key={`guide-${fontEpoch}`}
                             className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
                             glyph={glyph}
-                            fontFamily={watchFontFamily}
+                            fontFamily={scriptStack}
                           />
                           <ScriptCanvasGlyph
+                            key={`ink-${fontEpoch}`}
                             className="letter-card__hero-ink"
                             glyph={glyph}
-                            fontFamily={watchFontFamily}
+                            fontFamily={scriptStack}
                             mask={`url(#${maskId})`}
                           />
                         </>
@@ -352,6 +347,7 @@ export function LetterCard({
                     />
                   ) : (
                     <ScriptCanvasGlyph
+                      key={`final-${fontEpoch}`}
                       className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
                       glyph={glyph}
                       fontFamily={scriptStack}

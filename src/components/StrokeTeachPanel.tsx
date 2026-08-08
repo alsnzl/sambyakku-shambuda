@@ -153,7 +153,9 @@ export function StrokeTeachPanel({
    * Playback taught (active face, else read-only other-face fallback e.g. muktam).
    * Used for watch when the active face has no local draft yet.
    */
-  const playbackTaught = getTaughtGlyphStrokes(letterId, script)
+  const playbackTaught = getTaughtGlyphStrokes(letterId, script, null, {
+    crossFaceFallback: true,
+  })
   const activeFontLabel = info.fontLabel
   const recordedFontChoice = parseScriptFontChoice(fontSlot, info.fontFace)
   const watchFontFamily = recordedFontChoice
@@ -218,6 +220,7 @@ export function StrokeTeachPanel({
   /**
    * Prefer in-progress strokes; else active-face saved; else read-only
    * cross-face playback (so watch works when only muktam has am/ah data).
+   * Outline stays active-face only so switching 기록 폰트 always changes the glyph.
    */
   const previewStrokes =
     recorded.length > 0
@@ -225,8 +228,7 @@ export function StrokeTeachPanel({
       : (info.data?.strokes?.length
           ? info.data.strokes
           : (playbackTaught?.strokes ?? []))
-  const watchOutlineD =
-    info.data?.d ?? (recorded.length === 0 ? playbackTaught?.d : undefined) ?? null
+  const watchOutlineD = info.data?.d ?? null
   const useWatchPathGuide = Boolean(watchOutlineD)
   const canWatch = previewStrokes.length > 0
   const canLoadSaved = Boolean(info.data?.strokes?.length)

@@ -462,20 +462,32 @@ export function findPlaybackTaughtGlyphStrokes(
   return null
 }
 
+export type TaughtGlyphLookupOpts = {
+  /**
+   * When the active face has no strokes/outline, reuse another face
+   * (prefer muktam) for watch playback only. Never use for the on-screen
+   * letter glyph — that would freeze the UI on the other font's silhouette.
+   */
+  crossFaceFallback?: boolean
+}
+
 /**
  * Mother/teacher recorded theory for the active (or given) font.
- * If that face has no strokes/outline, falls back to another face for
- * playback/guide only (see findPlaybackTaughtGlyphStrokes).
+ * Cross-face fallback is opt-in (teach watch / aṃ·aḥ) — see opts.
  */
 export function getTaughtGlyphStrokes(
   letterId: string,
   script: StrokeScript,
   fontFace?: string | null,
+  opts?: TaughtGlyphLookupOpts,
 ): GlyphStrokeData | null {
   const face = activeFace(script, fontFace)
   const primary = taughtGlyphStrokesForFace(letterId, script, face)
   if (isPlaybackTaughtData(primary)) return primary
-  return findPlaybackTaughtGlyphStrokes(letterId, script, face)
+  if (opts?.crossFaceFallback) {
+    return findPlaybackTaughtGlyphStrokes(letterId, script, face)
+  }
+  return null
 }
 
 export function getEffectiveGlyphStrokes(
