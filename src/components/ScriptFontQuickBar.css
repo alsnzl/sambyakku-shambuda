@@ -103,16 +103,19 @@
   width: 2.25rem;
   height: 2.15rem;
   margin: 0;
-  padding: 0.2rem 0 0;
+  padding: 0;
   font-size: 1.4rem;
-  line-height: 1.15;
+  line-height: 1;
   text-align: center;
   color: var(--ink);
 }
 
-/* Noto Siddham preview always needs the optical nudge (even when not selected). */
+/*
+ * Preview chip always renders Noto ink — nudge even when another face is selected
+ * (document --siddham-optical-nudge is 0 then, which left 𑖀 sitting high in the pill).
+ */
 .script-font-bar__sample--noto {
-  translate: 0 var(--siddham-optical-nudge, 0.26em);
+  translate: 0 0.34em;
 }
 
 .script-font-bar__opt-label {

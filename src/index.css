@@ -935,8 +935,7 @@ html[data-siddham-face='noto-siddham'] :is(
   .tool__chip-glyph--siddham,
   .tool__output--siddham,
   .tool__corr-glyph--siddham,
-  .tool__pair-glyph--siddham,
-  .script-font-bar__sample--noto
+  .tool__pair-glyph--siddham
 ) {
   translate: 0 var(--siddham-optical-nudge);
 }
