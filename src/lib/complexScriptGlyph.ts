@@ -6,3 +6,16 @@
 export function glyphHasCombiningMarks(glyph: string): boolean {
   return /\p{M}/u.test(glyph)
 }
+
+/**
+ * Only iPhone/iPad WebKit needs HTML foreignObject for combining marks.
+ * Desktop/Android SVG <text> positions aṃ/aḥ correctly against taught strokes;
+ * foreignObject centering was shifting those glyphs vs recorded paths.
+ */
+export function needsIosHtmlCombiningGlyph(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  if (/iPhone|iPad|iPod/i.test(ua)) return true
+  // iPadOS desktop-UA mode
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+}

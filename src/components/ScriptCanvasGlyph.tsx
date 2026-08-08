@@ -1,4 +1,4 @@
-import { glyphHasCombiningMarks } from '../lib/complexScriptGlyph'
+import { glyphHasCombiningMarks, needsIosHtmlCombiningGlyph } from '../lib/complexScriptGlyph'
 import {
   STROKE_GUIDE_FONT_SIZE,
   STROKE_GUIDE_X,
@@ -19,7 +19,9 @@ type Props = {
 }
 
 /**
- * Canvas guide/ink glyph: HTML foreignObject when combining marks need iOS-safe shaping.
+ * Canvas guide/ink glyph.
+ * Combining marks use HTML foreignObject only on iOS (dotted-circle bug).
+ * Elsewhere SVG <text> keeps aṃ/aḥ aligned with taught stroke paths.
  */
 export function ScriptCanvasGlyph({
   className,
@@ -31,7 +33,8 @@ export function ScriptCanvasGlyph({
   y = STROKE_GUIDE_Y,
   mask,
 }: Props) {
-  const useHtml = !preferSvgText && glyphHasCombiningMarks(glyph)
+  const useHtml =
+    !preferSvgText && glyphHasCombiningMarks(glyph) && needsIosHtmlCombiningGlyph()
   if (useHtml) {
     return (
       <SvgHtmlGlyph
