@@ -1,5 +1,6 @@
 import { getLetterById } from '../data/letters'
 import { formatCloudWriteError, getCloudToken, hasCloudWriteToken } from './strokeCloud'
+import { recordTextCloudVersion } from './textCloudVersions'
 
 const LOCAL_KEY = 'sambyakku-hangul-overrides'
 const CACHE_KEY = 'sambyakku-hangul-cloud-cache'
@@ -376,6 +377,12 @@ export async function publishHangulHintToCloud(
     if (res.ok) {
       const result = (await res.json()) as { content?: { sha?: string } }
       writeHangulCloudCache(store, result.content?.sha ?? sha)
+      void recordTextCloudVersion({
+        kind: 'hangulHints',
+        letterId,
+        text: entry.text,
+        message: `hangul: ${letterId}`,
+      })
       return entry
     }
 

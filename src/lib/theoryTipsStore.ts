@@ -1,5 +1,6 @@
 import { getTheoryBlurb } from '../data/theoryTips'
 import { formatCloudWriteError, getCloudToken, hasCloudWriteToken } from './strokeCloud'
+import { recordTextCloudVersion } from './textCloudVersions'
 
 const LOCAL_KEY = 'sambyakku-theory-overrides'
 const CACHE_KEY = 'sambyakku-theory-cloud-cache'
@@ -321,6 +322,12 @@ export async function publishTheoryTipToCloud(
     if (res.ok) {
       const result = (await res.json()) as { content?: { sha?: string } }
       writeTheoryCloudCache(store, result.content?.sha ?? sha)
+      void recordTextCloudVersion({
+        kind: 'theoryTips',
+        letterId,
+        text: entry.text,
+        message: `theory: ${letterId}`,
+      })
       return entry
     }
 

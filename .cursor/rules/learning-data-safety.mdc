@@ -18,6 +18,8 @@ Cloud learning data lives in `cloud/taughtStrokes.json`, `cloud/theoryTips.json`
 - **Allowed:** read-only copies under `cloud/backups/` or `cloud/versions/`; app features that snapshot then restore with explicit user confirm.
 - **Forbidden:** casual edits to live JSON; force-push of `main`; Actions/jobs that rewrite live `cloud/*.json` except an explicit, reviewed restore flow.
 
+Version snapshots belong only under `cloud/versions/{taughtStrokes|theoryTips|hangulHints}/` and must never be used as a reason to blank live files.
+
 ## Temp backups
 
 Keep `_backup_temp/` local only (gitignored). Do not commit it.
