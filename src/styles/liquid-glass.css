@@ -123,14 +123,17 @@
    */
   overflow: visible;
   isolation: isolate;
-  transform: translateZ(0);
+  /*
+   * Do not promote these to their own compositor layer with translateZ(0).
+   * Mobile WebView/Chrome misplaces Devanagari/Siddham combining marks
+   * (anusvara / visarga on aṃ, aḥ, etc.) when the glyph parent is layered.
+   */
 }
 
 /* Surfaces that must clip ink / media — keep overflow hidden */
 :is(.letter-card__hero-frame, .learn__cell, .write__svg, .teach__svg) {
   overflow: hidden;
-  isolation: isolate;
-  transform: translateZ(0);
+  /* No translateZ / isolation here — same Indic mark compositing issue on mobile. */
 }
 
 .tool__block {

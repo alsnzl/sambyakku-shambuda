@@ -425,7 +425,6 @@
   min-width: 0;
   border-radius: var(--radius);
   overflow: hidden;
-  isolation: isolate;
   box-shadow: 0 4px 12px var(--shadow);
   /* Long 글자표: skip offscreen paint work while scrolling */
   content-visibility: auto;
@@ -450,7 +449,7 @@
   overflow: hidden;
   /* Force WebKit to establish a clip/mask for button contents */
   -webkit-mask-image: -webkit-radial-gradient(white, black);
-  transform: translateZ(0);
+  /* Avoid translateZ(0): mobile Chrome shifts Devanagari/Siddham combining marks. */
 }
 
 .learn__tile--compact {
@@ -511,7 +510,7 @@
 
 .learn__tile:active,
 .learn__group:active {
-  transform: translateZ(0) scale(0.985);
+  transform: scale(0.985);
 }
 
 /* Font bar + letter card share one wash so the fold doesn't sit on bare paper. */
