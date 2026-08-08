@@ -1,9 +1,21 @@
 {
   "meta": {
     "description": "획 기록 버전 인덱스 — 라이브 taughtStrokes.json 과 별도. 복원·미리보기용.",
-    "updatedAt": "2026-08-08T11:04:47.015Z"
+    "updatedAt": "2026-08-08T11:06:13.225Z"
   },
   "versions": [
+    {
+      "id": "2026-08-08T11-06-13-225Z_siddham_va_muktam",
+      "createdAt": "2026-08-08T11:06:13.225Z",
+      "script": "siddham",
+      "letterId": "va",
+      "fontFace": "muktam",
+      "fontLabel": "Muktamsiddham",
+      "strokeCount": 5,
+      "path": "cloud/versions/taughtStrokes/2026-08-08T11-06-13-225Z_siddham_va_muktam.json",
+      "message": "teach: siddham/va@muktam (5 strokes, Muktamsiddham)",
+      "kind": "auto-publish"
+    },
     {
       "id": "2026-08-08T11-04-47-015Z_siddham_la_muktam",
       "createdAt": "2026-08-08T11:04:47.015Z",
