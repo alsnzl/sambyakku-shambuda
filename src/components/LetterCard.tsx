@@ -26,6 +26,7 @@ import { getTaughtGlyphStrokes, getTeachingInfo } from '../lib/strokeRecord'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
+import { TaughtStrokeGlyph } from './TaughtStrokeGlyph'
 import { WritePractice } from './WritePractice'
 import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
@@ -111,7 +112,8 @@ export function LetterCard({
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(script, recordedFontChoice)
     : scriptStack
-  /** Use saved taught outline when present — matches stroke paths (incl. aṃ/aḥ). */
+  /** Prefer taught freehand strokes (same geometry as intro animation). */
+  const useStrokeGlyph = Boolean(taughtData?.strokes.length)
   const usePathGuide = Boolean(taughtData?.d)
   const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
@@ -317,7 +319,19 @@ export function LetterCard({
                           ))}
                         </mask>
                       </defs>
-                      {usePathGuide ? (
+                      {useStrokeGlyph ? (
+                        <>
+                          <TaughtStrokeGlyph
+                            className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                            strokes={taughtData.strokes}
+                          />
+                          <TaughtStrokeGlyph
+                            className="letter-card__hero-ink"
+                            strokes={taughtData.strokes}
+                            mask={`url(#${maskId})`}
+                          />
+                        </>
+                      ) : usePathGuide ? (
                         <>
                           <path
                             className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
@@ -346,7 +360,12 @@ export function LetterCard({
                       )}
                     </>
                   ) : null}
-                  {usePathGuide && taughtData?.d ? (
+                  {useStrokeGlyph ? (
+                    <TaughtStrokeGlyph
+                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                      strokes={taughtData!.strokes}
+                    />
+                  ) : usePathGuide && taughtData?.d ? (
                     <path
                       className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
                       d={taughtData.d}

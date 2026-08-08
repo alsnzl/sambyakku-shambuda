@@ -57,6 +57,7 @@ import {
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
+import { TaughtStrokeGlyph } from './TaughtStrokeGlyph'
 import { StrokeOrderTrack } from './StrokeOrderTrack'
 import './WritePractice.css'
 
@@ -88,9 +89,11 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
-  /** Prefer saved taught outline so watch/trace align with strokes (aṃ/aḥ). */
-  const useWatchPathGuide = Boolean(taughtData?.d)
-  const useTracePathGuide = Boolean(taughtData?.d)
+  /** Prefer taught freehand strokes so guide size matches reveal animation. */
+  const useWatchStrokeGlyph = Boolean(taughtData?.strokes.length)
+  const useTraceStrokeGlyph = Boolean(taughtData?.strokes.length)
+  const useWatchPathGuide = Boolean(taughtData?.d) && !useWatchStrokeGlyph
+  const useTracePathGuide = Boolean(taughtData?.d) && !useTraceStrokeGlyph
   const glyphX = STROKE_GUIDE_X
   const glyphY = STROKE_GUIDE_Y
   const watchFontKey = `${fontEpoch}-${watchFontFamily}`
@@ -527,7 +530,19 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                       ))}
                     </mask>
                   </defs>
-                  {useTracePathGuide && taughtData?.d ? (
+                  {useTraceStrokeGlyph && taughtData ? (
+                    <>
+                      <TaughtStrokeGlyph
+                        className="write__glyph-guide"
+                        strokes={taughtData.strokes}
+                      />
+                      <TaughtStrokeGlyph
+                        className="write__glyph-ink"
+                        strokes={taughtData.strokes}
+                        mask={`url(#${maskId})`}
+                      />
+                    </>
+                  ) : useTracePathGuide && taughtData?.d ? (
                     <>
                       <path className="write__glyph-guide" d={taughtData.d} />
                       <path
@@ -582,7 +597,19 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     </mask>
                   </defs>
 
-                  {useWatchPathGuide ? (
+                  {useWatchStrokeGlyph ? (
+                    <>
+                      <TaughtStrokeGlyph
+                        className="write__glyph-guide"
+                        strokes={taughtData.strokes}
+                      />
+                      <TaughtStrokeGlyph
+                        className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                        strokes={taughtData.strokes}
+                        mask={`url(#${maskId}-watch)`}
+                      />
+                    </>
+                  ) : useWatchPathGuide ? (
                     <>
                       <path className="write__glyph-guide" d={taughtData.d} />
                       <path

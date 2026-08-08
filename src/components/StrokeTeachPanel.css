@@ -634,15 +634,18 @@
 
 .teach__glyph-guide {
   fill: color-mix(in srgb, var(--ink) 10%, transparent);
-  /* foreignObject HTML uses color, not fill */
+  stroke: color-mix(in srgb, var(--ink) 10%, transparent);
+  /* foreignObject HTML / TaughtStrokeGlyph use color */
   color: color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 .teach__glyph-ink {
   fill: var(--accent);
+  stroke: var(--accent);
   color: var(--accent);
   transition:
     fill var(--motion-base, 0.35s) var(--motion-ease, ease),
+    stroke var(--motion-base, 0.35s) var(--motion-ease, ease),
     color var(--motion-base, 0.35s) var(--motion-ease, ease);
 }
 
@@ -652,6 +655,7 @@
 
 .teach__glyph-ink.is-done {
   fill: var(--ink);
+  stroke: var(--ink);
   color: var(--ink);
 }
 
