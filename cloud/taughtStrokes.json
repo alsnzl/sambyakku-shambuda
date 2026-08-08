@@ -1,7 +1,7 @@
 {
   "meta": {
     "description": "교사가 클라우드에 저장한 획 — 배포 전 src/data/taughtStrokes.json 으로 내장합니다.",
-    "updatedAt": "2026-08-08T14:04:25.298Z",
+    "updatedAt": "2026-08-08T14:04:58.432Z",
     "taughtCount": {
       "deva": 2,
       "siddham": 48
@@ -1536,7 +1536,7 @@
             "label": "획 6"
           }
         ],
-        "taughtAt": "2026-08-08T14:04:23.771Z",
+        "taughtAt": "2026-08-08T14:04:57.668Z",
         "fontFace": "noto-siddham",
         "fontLabel": "Noto Sans Siddham",
         "note": "펜으로 · 획 순서대로 · 윤곽을 충분히 덮기"
