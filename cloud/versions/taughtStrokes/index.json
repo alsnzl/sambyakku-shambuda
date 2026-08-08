@@ -1,9 +1,21 @@
 {
   "meta": {
     "description": "획 기록 버전 인덱스 — 라이브 taughtStrokes.json 과 별도. 복원·미리보기용.",
-    "updatedAt": "2026-08-08T13:49:31.075Z"
+    "updatedAt": "2026-08-08T13:51:59.793Z"
   },
   "versions": [
+    {
+      "id": "2026-08-08T13-51-59-793Z_siddham_ta_noto-siddham",
+      "createdAt": "2026-08-08T13:51:59.793Z",
+      "script": "siddham",
+      "letterId": "ta",
+      "fontFace": "noto-siddham",
+      "fontLabel": "Noto Sans Siddham",
+      "strokeCount": 5,
+      "path": "cloud/versions/taughtStrokes/2026-08-08T13-51-59-793Z_siddham_ta_noto-siddham.json",
+      "message": "teach: siddham/ta@noto-siddham (5 strokes, Noto Sans Siddham)",
+      "kind": "auto-publish"
+    },
     {
       "id": "2026-08-08T13-49-31-075Z_siddham_tha_noto-siddham",
       "createdAt": "2026-08-08T13:49:31.075Z",
