@@ -9,6 +9,7 @@ import {
   resolveStrokeFontFace,
   strokeFontLabel,
 } from './strokeFontScope'
+import { recordAutoStrokeVersion } from './strokeVersionsStore'
 
 const CACHE_KEY = 'sambyakku-stroke-cloud-cache'
 const TOKEN_KEY = 'sambyakku-stroke-cloud-token'
@@ -456,6 +457,14 @@ export async function publishLetterToCloud(
     const result = await putTaughtStore(cfg, token, store, sha, message)
     if (result.ok) {
       writeCloudCache(store, result.sha)
+      // Version snapshot lives under cloud/versions/ — never rewrites live taughtStrokes here.
+      void recordAutoStrokeVersion({
+        script,
+        letterId,
+        entry,
+        message,
+        kind: 'auto-publish',
+      })
       return entry
     }
 
