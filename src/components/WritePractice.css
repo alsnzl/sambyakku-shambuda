@@ -548,7 +548,6 @@
 .write__glyph-guide {
   fill: color-mix(in srgb, var(--ink) 10%, transparent);
   color: color-mix(in srgb, var(--ink) 10%, transparent);
-  stroke: color-mix(in srgb, var(--ink) 10%, transparent);
   dominant-baseline: alphabetic;
   pointer-events: none;
 }
@@ -556,13 +555,11 @@
 .write__glyph-ink {
   fill: var(--accent);
   color: var(--accent);
-  stroke: var(--accent);
   dominant-baseline: alphabetic;
   pointer-events: none;
   transition:
     fill var(--motion-base, 0.4s) var(--motion-ease, ease),
-    color var(--motion-base, 0.4s) var(--motion-ease, ease),
-    stroke var(--motion-base, 0.4s) var(--motion-ease, ease);
+    color var(--motion-base, 0.4s) var(--motion-ease, ease);
 }
 
 .write__glyph-ink--under-arrows {
@@ -572,7 +569,6 @@
 .write__glyph-ink.is-done {
   fill: var(--ink);
   color: var(--ink);
-  stroke: var(--ink);
 }
 
 .write__glyph-ink--under-arrows.is-done {

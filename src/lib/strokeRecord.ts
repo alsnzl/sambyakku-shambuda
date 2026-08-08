@@ -20,6 +20,7 @@ import {
   strokeFontLabel,
   type TaughtFontMap,
 } from './strokeFontScope'
+import { fitStrokesToOutline } from './taughtGlyphFit'
 
 const STORAGE_KEY = 'sambyakku-stroke-overrides'
 const STORAGE_VERSION_KEY = 'sambyakku-stroke-overrides-v'
@@ -307,7 +308,7 @@ export function getTeachingInfo(
   if (local) {
     return {
       source: hasCloud || hasOfficial ? 'draft-over-official' : 'local',
-      data: local,
+      data: fitStrokesToOutline(local),
       savedAt: localMeta?.savedAt ?? null,
       officialAt: cloud?.taughtAt ?? official?.taughtAt ?? null,
       strokeCount: local.strokes.length,
@@ -323,7 +324,7 @@ export function getTeachingInfo(
   if (cloud) {
     return {
       source: 'cloud',
-      data: { d: cloud.d, strokes: cloud.strokes },
+      data: fitStrokesToOutline({ d: cloud.d, strokes: cloud.strokes }),
       savedAt: cloud.taughtAt,
       officialAt: cloud.taughtAt,
       strokeCount: cloud.strokes.length,
@@ -339,7 +340,7 @@ export function getTeachingInfo(
   if (hasOfficial && official) {
     return {
       source: 'taught',
-      data: { d: official.d, strokes: official.strokes },
+      data: fitStrokesToOutline({ d: official.d, strokes: official.strokes }),
       savedAt: official.taughtAt,
       officialAt: official.taughtAt,
       strokeCount: official.strokes.length,
@@ -420,11 +421,13 @@ function taughtGlyphStrokesForFace(
   script: StrokeScript,
   face: string,
 ): GlyphStrokeData | null {
-  return (
+  const data =
     getCloudTaughtStrokes(letterId, script, face) ??
     getTaughtStrokes(letterId, script, face) ??
     loadUserStrokes(script, letterId, face)
-  )
+  // Older recordings were traced over the smaller font guide; put them back
+  // on the outline so reveal animations match the letter on screen.
+  return fitStrokesToOutline(data)
 }
 
 function isPlaybackTaughtData(

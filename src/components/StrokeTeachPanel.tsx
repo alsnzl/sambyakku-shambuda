@@ -49,7 +49,6 @@ import {
 } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
-import { TaughtStrokeGlyph } from './TaughtStrokeGlyph'
 import { StrokeOrderTrack } from './StrokeOrderTrack'
 import { recordTodayStrokeAttempt } from '../lib/todayStrokeSession'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
@@ -185,13 +184,7 @@ export function StrokeTeachPanel({
   const brush = 'pen' as const
   const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
 
-  /**
-   * Prefer outline fitted to stroke bounds (same size/center as reveal).
-   * Fall back to raw coverage outline `d`, then live font glyph.
-   */
-  const savedStrokes = info.data?.strokes ?? []
-  const useDrawStrokeGlyph = Boolean(savedOutlineD && savedStrokes.length)
-  const useDrawPathGuide = Boolean(savedOutlineD) && !useDrawStrokeGlyph
+  const useDrawPathGuide = Boolean(savedOutlineD)
   const canvasFontFamily = mode === 'watch' ? watchFontFamily : fontFamily
   const canvasFontKey = `${fontEpoch}-${canvasFontFamily}-${mode}`
 
@@ -234,8 +227,7 @@ export function StrokeTeachPanel({
           : (playbackTaught?.strokes ?? []))
   const watchOutlineD =
     info.data?.d ?? (recorded.length === 0 ? playbackTaught?.d : undefined) ?? null
-  const useWatchStrokeGlyph = Boolean(watchOutlineD && previewStrokes.length)
-  const useWatchPathGuide = Boolean(watchOutlineD) && !useWatchStrokeGlyph
+  const useWatchPathGuide = Boolean(watchOutlineD)
   const canWatch = previewStrokes.length > 0
   const canLoadSaved = Boolean(info.data?.strokes?.length)
 
@@ -847,21 +839,7 @@ export function StrokeTeachPanel({
                         ))}
                       </mask>
                     </defs>
-                    {useWatchStrokeGlyph && watchOutlineD ? (
-                      <>
-                        <TaughtStrokeGlyph
-                          className="teach__glyph-guide"
-                          d={watchOutlineD}
-                          strokes={previewStrokes}
-                        />
-                        <TaughtStrokeGlyph
-                          className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                          d={watchOutlineD}
-                          strokes={previewStrokes}
-                          mask={`url(#${maskId}-watch)`}
-                        />
-                      </>
-                    ) : useWatchPathGuide && watchOutlineD ? (
+                    {useWatchPathGuide && watchOutlineD ? (
                       <>
                         <path className="teach__glyph-guide" d={watchOutlineD} />
                         <path
@@ -933,21 +911,7 @@ export function StrokeTeachPanel({
                         ))}
                       </mask>
                     </defs>
-                    {useDrawStrokeGlyph && savedOutlineD ? (
-                      <>
-                        <TaughtStrokeGlyph
-                          className="teach__glyph-guide"
-                          d={savedOutlineD}
-                          strokes={savedStrokes}
-                        />
-                        <TaughtStrokeGlyph
-                          className="teach__glyph-ink"
-                          d={savedOutlineD}
-                          strokes={savedStrokes}
-                          mask={`url(#${maskId})`}
-                        />
-                      </>
-                    ) : useDrawPathGuide && savedOutlineD ? (
+                    {useDrawPathGuide && savedOutlineD ? (
                       <>
                         <path className="teach__glyph-guide" d={savedOutlineD} />
                         <path
