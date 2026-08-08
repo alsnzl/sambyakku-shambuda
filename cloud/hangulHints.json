@@ -1,7 +1,12 @@
 {
   "meta": {
     "description": "교사가 편집한 한글 발음 힌트 — letterId 키.",
-    "updatedAt": null
+    "updatedAt": "2026-08-08T01:13:22.037Z"
   },
-  "hints": {}
+  "hints": {
+    "a": {
+      "text": "아",
+      "updatedAt": "2026-08-08T01:13:22.037Z"
+    }
+  }
 }
