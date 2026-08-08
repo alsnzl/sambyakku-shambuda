@@ -40,6 +40,12 @@
 
   /* Hangul is not in Fraunces — Noto Serif KR must be next so PC/phone match. */
   --display: 'Fraunces', 'Noto Serif KR', Georgia, serif;
+  /*
+   * IAST / Latin transliteration (ā ī ū ṛ ḷ ñ ś ṣ ṭ ḍ ṇ ḥ ṃ …).
+   * Must use a latin-ext face — Fraunces’ latin subset drops diacritics and
+   * browsers then mix fallbacks (misplaced macron above a, etc.).
+   */
+  --iast: 'Noto Serif', 'Noto Serif KR', Georgia, 'Times New Roman', serif;
   --sans: 'Noto Sans KR', sans-serif;
   --deva: 'Noto Sans Devanagari', sans-serif;
   /* UI Siddhaṃ default: Muktamsiddham (Devanagari codepoints). Switchable in settings. */
@@ -779,15 +785,27 @@ html.is-drawing-lock body {
   box-sizing: border-box;
 }
 
+html {
+  /* Single viewport scrollport — body must NOT also be overflow:auto
+     or page-enter transforms (글자표 pop) briefly show two scrollbars. */
+  scrollbar-gutter: stable;
+  overflow-x: clip;
+  overflow-y: auto;
+  max-width: 100%;
+}
+
 html,
 body {
   margin: 0;
   min-height: 100svh;
   min-height: var(--app-height, 100dvh);
-  overflow-x: clip;
-  overflow-y: auto;
   max-width: 100%;
   -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 #root {
@@ -814,13 +832,30 @@ textarea {
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--block-shadow);
-  overflow: hidden;
   isolation: isolate;
 }
 
 .ui-block--soft {
   background: color-mix(in srgb, var(--surface) 52%, transparent);
   box-shadow: none;
+}
+
+/* IAST / romanization — always Noto Serif latin-ext (never Fraunces alone) */
+:is(
+  .letter-card__iast,
+  .letter-card__similar-iast,
+  .learn__tile-iast,
+  .teach-page__iast,
+  .teach__guide-iast,
+  .tool__corr-iast,
+  .tool__mantra-step-iast,
+  .tool__chip-sub,
+  .tool__iast,
+  .today-results__iast,
+  .practice__prompt--iast,
+  .practice__choice-iast
+) {
+  font-family: var(--iast);
 }
 
 /*

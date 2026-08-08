@@ -24,6 +24,8 @@ type Prefs = {
   penOnly: boolean
   /** 1 = current default pressure curve. */
   pressureSens: number
+  /** Write-practice “보기” stroke replay multiplier (1 = default). */
+  watchPlaySpeed: number
 }
 
 const DEFAULTS: Prefs = {
@@ -33,7 +35,13 @@ const DEFAULTS: Prefs = {
   brush: 'pen',
   penOnly: true,
   pressureSens: PRESSURE_SENS_DEFAULT,
+  watchPlaySpeed: 1,
 }
+
+export const WATCH_PLAY_SPEED_MIN = 0.5
+export const WATCH_PLAY_SPEED_MAX = 2.5
+export const WATCH_PLAY_SPEED_STEP = 0.1
+export const WATCH_PLAY_SPEED_DEFAULT = DEFAULTS.watchPlaySpeed
 
 let systemListener: ((e: MediaQueryListEvent) => void) | null = null
 
@@ -65,6 +73,15 @@ function clampPressureSens(value: unknown): number {
   return Math.min(PRESSURE_SENS_MAX, Math.max(PRESSURE_SENS_MIN, Math.round(value * 100) / 100))
 }
 
+function clampWatchPlaySpeed(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULTS.watchPlaySpeed
+  const stepped = Math.round(value / WATCH_PLAY_SPEED_STEP) * WATCH_PLAY_SPEED_STEP
+  return Math.min(
+    WATCH_PLAY_SPEED_MAX,
+    Math.max(WATCH_PLAY_SPEED_MIN, Math.round(stepped * 10) / 10),
+  )
+}
+
 function load(): Prefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -77,6 +94,7 @@ function load(): Prefs {
       brush: isBrushKind(parsed.brush) ? parsed.brush : DEFAULTS.brush,
       penOnly: typeof parsed.penOnly === 'boolean' ? parsed.penOnly : DEFAULTS.penOnly,
       pressureSens: clampPressureSens(parsed.pressureSens),
+      watchPlaySpeed: clampWatchPlaySpeed(parsed.watchPlaySpeed),
     }
   } catch {
     return { ...DEFAULTS }
@@ -181,6 +199,16 @@ export function getPressureSens(): number {
 export function setPressureSens(value: number): number {
   const next = clampPressureSens(value)
   save({ ...load(), pressureSens: next })
+  return next
+}
+
+export function getWatchPlaySpeed(): number {
+  return load().watchPlaySpeed
+}
+
+export function setWatchPlaySpeed(value: number): number {
+  const next = clampWatchPlaySpeed(value)
+  save({ ...load(), watchPlaySpeed: next })
   return next
 }
 

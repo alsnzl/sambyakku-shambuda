@@ -10,7 +10,7 @@
   text-align: center;
   box-shadow: var(--block-shadow);
   transform-origin: center bottom;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -66,11 +66,13 @@
 
 .letter-card__stage {
   display: grid;
-  grid-template-columns: var(--touch-min) minmax(0, 1fr) var(--touch-min);
+  grid-template-columns: var(--touch-min) minmax(0, var(--canvas-draw-max)) var(--touch-min);
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   width: 100%;
-  max-width: var(--stage-max);
+  max-width: min(100%, calc(var(--canvas-draw-max) + 2 * var(--touch-min) + 1.1rem));
+  margin-inline: auto;
   overflow: visible;
 }
 
@@ -97,7 +99,7 @@
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
   box-shadow: var(--glass-specular, none);
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
   justify-self: center;
 }
@@ -117,16 +119,13 @@
 }
 
 .letter-card__hero-frame {
-  container-type: inline-size;
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: var(--canvas-draw-max);
   aspect-ratio: 1;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 0;
+  display: block;
   overflow: hidden;
   border-radius: var(--radius-xl);
   border: 1px solid var(--block-border);
@@ -134,33 +133,41 @@
   box-shadow: var(--block-shadow);
 }
 
-.letter-card__hero {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+.letter-card__hero-reveal {
   width: 100%;
   height: 100%;
-  line-height: 1;
-  color: var(--ink);
-  user-select: none;
-  /* Tracks fixed canvas frame (cqw); canvas ignores --glyph-scale */
-  font-size: min(173px, 62cqw);
-  /*
-    Indic glyphs sit high in the em box (ascent-heavy).
-    Asymmetric padding shifts the optical center down into the canvas.
-  */
-  padding-top: 0.28em;
-  padding-bottom: 0.06em;
+  display: block;
+  touch-action: none;
 }
 
-.letter-card__hero--deva {
-  font-family: var(--deva);
+.letter-card__hero-guide {
+  fill: color-mix(in srgb, var(--ink) 10%, transparent);
+  dominant-baseline: alphabetic;
+  pointer-events: none;
+  transition: opacity 0.7s cubic-bezier(0.33, 1, 0.68, 1) 0.15s;
 }
 
-.letter-card__hero--siddham {
-  font-family: var(--siddham);
+.letter-card__hero-guide.is-done {
+  opacity: 0;
+}
+
+.letter-card__hero-ink {
+  fill: var(--ink);
+  dominant-baseline: alphabetic;
+  pointer-events: none;
+}
+
+.letter-card__hero-final {
+  fill: var(--ink);
+  dominant-baseline: alphabetic;
+  pointer-events: none;
+  opacity: 0;
+  /* Soft fill-over — sits on top of stroke reveal so density never dips */
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.letter-card__hero-final.is-visible {
+  opacity: 1;
 }
 
 .letter-card__actions {
@@ -237,8 +244,10 @@
   min-width: 3.2rem;
 }
 
-.letter-card__similar-btn span:last-child {
+.letter-card__similar-btn span:last-child,
+.letter-card__similar-iast {
   display: block;
+  font-family: var(--iast);
   font-size: 0.7rem;
   color: var(--muted);
 }
@@ -263,26 +272,26 @@
 }
 
 /* Canvas-only slide; copy uses blur dissolve */
-.letter-card__hero--slide-next {
-  animation: letter-hero-slide-next 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+.letter-card__hero-reveal.letter-card__hero--slide-next {
+  animation: letter-hero-slide-next var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
-.letter-card__hero--slide-prev {
-  animation: letter-hero-slide-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+.letter-card__hero-reveal.letter-card__hero--slide-prev {
+  animation: letter-hero-slide-prev var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
-.letter-card__hero--pop {
-  animation: letter-hero-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+.letter-card__hero-reveal.letter-card__hero--pop {
+  animation: letter-hero-pop var(--motion-base, 0.28s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .letter-card__blur-swap {
-  animation: letter-blur-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+  animation: letter-blur-in var(--motion-base, 0.28s) var(--motion-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .letter-card__hero--slide-next,
-  .letter-card__hero--slide-prev,
-  .letter-card__hero--pop,
+  .letter-card__hero-reveal.letter-card__hero--slide-next,
+  .letter-card__hero-reveal.letter-card__hero--slide-prev,
+  .letter-card__hero-reveal.letter-card__hero--pop,
   .letter-card__blur-swap {
     animation: none !important;
     opacity: 1 !important;
@@ -308,7 +317,7 @@
 
 .letter-card__iast {
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--iast);
   font-size: calc(1.5rem * var(--glyph-scale));
   font-weight: 700;
   letter-spacing: 0.01em;

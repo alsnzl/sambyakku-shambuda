@@ -25,7 +25,9 @@ type Props = {
 type Phase = 'ready' | 'quiz' | 'done'
 
 function scriptClass(kind: 'deva' | 'siddham' | 'latin', role: 'prompt' | 'choice') {
-  if (kind === 'latin') return role === 'prompt' ? 'practice__prompt' : undefined
+  if (kind === 'latin') {
+    return role === 'prompt' ? 'practice__prompt practice__prompt--iast' : 'practice__choice-iast'
+  }
   if (kind === 'deva') {
     return role === 'prompt'
       ? 'practice__prompt practice__prompt--deva'
@@ -133,63 +135,61 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
 
   if (phase === 'ready') {
     return (
-      <MotionPage motionKey="ready" variant="fade-up">
-        <main className="practice">
-          <header className="practice__bar">
-            <button
-              type="button"
-              className="practice__back motion-press"
-              onClick={onBack}
-            >
-              {backLabel}
-            </button>
-            <h1>{meta.title} 연습</h1>
-          </header>
-          <ScriptFontQuickBar track={track} />
-          <section className="practice__ready motion-sheet__panel">
-            <h2>{meta.scriptLabel} 퀴즈</h2>
-            <p>문제 수와 출제 방향을 고른 뒤 시작하세요.</p>
+      <main className="practice">
+        <header className="practice__bar">
+          <button
+            type="button"
+            className="practice__back motion-press"
+            onClick={onBack}
+          >
+            {backLabel}
+          </button>
+          <h1>{meta.title} 연습</h1>
+        </header>
+        <ScriptFontQuickBar track={track} />
+        <section className="practice__ready">
+          <h2>{meta.scriptLabel} 퀴즈</h2>
+          <p>문제 수와 출제 방향을 고른 뒤 시작하세요.</p>
 
-            <p className="practice__section-label">문제 수</p>
-            <div className="practice__switch practice__switch--ready" role="group" aria-label="문제 수">
-              {COUNT_OPTIONS.map((opt) => (
-                <button
-                  key={String(opt.id)}
-                  type="button"
-                  className={`practice__switch-btn motion-press ${countMode === opt.id ? 'is-active' : ''}`}
-                  onClick={() => setCountMode(opt.id)}
-                  aria-pressed={countMode === opt.id}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+          <p className="practice__section-label">문제 수</p>
+          <div className="practice__switch practice__switch--ready" role="group" aria-label="문제 수">
+            {COUNT_OPTIONS.map((opt) => (
+              <button
+                key={String(opt.id)}
+                type="button"
+                className={`practice__switch-btn motion-press ${countMode === opt.id ? 'is-active' : ''}`}
+                onClick={() => setCountMode(opt.id)}
+                aria-pressed={countMode === opt.id}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
-            <p className="practice__section-label">출제 방향</p>
-            <div className="practice__modes" role="group" aria-label="출제 방향">
-              {DIRECTION_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`practice__mode-card motion-press ${direction === opt.id ? 'is-active' : ''}`}
-                  onClick={() => setDirection(opt.id)}
-                  aria-pressed={direction === opt.id}
-                >
-                  <span className="practice__mode-card-title">{opt.title}</span>
-                  <span className="practice__mode-card-body">{opt.body(meta.scriptLabel)}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="practice__cta motion-press"
-              onClick={() => start(direction, countMode)}
-            >
-              {countMode === 'all' ? `전체 ${quizSize}자 시작` : `${quizSize}문제 시작`}
-            </button>
-          </section>
-        </main>
-      </MotionPage>
+          <p className="practice__section-label">출제 방향</p>
+          <div className="practice__modes" role="group" aria-label="출제 방향">
+            {DIRECTION_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`practice__mode-card motion-press ${direction === opt.id ? 'is-active' : ''}`}
+                onClick={() => setDirection(opt.id)}
+                aria-pressed={direction === opt.id}
+              >
+                <span className="practice__mode-card-title">{opt.title}</span>
+                <span className="practice__mode-card-body">{opt.body(meta.scriptLabel)}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="practice__cta motion-press"
+            onClick={() => start(direction, countMode)}
+          >
+            {countMode === 'all' ? `전체 ${quizSize}자 시작` : `${quizSize}문제 시작`}
+          </button>
+        </section>
+      </main>
     )
   }
 
@@ -280,7 +280,7 @@ export function Practice({ track, onBack, backLabel = '← 학습' }: Props) {
         ))}
       </div>
 
-      <MotionPage motionKey={`${direction}-${current.id}`} variant="slide-left">
+      <MotionPage motionKey={`${direction}-${current.id}`} variant="slide-left" skipMountAnimation>
         <div key={`prompt-${fontEpoch}`} className="practice__prompt-block">
           <p className="practice__mode">{current.modeLabel}</p>
           <p

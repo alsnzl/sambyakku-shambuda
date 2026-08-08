@@ -40,26 +40,29 @@
 }
 
 .tool__block {
-  padding: 1.05rem 1.05rem 1.1rem;
-  margin-bottom: 0.7rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+  margin-bottom: 0.75rem;
   background: var(--block-bg);
   border: 1px solid var(--block-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--block-shadow);
-  overflow: hidden;
+  /* Keep press / primary glows; do not clip descendant box-shadows */
+  overflow: visible;
   isolation: isolate;
 }
 
 .tool__block h2 {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.35rem;
   font-family: var(--display);
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .tool__meta {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.85rem;
   font-size: 0.82rem;
+  line-height: 1.55;
   color: var(--muted);
 }
 
@@ -96,9 +99,15 @@
   font-family: var(--siddham);
 }
 
+.tool__iast {
+  font-family: var(--iast);
+  font-weight: 700;
+}
+
 .tool__chip-sub {
   display: block;
   margin-top: 0.2rem;
+  font-family: var(--iast);
   font-size: 0.72rem;
   color: var(--muted);
 }
@@ -111,7 +120,7 @@
 .tool__btn {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   padding: 0.7rem 1rem;
   background: var(--surface);
   color: var(--ink);
@@ -274,14 +283,10 @@
 @keyframes path-lotus-breathe {
   0%,
   100% {
-    background: color-mix(in srgb, var(--accent) 42%, #c5d9cf);
-    opacity: 0.72;
-    filter: saturate(0.9);
+    opacity: 0.7;
   }
   50% {
-    background: color-mix(in srgb, var(--accent) 72%, #d8ebe4);
     opacity: 1;
-    filter: saturate(1.15);
   }
 }
 
@@ -289,7 +294,6 @@
   .path-lotus__petal.is-on {
     animation: none;
     opacity: 1;
-    filter: none;
   }
 }
 
@@ -351,23 +355,20 @@
   opacity: 0.72;
 }
 
+/*
+ * Compact segment (글자 크기 · 화면 테마): liquid glass fill + specular rim.
+ * No outer glow — lift shadows painted a hard horizon onto the next card.
+ */
 .tool__seg {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-1);
-}
-
-.tool__seg--palette {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.tool__palette-swatch {
-  display: block;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: var(--radius-capsule);
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--shadow) 80%, transparent);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .tool__seg-btn {
@@ -376,27 +377,38 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.18rem;
-  min-height: var(--touch-min);
-  padding: 0.45rem 0.25rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius-capsule);
-  background: transparent;
+  gap: 0.2rem;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.55rem 0.4rem;
+  border: 1px solid var(--glass-border, var(--line));
+  border-radius: var(--radius);
+  background: var(--glass-fill-strong, var(--surface));
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--glass-specular, none);
+  -webkit-backdrop-filter: var(--block-blur-soft, none);
+  backdrop-filter: var(--block-blur-soft, none);
 }
 
 .tool__seg-btn.is-active {
-  border-color: var(--control-on-border);
-  background: var(--control-on-bg);
-  color: var(--control-on-fg);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, white 32%, var(--accent));
+  background: color-mix(in srgb, var(--accent) 74%, transparent);
+  color: var(--on-accent);
+  box-shadow: var(--glass-specular, none);
+  -webkit-backdrop-filter: blur(16px) saturate(1.65);
+  backdrop-filter: blur(16px) saturate(1.65);
 }
 
 .tool__seg-btn.is-active .tool__seg-preview {
-  color: var(--control-on-fg);
+  color: var(--on-accent);
+}
+
+.tool__seg-btn.is-active .tool__seg-hint {
+  color: color-mix(in srgb, var(--on-accent) 78%, transparent);
 }
 
 .tool__seg-preview {
@@ -418,15 +430,64 @@
 }
 
 .tool__seg-title {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: inherit;
+  line-height: 1.2;
 }
 
 .tool__seg-hint {
   font-size: 0.68rem;
   font-weight: 500;
   color: var(--muted);
+  line-height: 1.25;
+}
+
+/* Palette grid — separate from compact segments (must not inherit capsule track) */
+.tool__seg--palette {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.tool__seg--palette .tool__seg-btn {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  min-height: 0;
+  padding: 0.75rem 0.8rem;
+  gap: 0.28rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border, var(--line));
+  background: var(--glass-fill-strong, var(--surface));
+  color: var(--ink);
+  box-shadow: var(--glass-specular, none);
+  -webkit-backdrop-filter: var(--block-blur-soft, none);
+  backdrop-filter: var(--block-blur-soft, none);
+}
+
+.tool__seg--palette .tool__seg-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, var(--glass-fill-strong, var(--surface)));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border, var(--line)));
+  color: var(--ink);
+  box-shadow: var(--glass-specular, none);
+}
+
+.tool__seg--palette .tool__seg-btn.is-active .tool__seg-title {
+  color: var(--accent);
+}
+
+.tool__seg--palette .tool__seg-btn.is-active .tool__seg-hint {
+  color: var(--muted);
+}
+
+.tool__palette-swatch {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-bottom: 0.1rem;
+  border-radius: var(--radius-capsule);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--shadow) 80%, transparent);
 }
 
 .tool__corr-list {
@@ -478,7 +539,7 @@
 }
 
 .tool__corr-iast {
-  font-family: var(--display);
+  font-family: var(--iast);
   font-size: calc(0.95rem * var(--glyph-scale));
   font-weight: 700;
   color: var(--ink);
@@ -545,6 +606,7 @@
 }
 
 .tool__mantra-step-iast {
+  font-family: var(--iast);
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--muted);
@@ -693,15 +755,16 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   padding: 0.2rem 0.45rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--glass-border, var(--line));
   color: var(--muted);
-  background: var(--surface);
+  background: var(--glass-fill-strong, var(--surface));
+  box-shadow: none;
 }
 
 .tool__font-badge.is-custom {
   color: var(--teal);
-  border-color: color-mix(in srgb, var(--teal) 35%, var(--line));
+  border-color: color-mix(in srgb, var(--teal) 35%, var(--glass-border, var(--line)));
   background: var(--teal-wash);
 }
 
@@ -709,48 +772,68 @@
   margin-bottom: 0.55rem;
 }
 
-.tool__font-compare {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
-  gap: 0.55rem;
-  margin: 0.35rem 0 0.55rem;
-}
-
-.tool__font-pane {
-  min-width: 0;
-  padding: 0.55rem 0.6rem 0.6rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 70%, var(--paper));
-}
-
-.tool__font-pane.is-active-pane {
-  border-color: var(--control-on-border);
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
-}
-
-.tool__font-pane.is-empty {
-  border-style: dashed;
-  opacity: 0.85;
-}
-
 .tool__font-choices {
-  margin-bottom: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
 }
 
-.tool__font-pane-label {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--muted);
+.tool__font-card {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 5.6rem;
+  padding: 0.55rem 0.5rem 0.6rem;
+  border: 1px solid var(--glass-border, var(--line));
+  border-radius: var(--radius-md);
+  background: var(--glass-fill-strong, var(--surface));
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--block-shadow, none);
+  -webkit-backdrop-filter: var(--block-blur-soft, none);
+  backdrop-filter: var(--block-blur-soft, none);
+}
+
+.tool__font-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.tool__font-card.is-empty {
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.tool__font-card.is-active {
+  border-color: color-mix(in srgb, white 32%, var(--accent));
+  background: color-mix(in srgb, var(--accent) 74%, transparent);
+  color: var(--on-accent);
+  box-shadow: var(--control-on-shadow, none);
+  -webkit-backdrop-filter: blur(16px) saturate(1.65);
+  backdrop-filter: blur(16px) saturate(1.65);
+}
+
+.tool__font-card.is-active .tool__font-preview,
+.tool__font-card.is-active .tool__font-card-label,
+.tool__font-card.is-active .tool__font-card-file {
+  color: var(--on-accent);
+}
+
+.tool__font-card.is-active .tool__font-card-file {
+  color: color-mix(in srgb, var(--on-accent) 78%, transparent);
 }
 
 .tool__font-preview {
-  margin: 0 0 0.35rem;
-  font-size: calc(1.45rem * var(--glyph-scale));
-  line-height: 1.25;
+  margin: 0;
+  font-size: calc(1.35rem * var(--glyph-scale));
+  line-height: 1.3;
   color: var(--ink);
   letter-spacing: 0.04em;
   overflow-wrap: anywhere;
@@ -766,8 +849,28 @@
   translate: 0 0.18em;
 }
 
-.tool__font-name {
-  margin: 0;
+.tool__font-card-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.tool__font-card-file {
+  display: block;
+  margin-top: -0.1rem;
+  font-size: 0.65rem;
+  line-height: 1.25;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool__font-status {
+  margin: 0 0 0.55rem;
   font-size: 0.72rem;
   color: var(--ink-soft);
   overflow: hidden;
@@ -780,6 +883,11 @@
   font-size: 0.8rem;
   line-height: 1.4;
   color: var(--clay);
+}
+
+.tool__font-actions {
+  margin-top: 0.15rem;
+  padding-bottom: 0.2rem;
 }
 
 .tool__font-input {
@@ -805,6 +913,19 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.tool__labs-toggle.motion-press:not(:disabled):hover,
+.tool__labs-toggle.motion-press:not(:disabled):active,
+.tool__labs-toggle.motion-press:not(:disabled):focus-visible {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
 }
 
 .tool__labs-toggle-main {
@@ -831,6 +952,9 @@
 
 .tool__labs-body {
   padding-top: 0.85rem;
+  /* Room for primary button outer glow inside the card */
+  padding-bottom: 0.35rem;
+  padding-inline: 0.15rem;
 }
 
 .tool__labs-section-title {
@@ -839,5 +963,3 @@
   font-weight: 700;
   color: var(--ink);
 }
-
-

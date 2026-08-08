@@ -274,67 +274,74 @@ export function Learn({
   }
 
   if (view === 'chart') {
+    const chartMain = (
+      <main className="learn">
+        <header className="learn__bar">
+          <button
+            type="button"
+            className="learn__back motion-press"
+            onClick={() => (startInChart ? onBack() : setView('menu'))}
+          >
+            {startInChart ? backLabel : '← 메뉴'}
+          </button>
+          <h1>전체 문자</h1>
+        </header>
+        <ScriptFontQuickBar track={track} />
+        <p className="learn__intro">
+          {meta.scriptLabel} 전체 자모입니다. 계열은 얇은 선으로 구분됩니다.
+        </p>
+
+        <div className="learn__chart">
+          {groups.map((group, index) => (
+            <section
+              key={group.id}
+              className={
+                index === 0
+                  ? 'learn__chart-section'
+                  : 'learn__chart-section learn__chart-section--divided'
+              }
+              aria-labelledby={`chart-${group.id}`}
+            >
+              <div className="learn__chart-head">
+                <h2 id={`chart-${group.id}`}>{group.labelKo}</h2>
+                <span>
+                  {group.type === 'vowel' ? '모음' : '자음'} ·{' '}
+                  {group.letters.length}자
+                </span>
+              </div>
+              <ul
+                key={`learn-chart-${fontEpoch}`}
+                className="learn__grid learn__grid--chart motion-stagger"
+              >
+                {group.letters.map((item) => (
+                  <li key={item.id} className="learn__cell">
+                    <button
+                      type="button"
+                      className="learn__tile learn__tile--compact motion-press"
+                      onClick={() => openLetter(item, 'chart')}
+                    >
+                      <span className="learn__tile-glyph" aria-hidden="true">
+                        <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
+                          {glyphForTrack(item, track)}
+                        </span>
+                      </span>
+                      <span className="learn__tile-iast">{item.iast}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </main>
+    )
+
+    /* Tracks → 글자표: App MotionPage already pops up; avoid nested side-enter. */
+    if (startInChart) return chartMain
+
     return (
       <MotionPage motionKey={`chart-${track}`} variant="fade-up">
-        <main className="learn">
-          <header className="learn__bar">
-            <button
-              type="button"
-              className="learn__back motion-press"
-              onClick={() => (startInChart ? onBack() : setView('menu'))}
-            >
-              {startInChart ? backLabel : '← 메뉴'}
-            </button>
-            <h1>전체 문자</h1>
-          </header>
-          <ScriptFontQuickBar track={track} />
-          <p className="learn__intro">
-            {meta.scriptLabel} 전체 자모입니다. 계열은 얇은 선으로 구분됩니다.
-          </p>
-
-          <div className="learn__chart">
-            {groups.map((group, index) => (
-              <section
-                key={group.id}
-                className={
-                  index === 0
-                    ? 'learn__chart-section'
-                    : 'learn__chart-section learn__chart-section--divided'
-                }
-                aria-labelledby={`chart-${group.id}`}
-              >
-                <div className="learn__chart-head">
-                  <h2 id={`chart-${group.id}`}>{group.labelKo}</h2>
-                  <span>
-                    {group.type === 'vowel' ? '모음' : '자음'} ·{' '}
-                    {group.letters.length}자
-                  </span>
-                </div>
-                <ul
-                  key={`learn-chart-${fontEpoch}`}
-                  className="learn__grid learn__grid--chart motion-stagger"
-                >
-                  {group.letters.map((item) => (
-                    <li key={item.id} className="learn__cell">
-                      <button
-                        type="button"
-                        className="learn__tile learn__tile--compact motion-press"
-                        onClick={() => openLetter(item, 'chart')}
-                      >
-                        <span className="learn__tile-glyph" aria-hidden="true">
-                          <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
-                            {glyphForTrack(item, track)}
-                          </span>
-                        </span>
-                        <span className="learn__tile-iast">{item.iast}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        </main>
+        {chartMain}
       </MotionPage>
     )
   }

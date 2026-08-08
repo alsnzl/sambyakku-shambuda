@@ -1,6 +1,13 @@
 /* Self-hosted UI fonts — same files on PC, phone, and GitHub Pages. */
 import '@fontsource/fraunces/latin-500.css'
 import '@fontsource/fraunces/latin-700.css'
+/* IAST (ā ī ū ṛ ṃ …) needs latin-ext; Fraunces latin subset alone misplaces diacritics. */
+import '@fontsource/noto-serif/latin-400.css'
+import '@fontsource/noto-serif/latin-500.css'
+import '@fontsource/noto-serif/latin-700.css'
+import '@fontsource/noto-serif/latin-ext-400.css'
+import '@fontsource/noto-serif/latin-ext-500.css'
+import '@fontsource/noto-serif/latin-ext-700.css'
 import '@fontsource/noto-serif-kr/korean-500.css'
 import '@fontsource/noto-serif-kr/korean-700.css'
 import '@fontsource/noto-sans-kr/korean-400.css'

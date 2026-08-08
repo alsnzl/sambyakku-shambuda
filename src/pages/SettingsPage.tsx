@@ -209,6 +209,7 @@ export function SettingsPage({ onBack }: Props) {
   ) {
     const bundled = slot === 'deva' ? DEVA_FONT_OPTIONS : SIDDHAM_FONT_OPTIONS
     const userFamily = getUserScriptFontFamily(slot)
+    const userMeta = getScriptFontMeta(slot)
     return (
       <div className="tool__font-slot">
         <div className="tool__font-slot-head">
@@ -219,86 +220,69 @@ export function SettingsPage({ onBack }: Props) {
         </div>
         {note ? <p className="tool__meta tool__font-note">{note}</p> : null}
 
-        <p className="tool__font-pane-label" style={{ marginBottom: '0.35rem' }}>
-          적용할 폰트
-        </p>
-        <div className="tool__seg tool__font-choices" role="group" aria-label={`${title} 폰트 선택`}>
+        <div
+          key={`${slot}-${previewTick}`}
+          className="tool__font-choices"
+          role="group"
+          aria-label={`${title} 폰트 선택`}
+        >
           {bundled.map((opt) => (
             <button
               key={opt.id}
               type="button"
-              className={`tool__seg-btn motion-press ${ui.choice === opt.id ? 'is-active' : ''}`}
+              className={`tool__font-card motion-press ${ui.choice === opt.id ? 'is-active' : ''}`}
               aria-pressed={ui.choice === opt.id}
               disabled={ui.busy}
               onClick={() => void handleFontChoice(slot, opt.id)}
             >
-              <span className="tool__seg-title">{opt.label}</span>
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`tool__seg-btn motion-press ${ui.choice === 'user' ? 'is-active' : ''}`}
-            aria-pressed={ui.choice === 'user'}
-            disabled={ui.busy || !ui.hasUser}
-            onClick={() => void handleFontChoice(slot, 'user')}
-          >
-            <span className="tool__seg-title">사용자</span>
-            <span className="tool__seg-hint">{ui.hasUser ? '업로드됨' : '없음'}</span>
-          </button>
-        </div>
-
-        <div
-          key={`${slot}-${previewTick}`}
-          className="tool__font-compare"
-          role="group"
-          aria-label={`${title} 미리보기`}
-        >
-          {bundled.map((opt) => (
-            <div
-              key={opt.id}
-              className={`tool__font-pane ${ui.choice === opt.id ? 'is-active-pane' : ''}`}
-            >
-              <p className="tool__font-pane-label">{opt.label}</p>
-              <p
+              <span
                 className={`tool__font-preview${opt.id === 'noto-siddham' ? ' tool__font-preview--noto-siddham' : ''}`}
                 lang="sa"
                 style={{ fontFamily: `"${opt.family}", sans-serif` }}
               >
                 {getScriptFontSample(slot, opt.id)}
-              </p>
-            </div>
+              </span>
+              <span className="tool__font-card-label">{opt.label}</span>
+            </button>
           ))}
-          <div className={`tool__font-pane ${ui.hasUser ? '' : 'is-empty'} ${ui.choice === 'user' ? 'is-active-pane' : ''}`}>
-            <p className="tool__font-pane-label">사용자</p>
+          <button
+            type="button"
+            className={`tool__font-card motion-press ${ui.hasUser ? '' : 'is-empty'} ${ui.choice === 'user' ? 'is-active' : ''}`}
+            aria-pressed={ui.choice === 'user'}
+            disabled={ui.busy || !ui.hasUser}
+            onClick={() => void handleFontChoice(slot, 'user')}
+          >
             {ui.hasUser ? (
               <>
-                <p
+                <span
                   className="tool__font-preview"
                   lang="sa"
                   style={{ fontFamily: `"${userFamily}", sans-serif` }}
                 >
                   {SCRIPT_FONT_SAMPLE}
-                </p>
-                <p className="tool__font-name" title={getScriptFontMeta(slot)?.fileName}>
-                  {getScriptFontMeta(slot)?.fileName}
-                </p>
+                </span>
+                <span className="tool__font-card-label">사용자</span>
+                <span className="tool__font-card-file" title={userMeta?.fileName}>
+                  {userMeta?.fileName}
+                </span>
               </>
             ) : (
               <>
-                <p className="tool__font-preview tool__font-preview--placeholder" aria-hidden="true">
+                <span className="tool__font-preview tool__font-preview--placeholder" aria-hidden="true">
                   —
-                </p>
-                <p className="tool__font-name">아직 올린 폰트 없음</p>
+                </span>
+                <span className="tool__font-card-label">사용자</span>
+                <span className="tool__font-card-file">아직 없음</span>
               </>
             )}
-          </div>
+          </button>
         </div>
 
-        <p className="tool__font-name" style={{ marginBottom: '0.55rem' }}>
+        <p className="tool__font-status">
           {ui.busy ? '적용 중…' : `현재: ${ui.label}`}
         </p>
         {ui.error ? <p className="tool__font-error">{ui.error}</p> : null}
-        <div className="tool__row">
+        <div className="tool__row tool__font-actions">
           <input
             id={inputId}
             ref={inputRef}
@@ -345,7 +329,7 @@ export function SettingsPage({ onBack }: Props) {
 
       <section className="tool__block" aria-label="글자 크기">
         <h2>글자 크기</h2>
-        <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
+        <p className="tool__meta">
           설명·타일·퀴즈 등 일반 글씨에 적용됩니다. 획 기록·따라쓰기 캔버스와 화살표는 중간 크기로 고정됩니다.
         </p>
         <div className="tool__seg" role="group" aria-label="글자 크기 선택">
@@ -368,7 +352,7 @@ export function SettingsPage({ onBack }: Props) {
 
       <section className="tool__block" aria-label="화면 테마">
         <h2>화면 테마</h2>
-        <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
+        <p className="tool__meta">
           어두운 모드는 밤 공부용입니다. 시스템은 기기 설정을 따릅니다.
         </p>
         <div className="tool__seg" role="group" aria-label="테마 선택">
@@ -389,7 +373,7 @@ export function SettingsPage({ onBack }: Props) {
 
       <section className="tool__block" aria-label="색감">
         <h2>색감</h2>
-        <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
+        <p className="tool__meta">
           밝기(라이트·다크)와 따로 적용됩니다. 각 색감은 밝은·어두운 모드 모두에 맞춰져 있습니다.
         </p>
         <div className="tool__seg tool__seg--palette" role="group" aria-label="색감 선택">
@@ -433,9 +417,9 @@ export function SettingsPage({ onBack }: Props) {
             <div className="tool__labs-body">
               <h3 className="tool__labs-section-title">스크립트 폰트</h3>
               <p className="tool__meta">
-                기본 폰트를 고르거나 OTF·TTF를 올리면 학습·쓰기(기록)·퀴즈 등 해당 문자 표시가
-                모두 바뀝니다. 획 순서는 기록값 그대로입니다. 최대{' '}
-                {SCRIPT_FONT_MAX_BYTES / (1024 * 1024)}MB. 사용권이 있는 파일만 올려 주세요.
+                기본 폰트를 고르거나 OTF·TTF를 올리면 학습·쓰기·퀴즈 표시가 바뀝니다. 획 순서는
+                기록값 그대로입니다. 최대 {SCRIPT_FONT_MAX_BYTES / (1024 * 1024)}MB · 사용권이 있는
+                파일만 올려 주세요.
               </p>
               {renderFontSlot(
                 'deva',
@@ -443,7 +427,7 @@ export function SettingsPage({ onBack }: Props) {
                 devaFont,
                 devaInputId,
                 devaInputRef,
-                'Noto Sans Devanagari는 기본 산스크리트 표시용입니다. Tiro Devanagari Sanskrit는 전통 문학·산스크리트용 공개 폰트입니다. 사용자 폰트는 데바나가리 글자(अ आ क)를 담은 파일을 올려 주세요. 획 순서는 기록값 그대로입니다.',
+                'Noto는 기본 표시용, Tiro는 전통 문학용입니다. 사용자 폰트는 데바나가리(अ आ क)가 들어 있는 OTF·TTF만 올려 주세요.',
               )}
               {renderFontSlot(
                 'siddham',
@@ -451,7 +435,7 @@ export function SettingsPage({ onBack }: Props) {
                 siddhamFont,
                 siddhamInputId,
                 siddhamInputRef,
-                'Muktamsiddham은 데바나가리 글자에 실담 모양을 얹습니다. Noto Sans Siddham은 유니코드 실담 글자를 씁니다. 사용자 폰트는 데바나가리 글자(अ आ क)를 담은 파일을 올려 주세요. 획 순서는 기록값 그대로입니다.',
+                'Muktam은 데바나가리 코드에 실담 모양을 얹고, Noto는 유니코드 실담을 씁니다. 사용자 폰트는 데바나가리(अ आ क) 글자를 담아 주세요.',
               )}
             </div>
           </div>

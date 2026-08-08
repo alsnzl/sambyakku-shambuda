@@ -3,7 +3,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, transparent);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .teach-sync__grid {

@@ -241,7 +241,7 @@
     margin-bottom: 0;
   }
 
-  .write__actions {
+  .write__toolbar {
     margin-left: auto;
   }
 
@@ -335,7 +335,7 @@
 
   .teach.is-open .teach__guide-iast {
     margin: 0;
-    font-family: var(--display);
+    font-family: var(--iast);
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--ink);

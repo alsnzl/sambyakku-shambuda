@@ -45,7 +45,7 @@ function MantraCard({
       </h2>
       {open ? (
         <>
-          <p className="tool__meta">{mantra.iast}</p>
+          <p className="tool__meta tool__iast">{mantra.iast}</p>
           <div className="tool__mantra-scripts">
             <div className="tool__output tool__output--deva" lang="sa">
               {mantra.dewa}

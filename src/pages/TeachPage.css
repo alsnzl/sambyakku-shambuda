@@ -29,7 +29,7 @@
   cursor: pointer;
   text-align: left;
   color: inherit;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -111,7 +111,7 @@
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
   box-shadow: var(--glass-specular, none);
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -141,19 +141,19 @@
 }
 
 .teach-page__canvas-motion--next {
-  animation: letter-hero-slide-next 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-slide-next var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .teach-page__canvas-motion--prev {
-  animation: letter-hero-slide-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-slide-prev var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .teach-page__canvas-motion--pop {
-  animation: letter-hero-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-pop var(--motion-base, 0.28s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .teach-page__blur-swap {
-  animation: letter-blur-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+  animation: letter-blur-in var(--motion-base, 0.28s) var(--motion-soft, cubic-bezier(0.25, 0.1, 0.25, 1)) both;
 }
 
 .teach-page__fade-swap {
@@ -187,7 +187,7 @@
   box-shadow: var(--block-shadow);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -235,7 +235,7 @@
 
 .teach-page__iast {
   margin: 0;
-  font-family: var(--display);
+  font-family: var(--iast);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--ink);
@@ -263,4 +263,52 @@
 .teach-page .theory-tip,
 .teach-page .teach-sync {
   margin-top: 0;
+}
+
+.learn__tile--teach-sync {
+  position: relative;
+}
+
+.teach-page__sync-dot {
+  position: absolute;
+  top: 0.62rem;
+  right: 0.62rem;
+  z-index: 2;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.teach-page__sync-dot.is-synced {
+  background: var(--moss);
+}
+
+.teach-page__sync-dot.is-empty {
+  background: color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.teach-page__sync-dot.is-error {
+  background: #c9a227;
+}
+
+.teach-page__sync-legend {
+  margin: -0.35rem 0 0.85rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 0.95rem;
+}
+
+.teach-page__sync-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.teach-page__sync-legend .teach-page__sync-dot {
+  position: static;
 }

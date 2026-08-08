@@ -4,13 +4,13 @@
  */
 
 .motion-press {
+  /* Compositor-first: transform/opacity. Color snaps; never animate backdrop-filter. */
   transition:
     transform var(--motion-press) var(--motion-interactive),
-    box-shadow var(--motion-fast) var(--motion-soft),
+    opacity var(--motion-fast) var(--motion-soft),
     background-color var(--motion-fast) var(--motion-soft),
     border-color var(--motion-fast) var(--motion-soft),
-    color var(--motion-fast) var(--motion-soft),
-    opacity var(--motion-fast) var(--motion-soft);
+    color var(--motion-fast) var(--motion-soft);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -19,8 +19,6 @@
   .motion-press:not(:disabled):hover {
     transform: translate3d(0, -1px, 0);
     box-shadow: var(--press-shadow);
-    -webkit-backdrop-filter: var(--block-blur-soft);
-    backdrop-filter: var(--block-blur-soft);
   }
 
   :is(
@@ -37,19 +35,84 @@
     backdrop-filter: none;
   }
 
-  /* Nested headers inside glass shells — no second blur layer on hover */
+  /*
+   * Nested controls inside glass cards: never add a second backdrop/lift shadow.
+   * That paints a hard rectangular “horizon” under rounded pill buttons (settings seg, etc.).
+   */
   :is(
     .script-font-bar__toggle,
+    .script-font-bar__opt,
     .write__advanced-summary,
     .teach__advanced-summary,
     .teach__toggle,
+    .home__feed-toggle,
     .home__track-more-toggle,
     .home__shared-toggle,
-    .today-results__toggle
+    .tool__labs-toggle,
+    .today-results__toggle,
+    .today-results__mode,
+    .stroke-version__toggle,
+    .tool__seg-btn,
+    .tool__font-card,
+    .tool__chip,
+    .tool__mantra-step,
+    .practice__switch-btn,
+    .practice__mode-card,
+    .write__btn,
+    .write__brush-btn,
+    .write__replay,
+    .write__mode-btn,
+    .write__again,
+    .teach__btn:not(.teach__btn--letter-nav),
+    .teach__brush-btn,
+    .letter-card__fav,
+    .letter-card__similar-btn,
+    .stroke-history__btn,
+    .theory-tip__btn
   ).motion-press:not(:disabled):hover {
+    transform: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     box-shadow: none;
+  }
+
+  .tool__seg:not(.tool__seg--palette) .tool__seg-btn.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    border-color: var(--glass-border);
+    box-shadow: var(--glass-specular);
+  }
+
+  .tool__seg:not(.tool__seg--palette) .tool__seg-btn.is-active.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 78%, transparent);
+    border-color: color-mix(in srgb, white 36%, var(--accent));
+    color: var(--on-accent);
+    box-shadow: var(--glass-specular);
+  }
+
+  .tool__seg--palette .tool__seg-btn.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--surface) 58%, transparent);
+    border-color: var(--glass-border);
+    box-shadow: var(--glass-specular);
+  }
+
+  .tool__seg--palette .tool__seg-btn.is-active.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 26%, var(--glass-fill-strong));
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--glass-border));
+    color: var(--ink);
+    box-shadow: var(--glass-specular);
+  }
+
+  .tool__font-card.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+    border-color: var(--glass-border);
+    box-shadow: var(--block-shadow);
+  }
+
+  .tool__font-card.is-active.motion-press:not(:disabled):hover {
+    background: color-mix(in srgb, var(--accent) 78%, transparent);
+    border-color: color-mix(in srgb, white 36%, var(--accent));
+    color: var(--on-accent);
+    box-shadow: var(--control-on-shadow);
   }
 }
 
@@ -58,7 +121,50 @@
   box-shadow: var(--press-shadow-active);
 }
 
-/* Fold / expand headers: half the default press shrink (4% → 2%). */
+/* Nested glass controls: keep press scale, drop the heavy lift shadow */
+:is(
+  .tool__seg-btn,
+  .tool__font-card,
+  .tool__chip,
+  .tool__mantra-step,
+  .script-font-bar__opt,
+  .practice__switch-btn,
+  .practice__mode-card,
+  .write__btn,
+  .write__brush-btn,
+  .write__replay,
+  .write__mode-btn,
+  .write__again,
+  .teach__btn:not(.teach__btn--letter-nav),
+  .teach__brush-btn,
+  .letter-card__fav,
+  .letter-card__similar-btn,
+  .stroke-history__btn,
+  .theory-tip__btn,
+  .today-results__mode
+).motion-press:not(:disabled):active {
+  box-shadow: none;
+}
+
+.tool__seg-btn.is-active.motion-press:not(:disabled):active {
+  box-shadow: none;
+}
+
+/* Settings segments / font cards: liquid glass OK — block outer glow only */
+.tool__seg-btn.motion-press,
+.tool__seg-btn.motion-press:not(:disabled):hover,
+.tool__seg-btn.motion-press:not(:disabled):active,
+.tool__seg-btn.is-active,
+.tool__seg-btn.is-active.motion-press:not(:disabled):hover,
+.tool__seg-btn.is-active.motion-press:not(:disabled):active {
+  /* Keep inset specular; never allow lift / depth glow */
+  box-shadow: var(--glass-specular) !important;
+}
+
+/*
+ * Fold / expand headers (always — collapsed or open).
+ * Parent shells are already glass + rounded; nested press glow paints a hard rectangle.
+ */
 :is(
   .write__advanced-summary,
   .teach__advanced-summary,
@@ -68,9 +174,30 @@
   .home__shared-toggle,
   .tool__labs-toggle,
   .teach__toggle,
-  .today-results__toggle
+  .today-results__toggle,
+  .stroke-version__toggle
+).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
+  background: transparent;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transform: none;
+}
+
+:is(
+  .write__advanced-summary,
+  .teach__advanced-summary,
+  .script-font-bar__toggle,
+  .home__feed-toggle,
+  .home__track-more-toggle,
+  .home__shared-toggle,
+  .tool__labs-toggle,
+  .teach__toggle,
+  .today-results__toggle,
+  .stroke-version__toggle
 ).motion-press:not(:disabled):active {
   transform: scale(0.98);
+  box-shadow: none !important;
 }
 
 /* Text back links — HIG ~44pt hit area */
@@ -137,34 +264,6 @@
   box-shadow: var(--press-shadow-active);
 }
 
-/*
- * Fold headers while expanded: soft press shadows bleed over the panel below.
- * Kill hover/active lift+shadow; keep the header visually flat against content.
- */
-:is(
-  .write__advanced,
-  .teach__advanced,
-  .script-font-bar,
-  .home__feed,
-  .home__track-more,
-  .home__shared--fold,
-  .tool__labs,
-  .today-results
-).is-open
-  :is(
-    .write__advanced-summary,
-    .teach__advanced-summary,
-    .script-font-bar__toggle,
-    .home__feed-toggle,
-    .home__track-more-toggle,
-    .home__shared-toggle,
-    .tool__labs-toggle,
-    .today-results__toggle
-  ).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
-  box-shadow: none;
-  transform: none;
-}
-
 /* Expanded panel paints above the header so any residual blur stays underneath. */
 :is(
   .write__advanced,
@@ -174,7 +273,8 @@
   .home__track-more,
   .home__shared--fold,
   .tool__labs,
-  .today-results
+  .today-results,
+  .stroke-version
 ).is-open
   > .fold-panel.is-expanded,
 :is(
@@ -185,7 +285,8 @@
   .home__track-more,
   .home__shared--fold,
   .tool__labs,
-  .today-results
+  .today-results,
+  .stroke-version
 ).is-open
   .fold-panel.is-expanded {
   position: relative;

@@ -34,7 +34,7 @@
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
   box-shadow: var(--glass-specular, none);
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 

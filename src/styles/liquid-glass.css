@@ -89,10 +89,8 @@
   .learn__group,
   .learn__all-btn,
   .learn__chart-section,
-  .learn__cell,
   .learn__focus > .script-font-bar,
   .letter-card,
-  .letter-card__hero-frame,
   .letter-card__similar,
   .script-font-bar,
   .practice__result,
@@ -100,31 +98,46 @@
   .practice__ready,
   .practice__mode-card,
   .practice__choice,
-  .tool__block,
-  .tool__font-pane,
   .about__section,
   .about__note,
   .teach-page__track,
+  .teach-page__card,
   .write__grade,
   .write__steps,
   .write__advanced,
   .teach__token,
   .teach__message,
   .teach__advanced,
-  .theory-tip
+  .theory-tip,
+  .today-results,
+  .stroke-version
 ) {
   border-color: var(--block-border);
   box-shadow: var(--block-shadow);
   -webkit-backdrop-filter: var(--block-blur);
   backdrop-filter: var(--block-blur);
   /*
-   * Clip fill + backdrop-filter to border-radius.
-   * Without this, WebKit/Chromium paint a square blur/fill layer behind rounded corners.
-   * Do not put glass on radius-less wrappers (e.g. learn__sheet-panel) — that caused the peek.
+   * Allow descendant press / “on” shadows to paint outside the radius.
+   * (overflow:hidden here was clipping green glow under segment buttons, etc.)
+   * Backdrop still follows border-radius via transform + isolation on modern engines.
    */
+  overflow: visible;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* Surfaces that must clip ink / media — keep overflow hidden */
+:is(.letter-card__hero-frame, .learn__cell, .write__svg, .teach__svg) {
   overflow: hidden;
   isolation: isolate;
   transform: translateZ(0);
+}
+
+.tool__block {
+  border-color: var(--block-border);
+  box-shadow: var(--block-shadow);
+  -webkit-backdrop-filter: var(--block-blur);
+  backdrop-filter: var(--block-blur);
 }
 
 .ui-block--soft {
@@ -172,7 +185,7 @@
   box-shadow: var(--block-shadow);
   -webkit-backdrop-filter: var(--block-blur);
   backdrop-filter: var(--block-blur);
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -220,12 +233,91 @@
   .letter-card__similar-btn,
   .script-font-bar__opt,
   .stroke-history__btn,
-  .theory-tip__btn
+  .theory-tip__btn,
+  .today-results__mode,
+  .today-results__card,
+  .today-results__edit
+) {
+  isolation: isolate;
+}
+
+/* Standalone controls may use soft glass blur; nested pills must not (square slab). */
+:is(
+  .home__btn,
+  .home__link,
+  .home__tool,
+  .learn__tile,
+  .tool__btn,
+  .practice__cta,
+  .practice__secondary,
+  .about__cta,
+  .letter-card__write-btn,
+  .letter-card__audio,
+  .letter-card__side-nav,
+  .today-results__card,
+  .today-results__edit
 ) {
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
+}
+
+/* Nested pills — no second blur slab (settings segments opt in below) */
+:is(
+  .tool__chip,
+  .tool__mantra-step,
+  .practice__switch-btn,
+  .practice__mode-card,
+  .write__btn,
+  .write__replay,
+  .write__brush-btn,
+  .teach__brush-btn,
+  .teach__btn:not(.teach__btn--letter-nav),
+  .letter-card__fav,
+  .letter-card__similar-btn,
+  .script-font-bar__opt,
+  .stroke-history__btn,
+  .theory-tip__btn,
+  .today-results__mode
+) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Outer glow must not be clipped by the control itself */
+:is(
+  .home__btn,
+  .home__link,
+  .home__tool,
+  .tool__btn,
+  .tool__chip,
+  .tool__seg-btn,
+  .practice__switch-btn,
+  .practice__cta,
+  .practice__secondary,
+  .about__cta,
+  .write__btn,
+  .write__replay,
+  .write__brush-btn,
+  .teach__brush-btn,
+  .teach__btn:not(.teach__btn--letter-nav),
+  .letter-card__fav,
+  .letter-card__write-btn,
+  .letter-card__audio,
+  .letter-card__side-nav,
+  .letter-card__similar-btn,
+  .script-font-bar__opt,
+  .stroke-history__btn,
+  .theory-tip__btn,
+  .today-results__mode,
+  .today-results__card,
+  .today-results__edit
+) {
+  overflow: visible;
+}
+
+/* Learn tiles: clip complex-script ink; lift shadow lives on .learn__cell */
+.learn__tile {
   overflow: hidden;
-  isolation: isolate;
 }
 
 /*
@@ -237,9 +329,12 @@
   .write__advanced-summary,
   .teach__advanced-summary,
   .teach__toggle,
+  .home__feed-toggle,
   .home__track-more-toggle,
   .home__shared-toggle,
-  .today-results__toggle
+  .tool__labs-toggle,
+  .today-results__toggle,
+  .stroke-version__toggle
 ) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -258,7 +353,13 @@
   .script-font-bar__toggle,
   .write__advanced-summary,
   .teach__advanced-summary,
-  .teach__toggle
+  .teach__toggle,
+  .home__feed-toggle,
+  .home__track-more-toggle,
+  .home__shared-toggle,
+  .tool__labs-toggle,
+  .today-results__toggle,
+  .stroke-version__toggle
 ).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -284,7 +385,6 @@
   .practice__mode-card:not(.is-active),
   .practice__secondary,
   .tool__chip,
-  .tool__seg-btn:not(.is-active),
   .tool__mantra-step:not(.is-active),
   .tool__btn:not(.tool__btn--primary),
   .letter-card__fav:not(.is-on),
@@ -300,6 +400,42 @@
   background: var(--glass-fill-strong);
   border-color: var(--glass-border);
   box-shadow: var(--glass-specular), 0 4px 14px color-mix(in srgb, var(--shadow) 35%, transparent);
+}
+
+/* Settings segments — liquid glass fill + specular rim only (no outer glow) */
+.tool__seg .tool__seg-btn {
+  background: var(--glass-fill-strong);
+  border-color: var(--glass-border);
+  color: var(--muted);
+  -webkit-backdrop-filter: var(--block-blur-soft);
+  backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--glass-specular);
+}
+
+.tool__seg:not(.tool__seg--palette) .tool__seg-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 74%, transparent);
+  border-color: color-mix(in srgb, white 32%, var(--accent));
+  color: var(--on-accent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.65);
+  backdrop-filter: blur(16px) saturate(1.65);
+  box-shadow: var(--glass-specular);
+}
+
+.tool__seg--palette .tool__seg-btn {
+  color: var(--ink);
+}
+
+.tool__seg--palette .tool__seg-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, var(--glass-fill-strong));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border));
+  color: var(--ink);
+  -webkit-backdrop-filter: blur(16px) saturate(1.55);
+  backdrop-filter: blur(16px) saturate(1.55);
+  box-shadow: var(--glass-specular);
+}
+
+.tool__seg--palette .tool__seg-btn.is-active .tool__seg-title {
+  color: var(--accent);
 }
 
 :is(
@@ -332,10 +468,6 @@
   box-shadow: inset 0 1px 2px color-mix(in srgb, var(--shadow) 35%, transparent);
 }
 
-.fold-panel.is-expanded .fold-panel__inner {
-  -webkit-backdrop-filter: var(--block-blur-soft);
-  backdrop-filter: var(--block-blur-soft);
-}
 
 /* Drawing stages: specular rim only — keep fill opaque enough for ink */
 :is(.write__svg, .teach__svg, .letter-card__hero-frame) {
@@ -343,7 +475,7 @@
   border-color: var(--glass-border);
 }
 
-/* Selected toggles: accent-tinted glass — blur stays, still obvious vs idle */
+/* Selected toggles: accent fill — no nested backdrop (avoids square blur slab) */
 :is(
   .write__btn.is-active,
   .write__brush-btn.is-active,
@@ -351,7 +483,6 @@
   .teach__brush-btn.is-active,
   .practice__switch-btn.is-active,
   .practice__mode-card.is-active,
-  .tool__seg-btn.is-active,
   .tool__mantra-step.is-active,
   .script-font-bar__opt.is-active,
   .letter-card__fav.is-on
@@ -359,9 +490,14 @@
   background: var(--control-on-bg);
   border-color: var(--control-on-border);
   color: var(--control-on-fg);
-  -webkit-backdrop-filter: blur(16px) saturate(1.65);
-  backdrop-filter: blur(16px) saturate(1.65);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: var(--control-on-shadow);
+}
+
+/* Settings segments: specular rim only — never outer glow (horizon bug) */
+.tool__seg-btn {
+  box-shadow: var(--glass-specular);
 }
 
 :is(
@@ -369,12 +505,12 @@
   .practice__mode-card.is-active .practice__mode-card-body,
   .script-font-bar__opt.is-active .script-font-bar__opt-label,
   .script-font-bar__opt.is-active .script-font-bar__sample,
-  .tool__seg-btn.is-active .tool__seg-preview,
-  .tool__seg-btn.is-active .tool__seg-title,
+  .tool__seg:not(.tool__seg--palette) .tool__seg-btn.is-active .tool__seg-preview,
+  .tool__seg:not(.tool__seg--palette) .tool__seg-btn.is-active .tool__seg-title,
   .tool__mantra-step.is-active .tool__mantra-step-deva,
   .tool__mantra-step.is-active .tool__mantra-step-iast
 ) {
-  color: var(--control-on-fg);
+  color: var(--on-accent);
 }
 
 .tool__mantra-step.is-active .tool__mantra-step-iast,
@@ -382,10 +518,20 @@
   opacity: 0.88;
 }
 
-.tool__font-pane.is-active-pane {
-  border-color: var(--control-on-border);
-  background: color-mix(in srgb, var(--accent) 28%, transparent);
+/* Settings font cards: liquid glass fill + specular only (no outer glow) */
+.tool__font-card {
+  background: var(--glass-fill-strong);
+  border-color: var(--glass-border);
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--block-shadow);
+}
+
+.tool__font-card.is-active {
+  background: color-mix(in srgb, var(--accent) 74%, transparent);
+  border-color: color-mix(in srgb, white 32%, var(--accent));
+  color: var(--on-accent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.65);
+  backdrop-filter: blur(16px) saturate(1.65);
   box-shadow: var(--control-on-shadow);
 }

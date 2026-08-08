@@ -109,8 +109,13 @@ export function GlyphReel({ chars, className = '', speedPx = SPEED }: Props) {
   useEffect(() => {
     let raf = 0
     let last = performance.now()
+    let visible = true
+    let lastPaintX = Number.NaN
 
     const tick = (now: number) => {
+      raf = 0
+      if (!visible && !draggingRef.current) return
+
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
       const loop = loopWidthRef.current
@@ -131,15 +136,46 @@ export function GlyphReel({ chars, className = '', speedPx = SPEED }: Props) {
 
       const el = trackRef.current
       if (el) {
-        const x = -offsetRef.current
-        // Avoid subpixel thrash that looks stuttery on 120Hz OLED
-        el.style.transform = `translate3d(${Math.round(x * 100) / 100}px, 0, 0)`
+        const x = Math.round(-offsetRef.current * 100) / 100
+        if (x !== lastPaintX) {
+          lastPaintX = x
+          el.style.transform = `translate3d(${x}px, 0, 0)`
+        }
       }
+
+      if (visible || draggingRef.current) {
+        raf = requestAnimationFrame(tick)
+      }
+    }
+
+    const start = () => {
+      if (raf) return
+      last = performance.now()
       raf = requestAnimationFrame(tick)
     }
 
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    const viewport = viewportRef.current
+    let io: IntersectionObserver | undefined
+    if (viewport && typeof IntersectionObserver !== 'undefined') {
+      io = new IntersectionObserver(
+        ([entry]) => {
+          visible = entry?.isIntersecting ?? true
+          if (visible) start()
+          else if (raf) {
+            cancelAnimationFrame(raf)
+            raf = 0
+          }
+        },
+        { root: null, threshold: 0.01 },
+      )
+      io.observe(viewport)
+    }
+
+    start()
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      io?.disconnect()
+    }
   }, [speedPx])
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {

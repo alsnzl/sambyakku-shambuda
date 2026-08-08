@@ -27,8 +27,13 @@ import {
 import {
   getPenOnly,
   getPressureSens,
+  getWatchPlaySpeed,
   setPenOnly,
   setPressureSens,
+  setWatchPlaySpeed,
+  WATCH_PLAY_SPEED_MAX,
+  WATCH_PLAY_SPEED_MIN,
+  WATCH_PLAY_SPEED_STEP,
 } from '../lib/prefsStore'
 import { scoreLetterWriting, type WritingGrade } from '../lib/writingScore'
 import { recordWriteScore } from '../lib/learnerStore'
@@ -45,7 +50,12 @@ import {
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptFontQuickBar } from './ScriptFontQuickBar'
 import { FoldChevron } from './FoldChevron'
-import { startStrokeRevealPlayback } from '../lib/strokePlayback'
+import {
+  STROKE_PLAY_LIFT_MS,
+  STROKE_PLAY_MIN_MS,
+  STROKE_PLAY_SPEED,
+  startStrokeRevealPlayback,
+} from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './WritePractice.css'
 
@@ -74,7 +84,6 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const fontChoice = getScriptFontChoice(fontSlot)
   const fontFamily = getActiveScriptFontStack(fontSlot)
   const recordedFontChoice = parseScriptFontChoice(fontSlot, teachInfo.fontFace)
-  const recordedFontLabel = teachInfo.fontLabel
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
@@ -100,6 +109,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
+  const [watchPlaySpeed, setWatchPlaySpeedState] = useState(() => getWatchPlaySpeed())
   const brush = 'pen' as const
 
   const theoryStrokes = canvasData?.strokes ?? []
@@ -194,10 +204,14 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
 
       setWatchDone(false)
       setActiveStep(0)
+      const speedMul = watchPlaySpeed
       stopPlayback = startStrokeRevealPlayback({
         paths: paths as SVGPathElement[],
         tip: tipRef.current,
         strokeWidths: strokeSnapshot.map((s) => s.width),
+        speed: STROKE_PLAY_SPEED * speedMul,
+        minStrokeMs: Math.max(90, Math.round(STROKE_PLAY_MIN_MS / speedMul)),
+        liftMs: Math.max(20, Math.round(STROKE_PLAY_LIFT_MS / speedMul)),
         onStep: setActiveStep,
         onDone: () => {
           if (!cancelled) setWatchDone(true)
@@ -211,7 +225,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
       cancelAnimationFrame(raf)
       stopPlayback?.()
     }
-  }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d])
+  }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d, watchPlaySpeed])
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !glyph) return
@@ -310,52 +324,53 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
           <div className="write__title-row">
             {onClose ? (
               <button type="button" className="write__back motion-press" onClick={onClose}>
-                ← 글자 보기
+                ← 글자
               </button>
             ) : null}
             <h3>쓰기 연습</h3>
           </div>
-          <div className="write__actions">
-            <button
-              type="button"
-              className={`write__btn write__btn--ghost motion-press ${mode === 'trace' ? 'is-active' : ''}`}
-              onClick={() => {
-                setWatchBlocked(false)
-                setMode('trace')
-              }}
-            >
-              따라 쓰기
-            </button>
-            <button
-              type="button"
-              className={`write__btn write__btn--ghost motion-press ${mode === 'watch' ? 'is-active' : ''}`}
-              onClick={() => {
-                if (!canWatchStrokes) {
-                  setWatchBlocked(true)
-                  setMode('trace')
-                  return
-                }
-                setWatchBlocked(false)
-                setMode('watch')
-                setPlayId((n) => n + 1)
-              }}
-            >
-              보기
-            </button>
-            {mode === 'trace' ? (
-              <button type="button" className="write__replay motion-press" onClick={resetTrace}>
-                다시
-              </button>
-            ) : (
+          <div className="write__toolbar" role="group" aria-label="연습 모드">
+            <div className="write__mode-seg">
               <button
                 type="button"
-                className="write__replay motion-press"
-                disabled={!canWatchStrokes}
-                onClick={() => setPlayId((n) => n + 1)}
+                className={`write__mode-btn motion-press ${mode === 'trace' ? 'is-active' : ''}`}
+                aria-pressed={mode === 'trace'}
+                onClick={() => {
+                  setWatchBlocked(false)
+                  setMode('trace')
+                }}
               >
-                다시 보기
+                쓰기
               </button>
-            )}
+              <button
+                type="button"
+                className={`write__mode-btn motion-press ${mode === 'watch' ? 'is-active' : ''}`}
+                aria-pressed={mode === 'watch'}
+                onClick={() => {
+                  if (!canWatchStrokes) {
+                    setWatchBlocked(true)
+                    setMode('trace')
+                    return
+                  }
+                  setWatchBlocked(false)
+                  setMode('watch')
+                  setPlayId((n) => n + 1)
+                }}
+              >
+                보기
+              </button>
+            </div>
+            <button
+              type="button"
+              className="write__again motion-press"
+              disabled={mode === 'watch' && !canWatchStrokes}
+              onClick={() => {
+                if (mode === 'trace') resetTrace()
+                else setPlayId((n) => n + 1)
+              }}
+            >
+              다시
+            </button>
           </div>
         </div>
       </div>
@@ -597,13 +612,24 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
           ) : null}
 
           {mode === 'watch' && !watchBlocked && taughtData ? (
-            <div className="write__font-badge" aria-label={`기록 폰트 ${recordedFontLabel}`}>
-              <span className="write__font-badge-kicker">기록 폰트</span>
-              <strong className="write__font-badge-name">{recordedFontLabel}</strong>
-              <span className="write__font-badge-state is-saved">
-                {taughtData.strokes.length}획
+            <label className="write__speed">
+              <span className="write__speed-label">
+                속도 <strong>{watchPlaySpeed.toFixed(1)}×</strong>
               </span>
-            </div>
+              <input
+                className="write__speed-range"
+                type="range"
+                min={WATCH_PLAY_SPEED_MIN}
+                max={WATCH_PLAY_SPEED_MAX}
+                step={WATCH_PLAY_SPEED_STEP}
+                value={watchPlaySpeed}
+                aria-label="획 재생 속도"
+                onChange={(e) => {
+                  const next = setWatchPlaySpeed(Number(e.target.value))
+                  setWatchPlaySpeedState(next)
+                }}
+              />
+            </label>
           ) : null}
 
           {mode === 'watch' && !watchBlocked && !taughtData ? (

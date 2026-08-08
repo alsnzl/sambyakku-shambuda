@@ -67,7 +67,7 @@ export function ReviewPage({ track, onBack, backLabel = '← 학습' }: Props) {
           </span>
         ) : (
           <>
-            <h2>{current.iast}</h2>
+            <h2 className="tool__iast">{current.iast}</h2>
             <p className="tool__meta">{getEffectiveHangulHint(current.id).text || current.hangulHint}</p>
             {current.note ? <p className="tool__lead">{current.note}</p> : null}
           </>

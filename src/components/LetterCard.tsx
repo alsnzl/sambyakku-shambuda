@@ -1,25 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { Letter } from '../data/letters'
+import { STROKE_VIEWBOX } from '../data/glyphStrokes'
+import { getSimilarLetters } from '../data/similarLetters'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { playLetterPronunciation } from '../lib/audio'
+import {
+  getActiveScriptFontStack,
+  getScriptFontChoice,
+  getScriptFontStack,
+  matchesGeneratedOutlineFont,
+  parseScriptFontChoice,
+} from '../lib/customScriptFonts'
+import {
+  getEffectiveHangulHint,
+  refreshHangulCloudStore,
+} from '../lib/hangulHintsStore'
 import {
   isFavorite,
   markLetterSeen,
   toggleFavorite,
 } from '../lib/learnerStore'
-import { getSimilarLetters } from '../data/similarLetters'
-import { getActiveScriptFontStack } from '../lib/customScriptFonts'
-import {
-  getEffectiveHangulHint,
-  refreshHangulCloudStore,
-} from '../lib/hangulHintsStore'
 import { glyphForTrack } from '../lib/scriptDisplay'
+import { refreshCloudStore } from '../lib/strokeCloud'
+import {
+  STROKE_GUIDE_FONT_SIZE,
+  STROKE_GUIDE_X,
+  STROKE_GUIDE_Y,
+} from '../lib/strokeGuideLayout'
+import { startStrokeRevealPlayback } from '../lib/strokePlayback'
+import { getTaughtGlyphStrokes, getTeachingInfo } from '../lib/strokeRecord'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { WritePractice } from './WritePractice'
 import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 type Props = {
   letter: Letter
@@ -74,21 +94,43 @@ export function LetterCard({
 }: Props) {
   const fontEpoch = useScriptFontEpoch()
   const glyph = glyphForTrack(letter, track)
+  const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
   const [hangulTick, setHangulTick] = useState(0)
+  const [cloudTick, setCloudTick] = useState(0)
+  const [introDoneKey, setIntroDoneKey] = useState<string | null>(null)
+  const [slideReadyKey, setSlideReadyKey] = useState<string | null>(null)
+  const revealRefs = useRef<(SVGPathElement | null)[]>([])
+  const maskIdRaw = useId().replace(/:/g, '')
+  const maskId = `letter-hero-mask-${maskIdRaw}`
   const similar = getSimilarLetters(letter.id)
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
-  const heroClass =
-    track === 'sanskrit' ? 'letter-card__hero--deva' : 'letter-card__hero--siddham'
-  const scriptStack = getActiveScriptFontStack(track === 'sanskrit' ? 'deva' : 'siddham')
+  const scriptStack = getActiveScriptFontStack(script)
+  const teachInfo = getTeachingInfo(letter.id, script)
+  const taughtData = getTaughtGlyphStrokes(letter.id, script)
+  void cloudTick
+  const hasRecordedStrokes = Boolean(taughtData?.strokes.length)
+  const introKey = `${letter.id}|${script}|${fontEpoch}|${taughtData?.d ?? ''}|${taughtData?.strokes.length ?? 0}`
+  const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
+  const introDone = !needsStrokeIntro || introDoneKey === introKey
+  const slideReady = slideReadyKey === introKey
+  const recordedFontChoice = parseScriptFontChoice(script, teachInfo.fontFace)
+  const watchFontFamily = recordedFontChoice
+    ? getScriptFontStack(script, recordedFontChoice)
+    : scriptStack
+  const usePathGuide =
+    Boolean(taughtData?.d) &&
+    !recordedFontChoice &&
+    matchesGeneratedOutlineFont(script, getScriptFontChoice(script))
   const heroMotionClass =
     navMotion === 'slide-left'
       ? 'letter-card__hero--slide-next'
       : navMotion === 'slide-right'
         ? 'letter-card__hero--slide-prev'
         : 'letter-card__hero--pop'
+  const slideMs = navMotion === 'pop' ? 400 : 480
   void hangulTick
   const hangul = getEffectiveHangulHint(letter.id).text
 
@@ -112,6 +154,93 @@ export function LetterCard({
       cancelled = true
     }
   }, [letter.id])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        await refreshCloudStore({ maxAgeMs: 30_000 })
+      } catch {
+        /* keep cache */
+      } finally {
+        if (!cancelled) setCloudTick((n) => n + 1)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [letter.id, script, fontEpoch])
+
+  /** Hide stroke mask until playback so only the gray template shows during slide-in. */
+  useLayoutEffect(() => {
+    if (!needsStrokeIntro || introDone || !taughtData?.strokes.length) return
+    const strokeCount = taughtData.strokes.length
+    for (let i = 0; i < strokeCount; i++) {
+      const el = revealRefs.current[i]
+      if (!el) continue
+      const len = el.getTotalLength()
+      const safe = len > 0.5 ? len : 1
+      el.style.strokeDasharray = `${safe}`
+      el.style.strokeDashoffset = `${safe}`
+    }
+  }, [needsStrokeIntro, introDone, introKey, taughtData?.strokes.length, taughtData?.d])
+
+  /** Wait for canvas slide-in before stroke reveal (animated letters only). */
+  useEffect(() => {
+    if (!needsStrokeIntro || introDone) return
+    setSlideReadyKey((prev) => (prev === introKey ? prev : null))
+    const t = window.setTimeout(() => setSlideReadyKey(introKey), slideMs)
+    return () => clearTimeout(t)
+  }, [needsStrokeIntro, introDone, introKey, slideMs])
+
+  useEffect(() => {
+    if (!needsStrokeIntro || introDone || !slideReady || !taughtData?.strokes.length) return
+
+    let cancelled = false
+    let raf = 0
+    let stopPlayback: (() => void) | null = null
+    const strokeCount = taughtData.strokes.length
+    const strokeSnapshot = taughtData.strokes.map((s) => ({ ...s }))
+    const doneKey = introKey
+    revealRefs.current = revealRefs.current.slice(0, strokeCount)
+
+    const start = () => {
+      if (cancelled) return
+      const paths = revealRefs.current.slice(0, strokeCount)
+      if (paths.some((el) => !el) || paths.length < strokeCount) {
+        raf = requestAnimationFrame(start)
+        return
+      }
+
+      stopPlayback = startStrokeRevealPlayback({
+        paths: paths as SVGPathElement[],
+        tip: null,
+        strokeWidths: strokeSnapshot.map((s) => s.width),
+        /* Learn intro: snappier than write/watch practice */
+        speed: 0.52,
+        minStrokeMs: 140,
+        liftMs: 32,
+        onStep: () => undefined,
+        onDone: () => {
+          if (!cancelled) setIntroDoneKey(doneKey)
+        },
+      })
+    }
+
+    raf = requestAnimationFrame(start)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      stopPlayback?.()
+    }
+  }, [
+    needsStrokeIntro,
+    introDone,
+    slideReady,
+    introKey,
+    taughtData?.strokes.length,
+    taughtData?.d,
+  ])
 
   useEffect(() => {
     onWritingChange?.(writeOpen)
@@ -163,15 +292,106 @@ export function LetterCard({
               </button>
 
               <div className="letter-card__hero-frame">
-                <p
-                  key={`hero-${letter.id}-${fontEpoch}`}
-                  className={`letter-card__hero ${heroClass} ${heroMotionClass}`}
-                  lang="sa"
-                  aria-label={letter.iast}
-                  style={{ fontFamily: scriptStack }}
-                >
-                  {glyph}
-                </p>
+                {needsStrokeIntro && taughtData?.strokes.length ? (
+                  <svg
+                    key={`hero-intro-${introKey}`}
+                    className={`letter-card__hero-reveal ${heroMotionClass}`}
+                    viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
+                    role="img"
+                    aria-label={letter.iast}
+                  >
+                    <defs>
+                      <mask id={maskId} maskUnits="userSpaceOnUse">
+                        <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                        {taughtData.strokes.map((s, i) => (
+                          <path
+                            key={`${letter.id}-intro-${i}`}
+                            ref={(el) => {
+                              revealRefs.current[i] = el
+                            }}
+                            d={s.d}
+                            stroke="white"
+                            strokeWidth={s.width}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        ))}
+                      </mask>
+                    </defs>
+                    {usePathGuide ? (
+                      <>
+                        <path
+                          className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                          d={taughtData.d}
+                        />
+                        <path
+                          className="letter-card__hero-ink"
+                          d={taughtData.d}
+                          mask={`url(#${maskId})`}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <text
+                          className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                          x={STROKE_GUIDE_X}
+                          y={STROKE_GUIDE_Y}
+                          textAnchor="middle"
+                          lang="sa"
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
+                          style={{ fontFamily: watchFontFamily }}
+                        >
+                          {glyph}
+                        </text>
+                        <text
+                          className="letter-card__hero-ink"
+                          x={STROKE_GUIDE_X}
+                          y={STROKE_GUIDE_Y}
+                          textAnchor="middle"
+                          lang="sa"
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
+                          style={{ fontFamily: watchFontFamily }}
+                          mask={`url(#${maskId})`}
+                        >
+                          {glyph}
+                        </text>
+                      </>
+                    )}
+                    {/* Fills in on top of the stroke reveal — no opacity dip / blink */}
+                    <text
+                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                      x={STROKE_GUIDE_X}
+                      y={STROKE_GUIDE_Y}
+                      textAnchor="middle"
+                      lang="sa"
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
+                      style={{ fontFamily: scriptStack }}
+                    >
+                      {glyph}
+                    </text>
+                  </svg>
+                ) : (
+                  <svg
+                    key={`hero-${introKey}`}
+                    className={`letter-card__hero-reveal ${heroMotionClass}`}
+                    viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
+                    role="img"
+                    aria-label={letter.iast}
+                  >
+                    <text
+                      className="letter-card__hero-final is-visible"
+                      x={STROKE_GUIDE_X}
+                      y={STROKE_GUIDE_Y}
+                      textAnchor="middle"
+                      lang="sa"
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
+                      style={{ fontFamily: scriptStack }}
+                    >
+                      {glyph}
+                    </text>
+                  </svg>
+                )}
               </div>
 
               <button
@@ -227,7 +447,7 @@ export function LetterCard({
                       <span className={glyphClass} lang="sa">
                         {glyphForTrack(s, track)}
                       </span>
-                      <span>{s.iast}</span>
+                      <span className="letter-card__similar-iast">{s.iast}</span>
                     </button>
                   ))}
                 </div>

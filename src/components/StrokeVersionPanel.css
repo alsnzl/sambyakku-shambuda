@@ -3,7 +3,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2%, transparent);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .stroke-version__toggle {
@@ -21,6 +21,19 @@
   font-weight: 700;
   text-align: left;
   cursor: pointer;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.stroke-version__toggle.motion-press:not(:disabled):hover,
+.stroke-version__toggle.motion-press:not(:disabled):active,
+.stroke-version__toggle.motion-press:not(:disabled):focus-visible {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
 }
 
 .stroke-version__body {

@@ -180,15 +180,15 @@
 }
 
 .teach__nav-slide--next {
-  animation: letter-hero-slide-next 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-slide-next var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .teach__nav-slide--prev {
-  animation: letter-hero-slide-prev 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-slide-prev var(--motion-slow, 0.4s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 .teach__nav-slide--pop {
-  animation: letter-hero-slide-next 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: letter-hero-slide-next var(--motion-base, 0.28s) var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
 @keyframes teach-nav-fade {
@@ -457,7 +457,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--ink) 2.5%, var(--surface));
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 
@@ -548,7 +548,7 @@
   background: var(--teal-wash);
   border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--ink-soft);
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
 }
 

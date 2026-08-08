@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getLetterGroups, type Letter } from '../data/letters'
 import { MotionPage } from '../components/MotionPage'
 import { HangulHintPanel } from '../components/HangulHintPanel'
@@ -7,9 +7,11 @@ import { TeachSyncStatusBar } from '../components/TeachSyncStatusBar'
 import { TheoryTipPanel } from '../components/TheoryTipPanel'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
-import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import { getActiveScriptFontStack, getScriptFontChoice } from '../lib/customScriptFonts'
 import { getEffectiveHangulHint } from '../lib/hangulHintsStore'
 import { glyphForTrack } from '../lib/scriptDisplay'
+import { getCloudTaughtEntry, refreshCloudStore } from '../lib/strokeCloud'
+import { listTodayStrokeRecords } from '../lib/todayStrokeSession'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptFontQuickBar } from '../components/ScriptFontQuickBar'
@@ -32,15 +34,46 @@ export function TeachPage({ onBack }: Props) {
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
   const [hangulEpoch, setHangulEpoch] = useState(0)
   const [syncEpoch, setSyncEpoch] = useState(0)
+  const [chartCloudEpoch, setChartCloudEpoch] = useState(0)
   const fontEpoch = useScriptFontEpoch()
 
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
+  const script = isSanskrit ? 'deva' : 'siddham'
+  const chartFontFace = getScriptFontChoice(script)
   const charClass = isSanskrit
     ? 'learn__tile-char learn__tile-char--deva'
     : 'learn__tile-char learn__tile-char--siddham'
   const heroClass = isSanskrit ? 'teach-page__glyph--deva' : 'teach-page__glyph--siddham'
-  const scriptStack = getActiveScriptFontStack(isSanskrit ? 'deva' : 'siddham')
+  const scriptStack = getActiveScriptFontStack(script)
+
+  useEffect(() => {
+    if (view !== 'chart') return
+    let cancelled = false
+    void refreshCloudStore({ maxAgeMs: 20_000 })
+      .catch(() => null)
+      .finally(() => {
+        if (!cancelled) setChartCloudEpoch((n) => n + 1)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [view, track, fontEpoch, syncEpoch])
+
+  const failedCloudLetterIds = useMemo(() => {
+    void chartCloudEpoch
+    const ids = new Set<string>()
+    for (const record of listTodayStrokeRecords()) {
+      if (
+        record.script === script &&
+        record.fontFace === chartFontFace &&
+        record.upload === 'failed'
+      ) {
+        ids.add(record.letterId)
+      }
+    }
+    return ids
+  }, [script, chartFontFace, chartCloudEpoch, syncEpoch])
 
   function pickTrack(next: ScriptTrack) {
     setTrack(next)
@@ -206,6 +239,20 @@ export function TeachPage({ onBack }: Props) {
           <p className="learn__intro teach-page__intro">
             기록할 글자를 고르세요. 그린 획은 따라 쓰기 연습에 쓰입니다.
           </p>
+          <p className="teach-page__sync-legend" aria-hidden="true">
+            <span className="teach-page__sync-legend-item">
+              <span className="teach-page__sync-dot is-synced" />
+              저장됨
+            </span>
+            <span className="teach-page__sync-legend-item">
+              <span className="teach-page__sync-dot is-empty" />
+              미저장
+            </span>
+            <span className="teach-page__sync-legend-item">
+              <span className="teach-page__sync-dot is-error" />
+              오류
+            </span>
+          </p>
           <TodayStrokeResults
             track={track}
             epoch={syncEpoch}
@@ -230,25 +277,47 @@ export function TeachPage({ onBack }: Props) {
                   </span>
                 </div>
                 <ul
-                  key={`teach-chart-${fontEpoch}`}
+                  key={`teach-chart-${fontEpoch}-${chartCloudEpoch}-${chartFontFace}`}
                   className="learn__grid learn__grid--chart motion-stagger"
                 >
-                  {group.letters.map((item) => (
-                    <li key={item.id} className="learn__cell">
-                      <button
-                        type="button"
-                        className="learn__tile learn__tile--compact motion-press"
-                        onClick={() => openLetter(item)}
-                      >
-                        <span className="learn__tile-glyph" aria-hidden="true">
-                          <span className={charClass} lang="sa" style={{ fontFamily: scriptStack }}>
-                            {glyphForTrack(item, track)}
+                  {group.letters.map((item) => {
+                    const hasError = failedCloudLetterIds.has(item.id)
+                    const synced = Boolean(
+                      getCloudTaughtEntry(item.id, script, chartFontFace),
+                    )
+                    const syncState = hasError ? 'error' : synced ? 'synced' : 'empty'
+                    const syncLabel =
+                      syncState === 'error'
+                        ? '업로드 오류'
+                        : syncState === 'synced'
+                          ? '클라우드 저장됨'
+                          : '클라우드 미저장'
+                    return (
+                      <li key={item.id} className="learn__cell">
+                        <button
+                          type="button"
+                          className="learn__tile learn__tile--compact learn__tile--teach-sync motion-press"
+                          onClick={() => openLetter(item)}
+                          aria-label={`${item.iast}, ${syncLabel}`}
+                        >
+                          <span
+                            className={`teach-page__sync-dot is-${syncState}`}
+                            aria-hidden="true"
+                          />
+                          <span className="learn__tile-glyph" aria-hidden="true">
+                            <span
+                              className={charClass}
+                              lang="sa"
+                              style={{ fontFamily: scriptStack }}
+                            >
+                              {glyphForTrack(item, track)}
+                            </span>
                           </span>
-                        </span>
-                        <span className="learn__tile-iast">{item.iast}</span>
-                      </button>
-                    </li>
-                  ))}
+                          <span className="learn__tile-iast">{item.iast}</span>
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               </section>
             ))}

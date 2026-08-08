@@ -63,25 +63,32 @@
 
 .learn__group-hero-panel {
   text-align: center;
+}
+
+.learn__group-hero-panel--next,
+.learn__group-hero-panel--prev,
+.learn__group-hero-panel--pop {
   will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .learn__group-hero-panel--next {
-  animation: learn-group-hero-next 520ms var(--motion-ease-out) both;
+  animation: learn-group-hero-next var(--motion-slow, 400ms) var(--motion-ease-out) both;
 }
 
 .learn__group-hero-panel--prev {
-  animation: learn-group-hero-prev 520ms var(--motion-ease-out) both;
+  animation: learn-group-hero-prev var(--motion-slow, 400ms) var(--motion-ease-out) both;
 }
 
 .learn__group-hero-panel--pop {
-  animation: learn-group-hero-pop 360ms var(--motion-soft) both;
+  animation: learn-group-hero-pop var(--motion-base, 280ms) var(--motion-soft) both;
 }
 
 @keyframes learn-group-hero-next {
   from {
     opacity: 0;
-    transform: translate3d(22%, 0, 0);
+    transform: translate3d(14%, 0, 0);
   }
   to {
     opacity: 1;
@@ -92,7 +99,7 @@
 @keyframes learn-group-hero-prev {
   from {
     opacity: 0;
-    transform: translate3d(-22%, 0, 0);
+    transform: translate3d(-14%, 0, 0);
   }
   to {
     opacity: 1;
@@ -114,7 +121,7 @@
 }
 
 .learn__group-tiles-fade {
-  animation: learn-group-tiles-fade 600ms var(--motion-soft) both;
+  animation: learn-group-tiles-fade var(--motion-base, 280ms) var(--motion-soft) both;
 }
 
 @keyframes learn-group-tiles-fade {
@@ -173,7 +180,10 @@
       var(--block-bg) 52%
     );
   box-shadow: var(--block-shadow);
-  overflow: hidden;
+  /* prev/next nav buttons need room for their press glow; the inner
+     viewport below still clips the sliding glyph panel on its own. */
+  overflow: visible;
+  isolation: isolate;
 }
 
 .learn__group-kicker {
@@ -362,7 +372,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -417,6 +427,9 @@
   overflow: hidden;
   isolation: isolate;
   box-shadow: 0 4px 12px var(--shadow);
+  /* Long 글자표: skip offscreen paint work while scrolling */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 6.2rem;
 }
 
 .learn__tile {
@@ -489,6 +502,7 @@
 
 .learn__tile-iast {
   flex-shrink: 0;
+  font-family: var(--iast);
   font-size: calc(clamp(0.82rem, 3.4vw, 0.92rem) * var(--glyph-scale));
   font-weight: 600;
   color: var(--muted);
@@ -551,6 +565,8 @@
 
 .learn__sheet-panel--slide {
   will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .learn__sheet-panel {
