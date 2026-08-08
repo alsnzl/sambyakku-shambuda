@@ -24,15 +24,11 @@ import {
 import { glyphHasCombiningMarks } from '../lib/complexScriptGlyph'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { refreshCloudStore } from '../lib/strokeCloud'
-import {
-  STROKE_GUIDE_FONT_SIZE,
-  STROKE_GUIDE_X,
-  STROKE_GUIDE_Y,
-} from '../lib/strokeGuideLayout'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
 import { getTaughtGlyphStrokes, getTeachingInfo } from '../lib/strokeRecord'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
+import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
 import { WritePractice } from './WritePractice'
 import { TheoryTipPanel } from './TheoryTipPanel'
 import './LetterCard.css'
@@ -301,95 +297,74 @@ export function LetterCard({
               </button>
 
               <div className="letter-card__hero-frame">
-                {needsStrokeIntro && taughtData?.strokes.length ? (
-                  <svg
-                    key={`hero-intro-${introKey}`}
-                    className={`letter-card__hero-reveal ${heroMotionClass}`}
-                    viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-                    role="img"
-                    aria-label={letter.iast}
-                  >
-                    <defs>
-                      <mask id={maskId} maskUnits="userSpaceOnUse">
-                        <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
-                        {taughtData.strokes.map((s, i) => (
-                          <path
-                            key={`${letter.id}-intro-${i}`}
-                            ref={(el) => {
-                              revealRefs.current[i] = el
-                            }}
-                            d={s.d}
-                            stroke="white"
-                            strokeWidth={s.width}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                          />
-                        ))}
-                      </mask>
-                    </defs>
-                    {usePathGuide ? (
-                      <>
-                        <path
-                          className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
-                          d={taughtData.d}
-                        />
-                        <path
-                          className="letter-card__hero-ink"
-                          d={taughtData.d}
-                          mask={`url(#${maskId})`}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <text
-                          className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
-                          x={STROKE_GUIDE_X}
-                          y={STROKE_GUIDE_Y}
-                          textAnchor="middle"
-                          lang="sa"
-                          fontSize={STROKE_GUIDE_FONT_SIZE}
-                          style={{ fontFamily: watchFontFamily }}
-                        >
-                          {glyph}
-                        </text>
-                        <text
-                          className="letter-card__hero-ink"
-                          x={STROKE_GUIDE_X}
-                          y={STROKE_GUIDE_Y}
-                          textAnchor="middle"
-                          lang="sa"
-                          fontSize={STROKE_GUIDE_FONT_SIZE}
-                          style={{ fontFamily: watchFontFamily }}
-                          mask={`url(#${maskId})`}
-                        >
-                          {glyph}
-                        </text>
-                      </>
-                    )}
-                  </svg>
-                ) : null}
                 {/*
-                  HTML glyph: iOS WebKit shapes Indic combining marks correctly here,
-                  unlike SVG <text> which paints orphan U+25CC dotted circles.
+                  Keep the final glyph inside the same SVG viewBox as the stroke
+                  reveal (fontSize 158 / 240) so size never drifts. Combining marks
+                  use foreignObject via ScriptCanvasGlyph for iOS shaping.
                 */}
-                <div
-                  key={`hero-glyph-${introKey}`}
-                  className={[
-                    'letter-card__hero-glyph',
-                    `letter-card__hero-glyph--${script}`,
-                    needsStrokeIntro ? '' : `letter-card__hero-reveal ${heroMotionClass}`,
-                    !needsStrokeIntro || introDone ? 'is-visible' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  style={{ fontFamily: scriptStack }}
+                <svg
+                  key={`hero-${introKey}`}
+                  className={`letter-card__hero-reveal ${heroMotionClass}`}
+                  viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
                   role="img"
                   aria-label={letter.iast}
-                  lang="sa"
                 >
-                  {glyph}
-                </div>
+                  {needsStrokeIntro && taughtData?.strokes.length ? (
+                    <>
+                      <defs>
+                        <mask id={maskId} maskUnits="userSpaceOnUse">
+                          <rect width={STROKE_VIEWBOX} height={STROKE_VIEWBOX} fill="black" />
+                          {taughtData.strokes.map((s, i) => (
+                            <path
+                              key={`${letter.id}-intro-${i}`}
+                              ref={(el) => {
+                                revealRefs.current[i] = el
+                              }}
+                              d={s.d}
+                              stroke="white"
+                              strokeWidth={s.width}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              fill="none"
+                            />
+                          ))}
+                        </mask>
+                      </defs>
+                      {usePathGuide ? (
+                        <>
+                          <path
+                            className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                            d={taughtData.d}
+                          />
+                          <path
+                            className="letter-card__hero-ink"
+                            d={taughtData.d}
+                            mask={`url(#${maskId})`}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <ScriptCanvasGlyph
+                            className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                            glyph={glyph}
+                            fontFamily={watchFontFamily}
+                          />
+                          <ScriptCanvasGlyph
+                            className="letter-card__hero-ink"
+                            glyph={glyph}
+                            fontFamily={watchFontFamily}
+                            mask={`url(#${maskId})`}
+                          />
+                        </>
+                      )}
+                    </>
+                  ) : null}
+                  <ScriptCanvasGlyph
+                    className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                    glyph={glyph}
+                    fontFamily={scriptStack}
+                  />
+                </svg>
               </div>
 
               <button
