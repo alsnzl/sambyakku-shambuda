@@ -48,6 +48,30 @@ export type StrokePlaybackOptions = {
 }
 
 /**
+ * Freeze ink at a stroke index (inclusive): strokes ≤ step are fully visible,
+ * later strokes stay hidden. Tip is hidden (completed-stroke pose).
+ */
+export function applyStrokeRevealAtStep(
+  paths: SVGPathElement[],
+  stepIndex: number,
+  tip: SVGCircleElement | null = null,
+): void {
+  const strokeCount = paths.length
+  if (strokeCount === 0) return
+
+  const step = Math.max(0, Math.min(strokeCount - 1, stepIndex))
+
+  paths.forEach((el, i) => {
+    const raw = el.getTotalLength()
+    const length = raw > 0.5 ? raw : 1
+    el.style.strokeDasharray = `${length}`
+    el.style.strokeDashoffset = i <= step ? '0' : `${length}`
+  })
+
+  if (tip) tip.style.opacity = '0'
+}
+
+/**
  * Starts rAF reveal. Returns cancel().
  * Progress is wall-clock based (smooth at 60 / 90 / 120 Hz).
  */

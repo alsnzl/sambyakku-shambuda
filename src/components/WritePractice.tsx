@@ -53,10 +53,12 @@ import {
   STROKE_PLAY_LIFT_MS,
   STROKE_PLAY_MIN_MS,
   STROKE_PLAY_SPEED,
+  applyStrokeRevealAtStep,
   startStrokeRevealPlayback,
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
+import { StrokeOrderTrack } from './StrokeOrderTrack'
 import './WritePractice.css'
 
 type Props = {
@@ -69,6 +71,7 @@ type Props = {
 }
 
 type PracticeMode = 'trace' | 'watch'
+type WatchMode = 'playing' | 'scrub'
 
 export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = false }: Props) {
   const fontEpoch = useScriptFontEpoch()
@@ -97,6 +100,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const traceFontKey = `${fontEpoch}-${fontFamily}`
 
   const [mode, setMode] = useState<PracticeMode>('trace')
+  const [watchMode, setWatchMode] = useState<WatchMode>('playing')
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
@@ -152,6 +156,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   useEffect(() => {
     setMode('trace')
     setWatchBlocked(false)
+    setWatchMode('playing')
     resetTrace()
   }, [letterId, script, resetTrace])
 
@@ -159,6 +164,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   useEffect(() => {
     setMode('trace')
     setWatchBlocked(false)
+    setWatchMode('playing')
     resetTrace()
   }, [fontEpoch, resetTrace])
 
@@ -180,9 +186,32 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
     }
   }, [fontSlot, recordedFontChoice, letterId])
 
-  /** Watch animation — taught strokes only; don't restart when activeStep updates */
+  const seekWatchTo = useCallback(
+    (index: number) => {
+      if (!taughtData?.strokes.length) return
+      const strokeCount = taughtData.strokes.length
+      const step = Math.max(0, Math.min(strokeCount - 1, index))
+
+      setWatchMode('scrub')
+      setActiveStep(step)
+      setWatchDone(step === strokeCount - 1)
+
+      const apply = () => {
+        const paths = revealRefs.current.slice(0, strokeCount)
+        if (paths.some((el) => !el) || paths.length < strokeCount) {
+          requestAnimationFrame(apply)
+          return
+        }
+        applyStrokeRevealAtStep(paths as SVGPathElement[], step, tipRef.current)
+      }
+      requestAnimationFrame(apply)
+    },
+    [taughtData?.strokes.length],
+  )
+
+  /** Watch animation — taught strokes only; scrub freezes via seekWatchTo */
   useEffect(() => {
-    if (mode !== 'watch' || !taughtData?.strokes.length) return
+    if (mode !== 'watch' || watchMode !== 'playing' || !taughtData?.strokes.length) return
 
     let cancelled = false
     let raf = 0
@@ -221,7 +250,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
       cancelAnimationFrame(raf)
       stopPlayback?.()
     }
-  }, [mode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d, watchPlaySpeed])
+  }, [mode, watchMode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d, watchPlaySpeed])
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !glyph) return
@@ -349,6 +378,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     return
                   }
                   setWatchBlocked(false)
+                  setWatchMode('playing')
                   setMode('watch')
                   setPlayId((n) => n + 1)
                 }}
@@ -362,7 +392,10 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
               disabled={mode === 'watch' && !canWatchStrokes}
               onClick={() => {
                 if (mode === 'trace') resetTrace()
-                else setPlayId((n) => n + 1)
+                else {
+                  setWatchMode('playing')
+                  setPlayId((n) => n + 1)
+                }
               }}
             >
               다시
@@ -495,8 +528,14 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                   )}
                   <StrokeArrowLayer
                     strokes={taughtData.strokes}
-                    revealCount={watchDone ? taughtData.strokes.length : Math.max(activeStep + 1, 1)}
-                    emphasizeLatest={!watchDone}
+                    revealCount={
+                      watchMode === 'scrub'
+                        ? activeStep + 1
+                        : watchDone
+                          ? taughtData.strokes.length
+                          : Math.max(activeStep + 1, 1)
+                    }
+                    emphasizeLatest={watchMode === 'scrub' ? true : !watchDone}
                   />
                   <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />
                 </>
@@ -594,24 +633,71 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
           ) : null}
 
           {mode === 'watch' && !watchBlocked && taughtData ? (
-            <label className="write__speed">
-              <span className="write__speed-label">
-                속도 <strong>{watchPlaySpeed.toFixed(1)}×</strong>
-              </span>
-              <input
-                className="write__speed-range"
-                type="range"
-                min={WATCH_PLAY_SPEED_MIN}
-                max={WATCH_PLAY_SPEED_MAX}
-                step={WATCH_PLAY_SPEED_STEP}
-                value={watchPlaySpeed}
-                aria-label="획 재생 속도"
-                onChange={(e) => {
-                  const next = setWatchPlaySpeed(Number(e.target.value))
-                  setWatchPlaySpeedState(next)
-                }}
-              />
-            </label>
+            <>
+              <div className="write__scrub" aria-label="획 탐색">
+                <StrokeOrderTrack
+                  className="write__scrub-order"
+                  label="획 번호"
+                  onSelect={seekWatchTo}
+                  steps={taughtData.strokes.map((_, i) => {
+                    const playingDone = watchMode === 'playing' && watchDone
+                    return {
+                      done: playingDone || i < activeStep,
+                      current: !playingDone && i === Math.min(activeStep, taughtData.strokes.length - 1),
+                    }
+                  })}
+                />
+                <div className="write__scrub-nav" role="group" aria-label="획 이동">
+                  <button
+                    type="button"
+                    className="write__scrub-btn motion-press"
+                    disabled={
+                      taughtData.strokes.length <= 1 ||
+                      Math.min(activeStep, taughtData.strokes.length - 1) <= 0
+                    }
+                    onClick={() => {
+                      const cur = Math.min(activeStep, taughtData.strokes.length - 1)
+                      seekWatchTo(cur - 1)
+                    }}
+                  >
+                    이전
+                  </button>
+                  <button
+                    type="button"
+                    className="write__scrub-btn motion-press"
+                    disabled={
+                      taughtData.strokes.length <= 1 ||
+                      Math.min(activeStep, taughtData.strokes.length - 1) >=
+                        taughtData.strokes.length - 1
+                    }
+                    onClick={() => {
+                      const cur = Math.min(activeStep, taughtData.strokes.length - 1)
+                      seekWatchTo(cur + 1)
+                    }}
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+              <label className="write__speed">
+                <span className="write__speed-label">
+                  속도 <strong>{watchPlaySpeed.toFixed(1)}×</strong>
+                </span>
+                <input
+                  className="write__speed-range"
+                  type="range"
+                  min={WATCH_PLAY_SPEED_MIN}
+                  max={WATCH_PLAY_SPEED_MAX}
+                  step={WATCH_PLAY_SPEED_STEP}
+                  value={watchPlaySpeed}
+                  aria-label="획 재생 속도"
+                  onChange={(e) => {
+                    const next = setWatchPlaySpeed(Number(e.target.value))
+                    setWatchPlaySpeedState(next)
+                  }}
+                />
+              </label>
+            </>
           ) : null}
 
           {mode === 'watch' && !watchBlocked && !taughtData ? (

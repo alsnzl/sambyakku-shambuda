@@ -128,6 +128,41 @@
   cursor: not-allowed;
 }
 
+.write__scrub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+}
+
+.write__scrub-order {
+  width: 100%;
+}
+
+.write__scrub-nav {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.write__scrub-btn {
+  appearance: none;
+  flex: 1 1 0;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  border-radius: var(--radius-capsule);
+  min-height: 2.2rem;
+  padding: 0.3rem 0.75rem;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.write__scrub-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 .write__speed {
   display: flex;
   align-items: center;
