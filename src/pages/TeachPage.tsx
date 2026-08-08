@@ -13,6 +13,8 @@ import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptFontQuickBar } from '../components/ScriptFontQuickBar'
+import { TodayStrokeResults } from '../components/TodayStrokeResults'
+import { getLetterById } from '../data/letters'
 import './Learn.css'
 import './TeachPage.css'
 
@@ -50,6 +52,11 @@ export function TeachPage({ onBack }: Props) {
     setLetter(item)
     setSlide('pop')
     setView('letter')
+  }
+
+  function openLetterById(letterId: string) {
+    const item = getLetterById(letterId)
+    if (item) openLetter(item)
   }
 
   function backFromLetter() {
@@ -199,6 +206,11 @@ export function TeachPage({ onBack }: Props) {
           <p className="learn__intro teach-page__intro">
             기록할 글자를 고르세요. 그린 획은 따라 쓰기 연습에 쓰입니다.
           </p>
+          <TodayStrokeResults
+            track={track}
+            epoch={syncEpoch}
+            onOpenLetter={openLetterById}
+          />
 
           <div className="learn__chart">
             {groups.map((group, index) => (

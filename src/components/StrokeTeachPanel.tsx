@@ -48,6 +48,7 @@ import {
   setPressureSens,
 } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
+import { recordTodayStrokeAttempt } from '../lib/todayStrokeSession'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
 import { FoldChevron } from './FoldChevron'
@@ -569,6 +570,14 @@ export function StrokeTeachPanel({
         : `맞춤 ${coverage.score}점(주의)`
 
     if (!hasCloudWriteToken()) {
+      recordTodayStrokeAttempt({
+        script,
+        letterId,
+        fontFace: face,
+        fontLabel: faceLabel,
+        strokeCount: count,
+        upload: 'local-only',
+      })
       setFlash(
         `${count}획 · ${faceLabel} · ${coverageNote} · 이 기기에만 저장 (설정에서 토큰을 저장하세요)`,
       )
@@ -590,12 +599,29 @@ export function StrokeTeachPanel({
       setLabelDrafts(buildLabelDrafts(data.strokes))
       setGuideTip(tip)
       setCloudPhase('idle')
+      recordTodayStrokeAttempt({
+        script,
+        letterId,
+        fontFace: face,
+        fontLabel: faceLabel,
+        strokeCount: count,
+        upload: 'success',
+      })
       setFlash(`${count}획 · ${faceLabel} · ${coverageNote} · 클라우드 저장 완료`)
       onSyncChange?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setCloudPhase('error')
       setCloudError(msg)
+      recordTodayStrokeAttempt({
+        script,
+        letterId,
+        fontFace: face,
+        fontLabel: faceLabel,
+        strokeCount: count,
+        upload: 'failed',
+        error: msg,
+      })
       setFlash(`클라우드 저장 실패 · 기기에만 보관됨 — ${msg}`)
       refresh()
       onSyncChange?.()
