@@ -38,7 +38,7 @@ export function StrokeArrowLayer({
               className="stroke-arrow__dot"
               cx={g.label.x}
               cy={g.label.y}
-              r={5.4}
+              r={isLatest ? 6.6 : 5.6}
             />
             <text
               className="stroke-arrow__num"

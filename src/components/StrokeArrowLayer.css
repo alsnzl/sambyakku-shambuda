@@ -20,34 +20,46 @@
 .stroke-arrow__dot {
   fill: color-mix(in srgb, var(--surface) 94%, white);
   stroke: color-mix(in srgb, var(--accent) 72%, #1a2330);
-  stroke-width: 1.15;
+  stroke-width: 1.35;
 }
 
 .stroke-arrow__num {
-  fill: color-mix(in srgb, var(--accent) 88%, #1a2330);
-  font-size: 7px;
-  font-weight: 700;
+  fill: color-mix(in srgb, var(--accent) 92%, #1a2330);
+  font-size: 8.5px;
+  font-weight: 800;
   font-family: var(--sans);
 }
 
 .stroke-arrow.is-past .stroke-arrow__shaft {
-  opacity: 0.55;
+  opacity: 0.42;
 }
 
 .stroke-arrow.is-past .stroke-arrow__head {
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .stroke-arrow.is-past .stroke-arrow__dot,
 .stroke-arrow.is-past .stroke-arrow__num {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .stroke-arrow.is-latest .stroke-arrow__shaft {
-  stroke-width: 2.35;
+  stroke-width: 2.55;
   opacity: 1;
 }
 
 .stroke-arrow.is-latest .stroke-arrow__head {
   opacity: 1;
+}
+
+.stroke-arrow.is-latest .stroke-arrow__dot {
+  r: 6.4;
+  stroke-width: 1.6;
+  fill: var(--accent);
+  stroke: color-mix(in srgb, var(--accent) 40%, #1a2330);
+}
+
+.stroke-arrow.is-latest .stroke-arrow__num {
+  fill: var(--on-accent);
+  font-size: 9px;
 }

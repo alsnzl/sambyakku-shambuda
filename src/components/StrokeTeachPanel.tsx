@@ -19,7 +19,6 @@ import {
 import {
   clearUserStrokes,
   DEFAULT_TEACH_GUIDE_TIP,
-  defaultLabels,
   getTeachingInfo,
   saveUserStrokes,
 } from '../lib/strokeRecord'
@@ -49,6 +48,7 @@ import {
 } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
+import { StrokeOrderTrack } from './StrokeOrderTrack'
 import { recordTodayStrokeAttempt } from '../lib/todayStrokeSession'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
@@ -130,7 +130,6 @@ export function StrokeTeachPanel({
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const fontSlot = script
   const generated = getGlyphStrokes(letterId, script)
-  const labels = defaultLabels(letterId, track)
   const inkWidth = FREEHAND_INK_WIDTH
   const fontChoice = getScriptFontChoice(fontSlot)
   const fontFamily = getActiveScriptFontStack(fontSlot)
@@ -168,7 +167,6 @@ export function StrokeTeachPanel({
   const [saveAckLow, setSaveAckLow] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const brush = 'pen' as const
-  const [labelDrafts, setLabelDrafts] = useState<string[]>(() => [...labels])
   const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
 
   /**
@@ -227,16 +225,6 @@ export function StrokeTeachPanel({
     return true
   }
 
-  function buildLabelDrafts(strokes?: GlyphStroke[]): string[] {
-    const fromStrokes = strokes?.map((s) => s.label) ?? []
-    const base = defaultLabels(letterId, track)
-    const count = Math.max(base.length, fromStrokes.length, 1)
-    return Array.from({ length: count }, (_, i) => {
-      const raw = fromStrokes[i]?.trim() || base[i]?.trim()
-      return raw || `획 ${i + 1}`
-    })
-  }
-
   useEffect(() => {
     setRecorded([])
     setRedoStack([])
@@ -252,7 +240,6 @@ export function StrokeTeachPanel({
     setScrollLock(false)
     pointsRef.current = []
     const nextInfo = getTeachingInfo(letterId, script)
-    setLabelDrafts(buildLabelDrafts(nextInfo.data?.strokes))
     setGuideTip(nextInfo.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
   }, [letterId, script, track])
 
@@ -273,7 +260,6 @@ export function StrokeTeachPanel({
     setWatchDone(false)
     setActiveStep(0)
     const next = getTeachingInfo(letterId, script)
-    setLabelDrafts(buildLabelDrafts(next.data?.strokes))
     setGuideTip(next.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
     refresh()
     if (next.strokeCount > 0) {
@@ -311,10 +297,9 @@ export function StrokeTeachPanel({
           setCloudPhase('idle')
           setCloudError(null)
           refresh()
-          // Prefer cloud labels/note once pull finishes (canvas still empty).
+          // Prefer cloud note once pull finishes (canvas still empty).
           if (recordedCountRef.current === 0) {
             const next = getTeachingInfo(letterId, script)
-            setLabelDrafts(buildLabelDrafts(next.data?.strokes))
             setGuideTip(next.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
           }
         }
@@ -422,7 +407,7 @@ export function StrokeTeachPanel({
     const index = recorded.length
     const stroke = commitFreehandStroke(
       pointsRef.current,
-      labelDrafts[index]?.trim() || labels[index] || `획 ${index + 1}`,
+      String(index + 1),
       inkWidth,
       pressureSens,
     )
@@ -468,35 +453,6 @@ export function StrokeTeachPanel({
     setFlash(null)
   }
 
-  function renameStroke(index: number, label: string) {
-    setLabelDrafts((drafts) => {
-      const next = [...drafts]
-      while (next.length <= index) next.push(`획 ${next.length + 1}`)
-      next[index] = label
-      return next
-    })
-    setRecorded((rs) => rs.map((s, i) => (i === index ? { ...s, label } : s)))
-    setSaveAckLow(false)
-  }
-
-  function commitStrokeLabel(index: number) {
-    const fallback = labels[index] || `획 ${index + 1}`
-    setLabelDrafts((drafts) => {
-      const next = [...drafts]
-      while (next.length <= index) next.push(fallback)
-      const trimmed = next[index]?.trim()
-      next[index] = trimmed || fallback
-      return next
-    })
-    setRecorded((rs) =>
-      rs.map((s, i) => {
-        if (i !== index) return s
-        const next = s.label.trim()
-        return { ...s, label: next || fallback }
-      }),
-    )
-  }
-
   function commitGuideTip() {
     const trimmed = guideTip.trim()
     setGuideTip(trimmed || DEFAULT_TEACH_GUIDE_TIP)
@@ -507,7 +463,6 @@ export function StrokeTeachPanel({
     if (!strokes?.length || saving) return
     exitWatch()
     setRecorded(strokes.map((s) => ({ ...s })))
-    setLabelDrafts(buildLabelDrafts(strokes))
     setGuideTip(info.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
     setRedoStack([])
     setDrawing([])
@@ -557,7 +512,7 @@ export function StrokeTeachPanel({
       d: outlineD || `M${glyphX} ${glyphY}`,
       strokes: recorded.map((s, i) => ({
         ...s,
-        label: s.label.trim() || labelDrafts[i]?.trim() || labels[i] || `획 ${i + 1}`,
+        label: String(i + 1),
       })),
     }
 
@@ -597,7 +552,6 @@ export function StrokeTeachPanel({
       setRecorded([])
       setRedoStack([])
       setDrawing([])
-      setLabelDrafts(buildLabelDrafts(data.strokes))
       setGuideTip(tip)
       setCloudPhase('idle')
       recordTodayStrokeAttempt({
@@ -670,28 +624,16 @@ export function StrokeTeachPanel({
   )
   void tick
 
-  const guideCount = Math.max(
-    labelDrafts.length,
-    labels.length,
-    mode === 'watch' ? previewStrokes.length : recorded.length + (mode === 'draw' ? 1 : 0),
-    1,
-  )
-  const guideSteps = Array.from({ length: guideCount }, (_, i) => {
-    const label =
-      labelDrafts[i] ||
-      recorded[i]?.label ||
-      previewStrokes[i]?.label ||
-      labels[i] ||
-      `획 ${i + 1}`
+  const orderCount =
+    mode === 'watch'
+      ? Math.max(previewStrokes.length, 1)
+      : Math.max(recorded.length + 1, info.strokeCount, 1)
+  const orderSteps = Array.from({ length: orderCount }, (_, i) => {
     const done =
-      mode === 'watch'
-        ? watchDone || activeStep > i
-        : i < recorded.length
+      mode === 'watch' ? watchDone || activeStep > i : i < recorded.length
     const current =
-      mode === 'watch'
-        ? !watchDone && activeStep === i
-        : i === recorded.length
-    return { label, done, current }
+      mode === 'watch' ? !watchDone && activeStep === i : i === recorded.length
+    return { done, current }
   })
 
   return (
@@ -725,7 +667,7 @@ export function StrokeTeachPanel({
               ? '재생 끝 · 화면을 누르면 다시 그릴 수 있어요'
               : `${previewStrokes.length}획 재생 중`
             : recorded.length > 0
-              ? `${recorded.length}획 · 이름을 고쳐도 돼요`
+              ? `${recorded.length}획 기록됨`
               : info.strokeCount > 0
                 ? `이 폰트 저장 ${info.strokeCount}획 · 불러오기로 수정`
                 : '이 폰트에는 아직 획이 없습니다 · 펜으로 그려 주세요'}
@@ -754,35 +696,12 @@ export function StrokeTeachPanel({
           </div>
 
           <div className="teach__guide-scroll">
-            <p className="teach__guide-title">획 가이드</p>
-            <ol className="teach__guide-steps">
-              {guideSteps.map((step, i) => (
-                <li
-                  key={`guide-${letterId}-${i}`}
-                  className={`teach__guide-step${step.done ? ' is-done' : ''}${
-                    step.current ? ' is-current' : ''
-                  }`}
-                >
-                  <span className="teach__guide-num" aria-hidden="true">
-                    {step.done ? '✓' : i + 1}
-                  </span>
-                  <div className="teach__guide-label-wrap">
-                    <input
-                      className="teach__guide-label-input"
-                      type="text"
-                      value={step.label}
-                      disabled={saving}
-                      aria-label={`${i + 1}번 획 설명`}
-                      onChange={(e) => renameStroke(i, e.target.value)}
-                      onBlur={() => commitStrokeLabel(i)}
-                    />
-                    {step.current ? (
-                      <span className="teach__guide-current-tag">그리는 중</span>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <p className="teach__guide-title">획 순서</p>
+            <StrokeOrderTrack
+              className="stroke-order--compact teach__guide-order"
+              steps={orderSteps}
+              label="획 순서"
+            />
           </div>
 
           <label className="teach__guide-tip-field">
@@ -1027,53 +946,7 @@ export function StrokeTeachPanel({
           ) : null}
 
           {glyph ? (
-            <ol className="teach__steps">
-              {mode === 'watch'
-                ? previewStrokes.map((s, i) => {
-                    const state =
-                      activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
-                    return (
-                      <li key={`teach-watch-${letterId}-${i}`} className={`teach__step ${state}`}>
-                        <span className="teach__step-num">{i + 1}</span>
-                        <span className="teach__step-label">{s.label}</span>
-                      </li>
-                    )
-                  })
-                : (
-                  <>
-                    {recorded.map((s, i) => (
-                      <li key={`teach-${letterId}-${i}`} className="teach__step is-done">
-                        <span className="teach__step-num">{i + 1}</span>
-                        <input
-                          className="teach__step-input"
-                          type="text"
-                          value={s.label}
-                          disabled={saving}
-                          aria-label={`${i + 1}번 획 이름`}
-                          onChange={(e) => renameStroke(i, e.target.value)}
-                          onBlur={() => commitStrokeLabel(i)}
-                        />
-                      </li>
-                    ))}
-                    <li className="teach__step is-active">
-                      <span className="teach__step-num">{recorded.length + 1}</span>
-                      <input
-                        className="teach__step-input"
-                        type="text"
-                        value={
-                          labelDrafts[recorded.length] ||
-                          labels[recorded.length] ||
-                          `획 ${recorded.length + 1}`
-                        }
-                        disabled={saving}
-                        aria-label={`${recorded.length + 1}번 획 이름 (그리는 중)`}
-                        onChange={(e) => renameStroke(recorded.length, e.target.value)}
-                        onBlur={() => commitStrokeLabel(recorded.length)}
-                      />
-                    </li>
-                  </>
-                )}
-            </ol>
+            <StrokeOrderTrack steps={orderSteps} label="획 순서" />
           ) : null}
 
           <div

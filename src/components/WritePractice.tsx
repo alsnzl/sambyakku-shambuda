@@ -8,7 +8,6 @@ import {
 } from '../lib/strokeGuideLayout'
 import type { GlyphStroke } from '../data/glyphStrokes'
 import {
-  defaultLabels,
   getEffectiveGlyphStrokes,
   getTaughtGlyphStrokes,
   getTeachingInfo,
@@ -58,6 +57,7 @@ import {
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
+import { StrokeOrderTrack } from './StrokeOrderTrack'
 import './WritePractice.css'
 
 type Props = {
@@ -115,10 +115,26 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
-  const steps =
-    theoryStrokes.map((s) => s.label).filter(Boolean).length > 0
-      ? theoryStrokes.map((s) => s.label)
-      : defaultLabels(letterId, track)
+  const orderCount =
+    mode === 'watch'
+      ? Math.max(taughtData?.strokes.length ?? theoryCount, 1)
+      : Math.max(
+          theoryCount,
+          drawn.length + (traceDone ? 0 : 1),
+          1,
+        )
+  const orderSteps = Array.from({ length: orderCount }, (_, i) => {
+    if (mode === 'trace') {
+      return {
+        done: i < drawn.length,
+        current: i === drawn.length && !traceDone,
+      }
+    }
+    return {
+      done: activeStep > i,
+      current: activeStep === i && !watchDone,
+    }
+  })
 
   const maskId = `${useId()}-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -273,7 +289,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
     const index = drawn.length
     const stroke = commitFreehandStroke(
       pointsRef.current,
-      steps[index] ?? `획 ${index + 1}`,
+      String(index + 1),
       inkWidth,
       pressureSens,
     )
@@ -665,7 +681,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                   {grade.perStroke.map((s) => (
                     <li key={`grade-${s.index}`} className={s.orderOk ? 'is-ok' : 'is-bad'}>
                       <span>
-                        {s.index + 1}. {s.label}
+                        {s.index + 1}번 획
                       </span>
                       <span>
                         {s.orderOk ? '순서 맞음' : `이론 ${s.bestMatchIndex + 1}번과 유사`}
@@ -694,33 +710,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
             </div>
           )}
 
-          <ol className="write__steps">
-            {(mode === 'trace'
-              ? [
-                  ...drawn.map((s) => s.label),
-                  ...(traceDone ? [] : [steps[drawn.length] ?? `획 ${drawn.length + 1}`]),
-                ]
-              : steps
-            ).map((label, i) => {
-              let state = ''
-              if (mode === 'trace') {
-                state =
-                  i < drawn.length
-                    ? 'is-done'
-                    : i === drawn.length && !traceDone
-                      ? 'is-active'
-                      : ''
-              } else {
-                state = activeStep === i ? 'is-active' : activeStep > i ? 'is-done' : ''
-              }
-              return (
-                <li key={`${letterId}-${i}-${label}`} className={`write__step ${state}`}>
-                  <span className="write__step-num">{i + 1}</span>
-                  <span className="write__step-label">{label}</span>
-                </li>
-              )
-            })}
-          </ol>
+          <StrokeOrderTrack steps={orderSteps} label="획 순서" />
         </div>
       </div>
     </section>
