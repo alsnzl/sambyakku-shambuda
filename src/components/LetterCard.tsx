@@ -21,7 +21,6 @@ import {
   markLetterSeen,
   toggleFavorite,
 } from '../lib/learnerStore'
-import { glyphHasCombiningMarks } from '../lib/complexScriptGlyph'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { refreshCloudStore } from '../lib/strokeCloud'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
@@ -118,15 +117,8 @@ export function LetterCard({
     Boolean(taughtData?.d) &&
     !recordedFontChoice &&
     matchesGeneratedOutlineFont(script, getScriptFontChoice(script))
-  /*
-   * iOS WebKit draws U+25CC dotted circles for combining marks inside SVG <text>.
-   * Skip SVG-text stroke intros for those glyphs; path outlines stay fine.
-   */
-  const hasCombining = glyphHasCombiningMarks(glyph)
-  const needsStrokeIntro =
-    hasRecordedStrokes &&
-    !prefersReducedMotion() &&
-    (usePathGuide || !hasCombining)
+  /* Combining marks use ScriptCanvasGlyph (foreignObject) — safe to animate on iOS. */
+  const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
   const slideReady = slideReadyKey === introKey
   const heroMotionClass =
