@@ -945,10 +945,6 @@ export function StrokeTeachPanel({
             <p className="teach__message teach__message--warn">{cloudError}</p>
           ) : null}
 
-          {glyph ? (
-            <StrokeOrderTrack steps={orderSteps} label="획 순서" />
-          ) : null}
-
           <div
             ref={advancedRef}
             className={`teach__advanced ${advancedOpen ? 'is-open' : ''}`}

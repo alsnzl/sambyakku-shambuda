@@ -57,7 +57,6 @@ import {
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
-import { StrokeOrderTrack } from './StrokeOrderTrack'
 import './WritePractice.css'
 
 type Props = {
@@ -115,26 +114,6 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
 
   const theoryStrokes = canvasData?.strokes ?? []
   const theoryCount = theoryStrokes.length
-  const orderCount =
-    mode === 'watch'
-      ? Math.max(taughtData?.strokes.length ?? theoryCount, 1)
-      : Math.max(
-          theoryCount,
-          drawn.length + (traceDone ? 0 : 1),
-          1,
-        )
-  const orderSteps = Array.from({ length: orderCount }, (_, i) => {
-    if (mode === 'trace') {
-      return {
-        done: i < drawn.length,
-        current: i === drawn.length && !traceDone,
-      }
-    }
-    return {
-      done: activeStep > i,
-      current: activeStep === i && !watchDone,
-    }
-  })
 
   const maskId = `${useId()}-mask`
   const svgRef = useRef<SVGSVGElement>(null)
@@ -709,8 +688,6 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
               </button>
             </div>
           )}
-
-          <StrokeOrderTrack steps={orderSteps} label="획 순서" />
         </div>
       </div>
     </section>
