@@ -112,9 +112,9 @@ export function LetterCard({
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(script, recordedFontChoice)
     : scriptStack
-  /** Prefer taught freehand strokes (same geometry as intro animation). */
-  const useStrokeGlyph = Boolean(taughtData?.strokes.length)
-  const usePathGuide = Boolean(taughtData?.d)
+  /** Outline fitted to stroke bounds — same size/center as intro animation. */
+  const useStrokeGlyph = Boolean(taughtData?.d && taughtData.strokes.length)
+  const usePathGuide = Boolean(taughtData?.d) && !useStrokeGlyph
   const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
   const slideReady = slideReadyKey === introKey
@@ -323,10 +323,12 @@ export function LetterCard({
                         <>
                           <TaughtStrokeGlyph
                             className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
+                            d={taughtData.d}
                             strokes={taughtData.strokes}
                           />
                           <TaughtStrokeGlyph
                             className="letter-card__hero-ink"
+                            d={taughtData.d}
                             strokes={taughtData.strokes}
                             mask={`url(#${maskId})`}
                           />
@@ -363,6 +365,7 @@ export function LetterCard({
                   {useStrokeGlyph ? (
                     <TaughtStrokeGlyph
                       className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                      d={taughtData!.d}
                       strokes={taughtData!.strokes}
                     />
                   ) : usePathGuide && taughtData?.d ? (

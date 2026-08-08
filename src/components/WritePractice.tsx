@@ -89,9 +89,9 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
-  /** Prefer taught freehand strokes so guide size matches reveal animation. */
-  const useWatchStrokeGlyph = Boolean(taughtData?.strokes.length)
-  const useTraceStrokeGlyph = Boolean(taughtData?.strokes.length)
+  /** Outline fitted to stroke bounds so guide size matches reveal animation. */
+  const useWatchStrokeGlyph = Boolean(taughtData?.d && taughtData.strokes.length)
+  const useTraceStrokeGlyph = Boolean(taughtData?.d && taughtData.strokes.length)
   const useWatchPathGuide = Boolean(taughtData?.d) && !useWatchStrokeGlyph
   const useTracePathGuide = Boolean(taughtData?.d) && !useTraceStrokeGlyph
   const glyphX = STROKE_GUIDE_X
@@ -534,10 +534,12 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     <>
                       <TaughtStrokeGlyph
                         className="write__glyph-guide"
+                        d={taughtData.d}
                         strokes={taughtData.strokes}
                       />
                       <TaughtStrokeGlyph
                         className="write__glyph-ink"
+                        d={taughtData.d}
                         strokes={taughtData.strokes}
                         mask={`url(#${maskId})`}
                       />
@@ -601,10 +603,12 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     <>
                       <TaughtStrokeGlyph
                         className="write__glyph-guide"
+                        d={taughtData.d}
                         strokes={taughtData.strokes}
                       />
                       <TaughtStrokeGlyph
                         className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                        d={taughtData.d}
                         strokes={taughtData.strokes}
                         mask={`url(#${maskId}-watch)`}
                       />
