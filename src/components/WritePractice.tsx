@@ -57,6 +57,7 @@ import {
   startStrokeRevealPlayback,
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
+import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
 import './WritePractice.css'
 
 type Props = {
@@ -423,31 +424,25 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                       ))}
                     </mask>
                   </defs>
-                  <text
+                  <ScriptCanvasGlyph
                     key={`guide-${traceFontKey}`}
                     className="write__glyph-guide"
+                    glyph={glyph}
+                    fontFamily={fontFamily}
+                    fontSize={STROKE_GUIDE_FONT_SIZE}
                     x={glyphX}
                     y={glyphY}
-                    textAnchor="middle"
-                    lang="sa"
-                    fontSize={STROKE_GUIDE_FONT_SIZE}
-                    style={{ fontFamily }}
-                  >
-                    {glyph}
-                  </text>
-                  <text
+                  />
+                  <ScriptCanvasGlyph
                     key={`ink-${traceFontKey}`}
                     className="write__glyph-ink"
+                    glyph={glyph}
+                    fontFamily={fontFamily}
+                    fontSize={STROKE_GUIDE_FONT_SIZE}
                     x={glyphX}
                     y={glyphY}
-                    textAnchor="middle"
-                    lang="sa"
-                    fontSize={STROKE_GUIDE_FONT_SIZE}
-                    style={{ fontFamily }}
                     mask={`url(#${maskId})`}
-                  >
-                    {glyph}
-                  </text>
+                  />
                 </>
               ) : mode === 'watch' && taughtData ? (
                 <>
@@ -482,31 +477,25 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     </>
                   ) : (
                     <>
-                      <text
+                      <ScriptCanvasGlyph
                         key={`guide-${watchFontKey}`}
                         className="write__glyph-guide"
+                        glyph={glyph}
+                        fontFamily={watchFontFamily}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
                         x={glyphX}
                         y={glyphY}
-                        textAnchor="middle"
-                        lang="sa"
-                        fontSize={STROKE_GUIDE_FONT_SIZE}
-                        style={{ fontFamily: watchFontFamily }}
-                      >
-                        {glyph}
-                      </text>
-                      <text
+                      />
+                      <ScriptCanvasGlyph
                         key={`ink-${watchFontKey}`}
                         className={`write__glyph-ink write__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                        glyph={glyph}
+                        fontFamily={watchFontFamily}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
                         x={glyphX}
                         y={glyphY}
-                        textAnchor="middle"
-                        lang="sa"
-                        fontSize={STROKE_GUIDE_FONT_SIZE}
-                        style={{ fontFamily: watchFontFamily }}
                         mask={`url(#${maskId}-watch)`}
-                      >
-                        {glyph}
-                      </text>
+                      />
                     </>
                   )}
                   <StrokeArrowLayer
@@ -517,16 +506,14 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                   <circle ref={tipRef} className="write__tip" r={6} cx={-50} cy={-50} />
                 </>
               ) : (
-                <text
+                <ScriptCanvasGlyph
                   className="write__glyph-fallback"
+                  glyph={glyph}
+                  fontFamily={fontFamily}
+                  fontSize={STROKE_GUIDE_FONT_SIZE}
                   x={glyphX}
                   y={glyphY}
-                  textAnchor="middle"
-                  fontSize={STROKE_GUIDE_FONT_SIZE}
-                  style={{ fontFamily }}
-                >
-                  {glyph}
-                </text>
+                />
               )}
             </svg>
           </div>

@@ -48,6 +48,7 @@ import {
   setPressureSens,
 } from '../lib/prefsStore'
 import { assessTeachCoverage } from '../lib/teachCoverage'
+import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
 import { recordTodayStrokeAttempt } from '../lib/todayStrokeSession'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
@@ -855,31 +856,25 @@ export function StrokeTeachPanel({
                       </>
                     ) : (
                       <>
-                        <text
+                        <ScriptCanvasGlyph
                           key={`guide-${canvasFontKey}`}
                           className="teach__glyph-guide"
+                          glyph={glyph}
+                          fontFamily={canvasFontFamily}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
                           x={glyphX}
                           y={glyphY}
-                          textAnchor="middle"
-                          lang="sa"
-                          fontSize={STROKE_GUIDE_FONT_SIZE}
-                          style={{ fontFamily: canvasFontFamily }}
-                        >
-                          {glyph}
-                        </text>
-                        <text
+                        />
+                        <ScriptCanvasGlyph
                           key={`ink-${canvasFontKey}`}
                           className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
+                          glyph={glyph}
+                          fontFamily={canvasFontFamily}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
                           x={glyphX}
                           y={glyphY}
-                          textAnchor="middle"
-                          lang="sa"
-                          fontSize={STROKE_GUIDE_FONT_SIZE}
-                          style={{ fontFamily: canvasFontFamily }}
                           mask={`url(#${maskId}-watch)`}
-                        >
-                          {glyph}
-                        </text>
+                        />
                       </>
                     )}
                     <StrokeArrowLayer
@@ -922,31 +917,25 @@ export function StrokeTeachPanel({
                         ))}
                       </mask>
                     </defs>
-                    <text
+                    <ScriptCanvasGlyph
                       key={`guide-${canvasFontKey}`}
                       className="teach__glyph-guide"
+                      glyph={glyph}
+                      fontFamily={canvasFontFamily}
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
                       x={glyphX}
                       y={glyphY}
-                      textAnchor="middle"
-                      lang="sa"
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      style={{ fontFamily: canvasFontFamily }}
-                    >
-                      {glyph}
-                    </text>
-                    <text
+                    />
+                    <ScriptCanvasGlyph
                       key={`ink-${canvasFontKey}`}
                       className="teach__glyph-ink"
+                      glyph={glyph}
+                      fontFamily={canvasFontFamily}
+                      fontSize={STROKE_GUIDE_FONT_SIZE}
                       x={glyphX}
                       y={glyphY}
-                      textAnchor="middle"
-                      lang="sa"
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      style={{ fontFamily: canvasFontFamily }}
                       mask={`url(#${maskId})`}
-                    >
-                      {glyph}
-                    </text>
+                    />
                     <StrokeArrowLayer strokes={recorded} emphasizeLatest />
                   </>
                 )}

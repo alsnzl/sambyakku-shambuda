@@ -140,6 +140,37 @@
   touch-action: none;
 }
 
+/* HTML hero glyph — Core Text shapes combining marks; SVG <text> does not on iOS. */
+.letter-card__hero-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.12em 0.08em 0;
+  box-sizing: border-box;
+  color: var(--ink);
+  line-height: 1;
+  font-size: calc(4.85rem * var(--glyph-scale));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.letter-card__hero-glyph.is-visible {
+  opacity: 1;
+}
+
+.letter-card__hero-glyph--deva {
+  font-family: var(--deva);
+  padding-top: max(0.32em, var(--deva-matra-clearance));
+}
+
+.letter-card__hero-glyph--siddham {
+  font-family: var(--siddham);
+}
+
 .letter-card__hero-guide {
   fill: color-mix(in srgb, var(--ink) 10%, transparent);
   dominant-baseline: alphabetic;

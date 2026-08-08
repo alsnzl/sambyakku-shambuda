@@ -21,6 +21,7 @@ import {
   markLetterSeen,
   toggleFavorite,
 } from '../lib/learnerStore'
+import { glyphHasCombiningMarks } from '../lib/complexScriptGlyph'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { refreshCloudStore } from '../lib/strokeCloud'
 import {
@@ -113,9 +114,6 @@ export function LetterCard({
   void cloudTick
   const hasRecordedStrokes = Boolean(taughtData?.strokes.length)
   const introKey = `${letter.id}|${script}|${fontEpoch}|${taughtData?.d ?? ''}|${taughtData?.strokes.length ?? 0}`
-  const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
-  const introDone = !needsStrokeIntro || introDoneKey === introKey
-  const slideReady = slideReadyKey === introKey
   const recordedFontChoice = parseScriptFontChoice(script, teachInfo.fontFace)
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(script, recordedFontChoice)
@@ -124,6 +122,17 @@ export function LetterCard({
     Boolean(taughtData?.d) &&
     !recordedFontChoice &&
     matchesGeneratedOutlineFont(script, getScriptFontChoice(script))
+  /*
+   * iOS WebKit draws U+25CC dotted circles for combining marks inside SVG <text>.
+   * Skip SVG-text stroke intros for those glyphs; path outlines stay fine.
+   */
+  const hasCombining = glyphHasCombiningMarks(glyph)
+  const needsStrokeIntro =
+    hasRecordedStrokes &&
+    !prefersReducedMotion() &&
+    (usePathGuide || !hasCombining)
+  const introDone = !needsStrokeIntro || introDoneKey === introKey
+  const slideReady = slideReadyKey === introKey
   const heroMotionClass =
     navMotion === 'slide-left'
       ? 'letter-card__hero--slide-next'
@@ -358,40 +367,29 @@ export function LetterCard({
                         </text>
                       </>
                     )}
-                    {/* Fills in on top of the stroke reveal — no opacity dip / blink */}
-                    <text
-                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
-                      x={STROKE_GUIDE_X}
-                      y={STROKE_GUIDE_Y}
-                      textAnchor="middle"
-                      lang="sa"
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      style={{ fontFamily: scriptStack }}
-                    >
-                      {glyph}
-                    </text>
                   </svg>
-                ) : (
-                  <svg
-                    key={`hero-${introKey}`}
-                    className={`letter-card__hero-reveal ${heroMotionClass}`}
-                    viewBox={`0 0 ${STROKE_VIEWBOX} ${STROKE_VIEWBOX}`}
-                    role="img"
-                    aria-label={letter.iast}
-                  >
-                    <text
-                      className="letter-card__hero-final is-visible"
-                      x={STROKE_GUIDE_X}
-                      y={STROKE_GUIDE_Y}
-                      textAnchor="middle"
-                      lang="sa"
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      style={{ fontFamily: scriptStack }}
-                    >
-                      {glyph}
-                    </text>
-                  </svg>
-                )}
+                ) : null}
+                {/*
+                  HTML glyph: iOS WebKit shapes Indic combining marks correctly here,
+                  unlike SVG <text> which paints orphan U+25CC dotted circles.
+                */}
+                <div
+                  key={`hero-glyph-${introKey}`}
+                  className={[
+                    'letter-card__hero-glyph',
+                    `letter-card__hero-glyph--${script}`,
+                    needsStrokeIntro ? '' : `letter-card__hero-reveal ${heroMotionClass}`,
+                    !needsStrokeIntro || introDone ? 'is-visible' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  style={{ fontFamily: scriptStack }}
+                  role="img"
+                  aria-label={letter.iast}
+                  lang="sa"
+                >
+                  {glyph}
+                </div>
               </div>
 
               <button
