@@ -1,5 +1,8 @@
 import { STROKE_VIEWBOX } from '../data/glyphStrokes'
-import { STROKE_GUIDE_FONT_SIZE } from '../lib/strokeGuideLayout'
+import {
+  STROKE_GUIDE_FONT_SIZE,
+  STROKE_GUIDE_Y,
+} from '../lib/strokeGuideLayout'
 
 type Props = {
   className?: string
@@ -10,11 +13,12 @@ type Props = {
 
 /**
  * iOS-only: script glyph via foreignObject + HTML (avoids SVG dotted circles).
- * Vertically centered in the viewBox so aṃ / aḥ line up with taught stroke paths
- * (HTML line metrics ≠ SVG alphabetic baseline at STROKE_GUIDE_Y).
  *
- * Keep layout simple — absolute boxes / translateY often fail to paint in iOS WebKit FO.
- * Put className on the XHTML root: FO CSS color does not cascade into HTML on iOS.
+ * Place the line box so its bottom sits on STROKE_GUIDE_Y — same anchor as
+ * SVG <text y={STROKE_GUIDE_Y}>, so aṃ/aḥ stay with taught stroke paths.
+ * Avoid position:absolute / relying on flex-center alone (iOS FO often pins to top).
+ *
+ * className goes on the XHTML root (FO CSS color does not cascade on iOS).
  */
 export function SvgHtmlGlyph({
   className,
@@ -40,27 +44,40 @@ export function SvgHtmlGlyph({
           margin: 0,
           padding: 0,
           boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily,
-          fontSize: `${fontSize}px`,
-          lineHeight: 1,
-          textAlign: 'center',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
+          overflow: 'visible',
         }}
       >
-        <span
+        <div
           style={{
-            display: 'block',
+            width: '100%',
+            height: `${STROKE_GUIDE_Y}px`,
+            margin: 0,
+            padding: 0,
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            fontFamily,
+            fontSize: `${fontSize}px`,
             lineHeight: 1,
-            color: 'inherit',
-            WebkitTextFillColor: 'currentColor',
+            textAlign: 'center',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
           }}
         >
-          {glyph}
-        </span>
+          <span
+            style={{
+              display: 'block',
+              lineHeight: 1,
+              color: 'inherit',
+              WebkitTextFillColor: 'currentColor',
+              /* Noto sits high in the em box; Muktam var is 0 */
+              translate: '0 var(--siddham-optical-nudge, 0px)',
+            }}
+          >
+            {glyph}
+          </span>
+        </div>
       </div>
     </foreignObject>
   )
