@@ -7,6 +7,10 @@ import { trackMeta } from '../types/track'
 import { playLetterPronunciation } from '../lib/audio'
 import {
   getActiveScriptFontStack,
+  getScriptFontChoice,
+  getScriptFontStack,
+  matchesGeneratedOutlineFont,
+  parseScriptFontChoice,
 } from '../lib/customScriptFonts'
 import {
   getEffectiveHangulHint,
@@ -20,7 +24,7 @@ import {
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { refreshCloudStore } from '../lib/strokeCloud'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
-import { getTaughtGlyphStrokes } from '../lib/strokeRecord'
+import { getTaughtGlyphStrokes, getTeachingInfo } from '../lib/strokeRecord'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
 import { ScriptCanvasGlyph } from './ScriptCanvasGlyph'
@@ -100,11 +104,20 @@ export function LetterCard({
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
   const scriptStack = getActiveScriptFontStack(script)
+  const teachInfo = getTeachingInfo(letter.id, script)
   const taughtData = getTaughtGlyphStrokes(letter.id, script)
   void cloudTick
   const hasRecordedStrokes = Boolean(taughtData?.strokes.length)
   const introKey = `${letter.id}|${script}|${fontEpoch}|${taughtData?.d ?? ''}|${taughtData?.strokes.length ?? 0}`
-  const usePathGuide = Boolean(taughtData?.d)
+  const recordedFontChoice = parseScriptFontChoice(script, teachInfo.fontFace)
+  const watchFontFamily = recordedFontChoice
+    ? getScriptFontStack(script, recordedFontChoice)
+    : scriptStack
+  const usePathGuide =
+    Boolean(taughtData?.d) &&
+    !recordedFontChoice &&
+    matchesGeneratedOutlineFont(script, getScriptFontChoice(script))
+  /* Combining marks use ScriptCanvasGlyph (foreignObject) — safe to animate on iOS. */
   const needsStrokeIntro = hasRecordedStrokes && !prefersReducedMotion()
   const introDone = !needsStrokeIntro || introDoneKey === introKey
   const slideReady = slideReadyKey === introKey
@@ -278,8 +291,8 @@ export function LetterCard({
               <div className="letter-card__hero-frame">
                 {/*
                   Keep the final glyph inside the same SVG viewBox as the stroke
-                  reveal. Taught outline `d` uses path for guide/ink/final;
-                  foreignObject (ScriptCanvasGlyph) only when no outline.
+                  reveal (fontSize 158 / 240) so size never drifts. Combining marks
+                  use foreignObject via ScriptCanvasGlyph for iOS shaping.
                 */}
                 <svg
                   key={`hero-${introKey}`}
@@ -324,35 +337,25 @@ export function LetterCard({
                       ) : (
                         <>
                           <ScriptCanvasGlyph
-                            key={`guide-${fontEpoch}`}
                             className={`letter-card__hero-guide${introDone ? ' is-done' : ''}`}
                             glyph={glyph}
-                            fontFamily={scriptStack}
+                            fontFamily={watchFontFamily}
                           />
                           <ScriptCanvasGlyph
-                            key={`ink-${fontEpoch}`}
                             className="letter-card__hero-ink"
                             glyph={glyph}
-                            fontFamily={scriptStack}
+                            fontFamily={watchFontFamily}
                             mask={`url(#${maskId})`}
                           />
                         </>
                       )}
                     </>
                   ) : null}
-                  {usePathGuide && taughtData?.d ? (
-                    <path
-                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
-                      d={taughtData.d}
-                    />
-                  ) : (
-                    <ScriptCanvasGlyph
-                      key={`final-${fontEpoch}`}
-                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
-                      glyph={glyph}
-                      fontFamily={scriptStack}
-                    />
-                  )}
+                  <ScriptCanvasGlyph
+                    className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                    glyph={glyph}
+                    fontFamily={scriptStack}
+                  />
                 </svg>
               </div>
 

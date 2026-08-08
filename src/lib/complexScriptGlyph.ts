@@ -9,8 +9,8 @@ export function glyphHasCombiningMarks(glyph: string): boolean {
 
 /**
  * Only iPhone/iPad WebKit needs HTML foreignObject for combining marks.
- * Desktop/Android use SVG <text>. Taught path outlines are preferred for
- * stroke intro/watch when available (see LetterCard / teach / write).
+ * Desktop/Android SVG <text> positions aṃ/aḥ correctly against taught strokes;
+ * foreignObject centering was shifting those glyphs vs recorded paths.
  */
 export function needsIosHtmlCombiningGlyph(): boolean {
   if (typeof navigator === 'undefined') return false
