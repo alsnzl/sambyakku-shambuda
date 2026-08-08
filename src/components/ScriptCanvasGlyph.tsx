@@ -22,6 +22,9 @@ type Props = {
  * Canvas guide/ink glyph.
  * Combining marks use HTML foreignObject only on iOS (dotted-circle bug).
  * Elsewhere SVG <text> keeps aṃ/aḥ aligned with taught stroke paths.
+ *
+ * Mask is applied on a wrapping <g> — mask on <foreignObject> often blanks
+ * the glyph entirely in iOS WebKit (aṃ / aḥ watch/intro ink).
  */
 export function ScriptCanvasGlyph({
   className,
@@ -36,15 +39,15 @@ export function ScriptCanvasGlyph({
   const useHtml =
     !preferSvgText && glyphHasCombiningMarks(glyph) && needsIosHtmlCombiningGlyph()
   if (useHtml) {
-    return (
+    const html = (
       <SvgHtmlGlyph
         className={className}
         glyph={glyph}
         fontFamily={fontFamily}
         fontSize={fontSize}
-        mask={mask}
       />
     )
+    return mask ? <g mask={mask}>{html}</g> : html
   }
   return (
     <text
