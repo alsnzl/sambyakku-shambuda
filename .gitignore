@@ -15,6 +15,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Local learning-data safety copies (never commit)
+_backup_temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

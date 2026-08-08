@@ -1,0 +1,87 @@
+# Read-only snapshot of live cloud JSON → cloud/backups/YYYY-MM-DD/
+# Never modifies cloud/taughtStrokes.json, theoryTips.json, or hangulHints.json.
+
+name: Cloud data backup
+
+on:
+  schedule:
+    # 00:10 KST (UTC+9)
+    - cron: '10 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cloud-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Snapshot live cloud JSON
+        id: snap
+        shell: bash
+        run: |
+          set -euo pipefail
+          DAY="$(TZ=Asia/Seoul date +%F)"
+          SRC_DIR="cloud"
+          DEST="cloud/backups/${DAY}"
+          mkdir -p "${DEST}"
+
+          copied=0
+          for f in taughtStrokes.json theoryTips.json hangulHints.json; do
+            src="${SRC_DIR}/${f}"
+            if [[ ! -f "${src}" ]]; then
+              echo "skip missing ${src}"
+              continue
+            fi
+            cp -f "${src}" "${DEST}/${f}"
+            copied=$((copied + 1))
+            echo "copied ${f} → ${DEST}/${f}"
+          done
+
+          if [[ "${copied}" -eq 0 ]]; then
+            echo "No live cloud JSON found; nothing to back up."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Guard: never stage changes to live files (path filter below also enforces this).
+          if ! git diff --quiet -- cloud/taughtStrokes.json cloud/theoryTips.json cloud/hangulHints.json 2>/dev/null; then
+            echo "::error::Live cloud JSON would change; aborting backup commit."
+            exit 1
+          fi
+
+          if git status --porcelain -- "${DEST}" | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "day=${DAY}" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Snapshot identical to existing ${DEST}"
+          fi
+
+      - name: Commit backup only
+        if: steps.snap.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          DAY="${{ steps.snap.outputs.day }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "cloud/backups/${DAY}/"
+          # Refuse if anything outside backups is staged
+          staged="$(git diff --cached --name-only)"
+          echo "${staged}" | grep -q . || exit 0
+          if echo "${staged}" | grep -v '^cloud/backups/'; then
+            echo "::error::Refusing to commit non-backup paths:"
+            echo "${staged}"
+            exit 1
+          fi
+          git commit -m "backup: cloud JSON snapshot ${DAY}"
+          git push

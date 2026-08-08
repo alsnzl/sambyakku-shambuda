@@ -1,0 +1,23 @@
+---
+description: Protect cloud learning data (strokes, tips, hangul) before any related work
+alwaysApply: true
+---
+
+# Learning data safety
+
+Cloud learning data lives in `cloud/taughtStrokes.json`, `cloud/theoryTips.json`, and `cloud/hangulHints.json` (GitHub `main` via Contents API). These are teacher-trained assets.
+
+## Before any learning-data work
+
+1. Copy the three live JSON files (and, if present, `src/data/taughtStrokes.json`) into `_backup_temp/<reason>_<timestamp>/`.
+2. Prefer refreshing local `cloud/*.json` from `origin/main` with `git checkout origin/main -- cloud/...` so stale local copies are not pushed.
+3. Never overwrite live cloud files with empty, scaffold, or older local content.
+
+## Allowed vs forbidden
+
+- **Allowed:** read-only copies under `cloud/backups/` or `cloud/versions/`; app features that snapshot then restore with explicit user confirm.
+- **Forbidden:** casual edits to live JSON; force-push of `main`; Actions/jobs that rewrite live `cloud/*.json` except an explicit, reviewed restore flow.
+
+## Temp backups
+
+Keep `_backup_temp/` local only (gitignored). Do not commit it.
