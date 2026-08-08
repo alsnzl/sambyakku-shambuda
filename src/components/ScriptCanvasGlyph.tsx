@@ -10,8 +10,6 @@ type Props = {
   className?: string
   glyph: string
   fontFamily: string
-  /** When true, prefer path outlines elsewhere — still OK to use SVG text. */
-  preferSvgText?: boolean
   fontSize?: number
   x?: number
   y?: number
@@ -19,7 +17,7 @@ type Props = {
 }
 
 /**
- * Canvas guide/ink glyph.
+ * Canvas guide/ink glyph when no taught outline path is available.
  * Combining marks use HTML foreignObject only on iOS (dotted-circle bug).
  * Elsewhere SVG <text> keeps aṃ/aḥ aligned with taught stroke paths.
  *
@@ -30,14 +28,13 @@ export function ScriptCanvasGlyph({
   className,
   glyph,
   fontFamily,
-  preferSvgText = false,
   fontSize = STROKE_GUIDE_FONT_SIZE,
   x = STROKE_GUIDE_X,
   y = STROKE_GUIDE_Y,
   mask,
 }: Props) {
   const useHtml =
-    !preferSvgText && glyphHasCombiningMarks(glyph) && needsIosHtmlCombiningGlyph()
+    glyphHasCombiningMarks(glyph) && needsIosHtmlCombiningGlyph()
   if (useHtml) {
     const html = (
       <SvgHtmlGlyph

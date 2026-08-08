@@ -90,8 +90,9 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const watchFontFamily = recordedFontChoice
     ? getScriptFontStack(fontSlot, recordedFontChoice)
     : fontFamily
-  /** Prefer saved taught outline so watch reveal aligns with strokes (aṃ/aḥ). */
+  /** Prefer saved taught outline so watch/trace align with strokes (aṃ/aḥ). */
   const useWatchPathGuide = Boolean(taughtData?.d)
+  const useTracePathGuide = Boolean(taughtData?.d)
   const glyphX = STROKE_GUIDE_X
   const glyphY = STROKE_GUIDE_Y
   const watchFontKey = `${fontEpoch}-${watchFontFamily}`
@@ -528,25 +529,38 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                       ))}
                     </mask>
                   </defs>
-                  <ScriptCanvasGlyph
-                    key={`guide-${traceFontKey}`}
-                    className="write__glyph-guide"
-                    glyph={glyph}
-                    fontFamily={fontFamily}
-                    fontSize={STROKE_GUIDE_FONT_SIZE}
-                    x={glyphX}
-                    y={glyphY}
-                  />
-                  <ScriptCanvasGlyph
-                    key={`ink-${traceFontKey}`}
-                    className="write__glyph-ink"
-                    glyph={glyph}
-                    fontFamily={fontFamily}
-                    fontSize={STROKE_GUIDE_FONT_SIZE}
-                    x={glyphX}
-                    y={glyphY}
-                    mask={`url(#${maskId})`}
-                  />
+                  {useTracePathGuide && taughtData?.d ? (
+                    <>
+                      <path className="write__glyph-guide" d={taughtData.d} />
+                      <path
+                        className="write__glyph-ink"
+                        d={taughtData.d}
+                        mask={`url(#${maskId})`}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <ScriptCanvasGlyph
+                        key={`guide-${traceFontKey}`}
+                        className="write__glyph-guide"
+                        glyph={glyph}
+                        fontFamily={fontFamily}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
+                        x={glyphX}
+                        y={glyphY}
+                      />
+                      <ScriptCanvasGlyph
+                        key={`ink-${traceFontKey}`}
+                        className="write__glyph-ink"
+                        glyph={glyph}
+                        fontFamily={fontFamily}
+                        fontSize={STROKE_GUIDE_FONT_SIZE}
+                        x={glyphX}
+                        y={glyphY}
+                        mask={`url(#${maskId})`}
+                      />
+                    </>
+                  )}
                 </>
               ) : mode === 'watch' && taughtData ? (
                 <>

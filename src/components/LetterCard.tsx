@@ -286,8 +286,8 @@ export function LetterCard({
               <div className="letter-card__hero-frame">
                 {/*
                   Keep the final glyph inside the same SVG viewBox as the stroke
-                  reveal (fontSize 158 / 240) so size never drifts. Combining marks
-                  use foreignObject via ScriptCanvasGlyph for iOS shaping.
+                  reveal. Taught outline `d` uses path for guide/ink/final;
+                  foreignObject (ScriptCanvasGlyph) only when no outline.
                 */}
                 <svg
                   key={`hero-${introKey}`}
@@ -346,11 +346,18 @@ export function LetterCard({
                       )}
                     </>
                   ) : null}
-                  <ScriptCanvasGlyph
-                    className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
-                    glyph={glyph}
-                    fontFamily={scriptStack}
-                  />
+                  {usePathGuide && taughtData?.d ? (
+                    <path
+                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                      d={taughtData.d}
+                    />
+                  ) : (
+                    <ScriptCanvasGlyph
+                      className={`letter-card__hero-final${introDone ? ' is-visible' : ''}`}
+                      glyph={glyph}
+                      fontFamily={scriptStack}
+                    />
+                  )}
                 </svg>
               </div>
 

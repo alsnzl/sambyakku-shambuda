@@ -9,11 +9,12 @@ type Props = {
 }
 
 /**
- * iOS-only: script glyph via foreignObject + HTML (avoids SVG dotted circles).
+ * iOS-only no-outline fallback: script glyph via foreignObject + HTML
+ * (avoids SVG dotted circles). Prefer taught SVG path outlines when present.
  *
  * Use **pixel** width/height inside FO — percentage sizing breaks layout on iOS
- * WebKit (glyph jumps top-right / wrong scale). Center in the viewBox so aṃ/aḥ
- * sit with taught stroke paths.
+ * WebKit (glyph jumps top-right / wrong scale). Center with flex in the viewBox.
+ * Apply masks on a wrapping <g> in ScriptCanvasGlyph, never on the FO itself.
  *
  * className stays on <foreignObject> so SVG opacity transitions (hero final) work.
  */

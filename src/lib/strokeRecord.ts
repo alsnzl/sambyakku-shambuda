@@ -415,18 +415,64 @@ export function clearUserStrokes(
   writeStore(store)
 }
 
-/** Mother/teacher recorded theory only for the active (or given) font. */
+function taughtGlyphStrokesForFace(
+  letterId: string,
+  script: StrokeScript,
+  face: string,
+): GlyphStrokeData | null {
+  return (
+    getCloudTaughtStrokes(letterId, script, face) ??
+    getTaughtStrokes(letterId, script, face) ??
+    loadUserStrokes(script, letterId, face)
+  )
+}
+
+function isPlaybackTaughtData(
+  data: GlyphStrokeData | null,
+): data is GlyphStrokeData {
+  return Boolean(data && (data.strokes.length > 0 || data.d))
+}
+
+/**
+ * Read-only playback/guide fallback: when `excludeFace` has no taught
+ * strokes/outline, reuse another face's data (prefer muktam). Never writes
+ * cloud or local store.
+ */
+export function findPlaybackTaughtGlyphStrokes(
+  letterId: string,
+  script: StrokeScript,
+  excludeFace: string,
+): GlyphStrokeData | null {
+  const excluded = resolveStrokeFontFace(script, excludeFace)
+  const candidates = listFontStrokeSummaries(letterId, script)
+    .filter((s) => s.fontFace !== excluded && s.strokeCount > 0)
+    .sort((a, b) => {
+      const rank = (face: string) => (face === 'muktam' ? 0 : 1)
+      const byPref = rank(a.fontFace) - rank(b.fontFace)
+      if (byPref !== 0) return byPref
+      return sourcePriority(a.source) - sourcePriority(b.source)
+    })
+  for (const s of candidates) {
+    const data = taughtGlyphStrokesForFace(letterId, script, s.fontFace)
+    if (isPlaybackTaughtData(data)) return data
+  }
+  return null
+}
+
+/**
+ * Mother/teacher recorded theory for the active (or given) font.
+ * If that face has no strokes/outline, falls back to another face for
+ * playback/guide only (see findPlaybackTaughtGlyphStrokes).
+ */
 export function getTaughtGlyphStrokes(
   letterId: string,
   script: StrokeScript,
   fontFace?: string | null,
 ): GlyphStrokeData | null {
   const face = activeFace(script, fontFace)
-  return (
-    getCloudTaughtStrokes(letterId, script, face) ??
-    getTaughtStrokes(letterId, script, face) ??
-    loadUserStrokes(script, letterId, face)
-  )
+  const primary = taughtGlyphStrokesForFace(letterId, script, face)
+  if (isPlaybackTaughtData(primary)) return primary
+  return findPlaybackTaughtGlyphStrokes(letterId, script, face)
 }
 
 export function getEffectiveGlyphStrokes(

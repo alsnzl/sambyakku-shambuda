@@ -19,6 +19,7 @@ import {
 import {
   clearUserStrokes,
   DEFAULT_TEACH_GUIDE_TIP,
+  getTaughtGlyphStrokes,
   getTeachingInfo,
   saveUserStrokes,
 } from '../lib/strokeRecord'
@@ -144,8 +145,15 @@ export function StrokeTeachPanel({
 
   const [tick, setTick] = useState(0)
   const info = getTeachingInfo(letterId, script)
-  /** Prefer taught/cloud outline so saved strokes stay registered with the guide. */
+  /** Active-face outline for save/coverage; may include generated path. */
   const outlineD = info.data?.d ?? generated?.d
+  /** Saved outline for active face only — draw path guide; never cross-face. */
+  const savedOutlineD = info.data?.d ?? null
+  /**
+   * Playback taught (active face, else read-only other-face fallback e.g. muktam).
+   * Used for watch when the active face has no local draft yet.
+   */
+  const playbackTaught = getTaughtGlyphStrokes(letterId, script)
   const activeFontLabel = info.fontLabel
   const recordedFontChoice = parseScriptFontChoice(fontSlot, info.fontFace)
   const watchFontFamily = recordedFontChoice
@@ -177,10 +185,10 @@ export function StrokeTeachPanel({
   const [guideTip, setGuideTip] = useState(DEFAULT_TEACH_GUIDE_TIP)
 
   /**
-   * Watch: prefer saved taught outline so stroke reveal matches the glyph
-   * (critical for aṃ/aḥ on iOS where HTML foreignObject + mask is fragile).
+   * Path outlines for aṃ/aḥ on iOS (FO+mask is fragile).
+   * Draw: only active-face saved outline. Watch: saved or cross-face playback.
    */
-  const usePathGuide = mode === 'watch' && Boolean(info.data?.d)
+  const useDrawPathGuide = Boolean(savedOutlineD)
   const canvasFontFamily = mode === 'watch' ? watchFontFamily : fontFamily
   const canvasFontKey = `${fontEpoch}-${canvasFontFamily}-${mode}`
 
@@ -211,9 +219,19 @@ export function StrokeTeachPanel({
     })
   }
 
-  /** Prefer in-progress strokes; otherwise last saved/cloud taught data. */
+  /**
+   * Prefer in-progress strokes; else active-face saved; else read-only
+   * cross-face playback (so watch works when only muktam has am/ah data).
+   */
   const previewStrokes =
-    recorded.length > 0 ? recorded : (info.data?.strokes ?? [])
+    recorded.length > 0
+      ? recorded
+      : (info.data?.strokes?.length
+          ? info.data.strokes
+          : (playbackTaught?.strokes ?? []))
+  const watchOutlineD =
+    info.data?.d ?? (recorded.length === 0 ? playbackTaught?.d : undefined) ?? null
+  const useWatchPathGuide = Boolean(watchOutlineD)
   const canWatch = previewStrokes.length > 0
   const canLoadSaved = Boolean(info.data?.strokes?.length)
 
@@ -825,12 +843,12 @@ export function StrokeTeachPanel({
                         ))}
                       </mask>
                     </defs>
-                    {usePathGuide && outlineD ? (
+                    {useWatchPathGuide && watchOutlineD ? (
                       <>
-                        <path className="teach__glyph-guide" d={outlineD} />
+                        <path className="teach__glyph-guide" d={watchOutlineD} />
                         <path
                           className={`teach__glyph-ink teach__glyph-ink--under-arrows ${watchDone ? 'is-done' : ''}`}
-                          d={outlineD}
+                          d={watchOutlineD}
                           mask={`url(#${maskId}-watch)`}
                         />
                       </>
@@ -897,25 +915,38 @@ export function StrokeTeachPanel({
                         ))}
                       </mask>
                     </defs>
-                    <ScriptCanvasGlyph
-                      key={`guide-${canvasFontKey}`}
-                      className="teach__glyph-guide"
-                      glyph={glyph}
-                      fontFamily={canvasFontFamily}
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      x={glyphX}
-                      y={glyphY}
-                    />
-                    <ScriptCanvasGlyph
-                      key={`ink-${canvasFontKey}`}
-                      className="teach__glyph-ink"
-                      glyph={glyph}
-                      fontFamily={canvasFontFamily}
-                      fontSize={STROKE_GUIDE_FONT_SIZE}
-                      x={glyphX}
-                      y={glyphY}
-                      mask={`url(#${maskId})`}
-                    />
+                    {useDrawPathGuide && savedOutlineD ? (
+                      <>
+                        <path className="teach__glyph-guide" d={savedOutlineD} />
+                        <path
+                          className="teach__glyph-ink"
+                          d={savedOutlineD}
+                          mask={`url(#${maskId})`}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <ScriptCanvasGlyph
+                          key={`guide-${canvasFontKey}`}
+                          className="teach__glyph-guide"
+                          glyph={glyph}
+                          fontFamily={canvasFontFamily}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
+                          x={glyphX}
+                          y={glyphY}
+                        />
+                        <ScriptCanvasGlyph
+                          key={`ink-${canvasFontKey}`}
+                          className="teach__glyph-ink"
+                          glyph={glyph}
+                          fontFamily={canvasFontFamily}
+                          fontSize={STROKE_GUIDE_FONT_SIZE}
+                          x={glyphX}
+                          y={glyphY}
+                          mask={`url(#${maskId})`}
+                        />
+                      </>
+                    )}
                     <StrokeArrowLayer strokes={recorded} emphasizeLatest />
                   </>
                 )}
