@@ -1,0 +1,123 @@
+.letter-memo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 9rem;
+  margin: 0;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 2%, transparent);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.letter-memo__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.letter-memo__head h4 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.letter-memo__head-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.letter-memo__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.28rem 0.45rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.letter-memo__badge--cloud {
+  background: var(--moss-wash);
+  border-color: color-mix(in srgb, var(--moss) 28%, transparent);
+  color: var(--ink-soft);
+}
+
+.letter-memo__badge--local {
+  background: var(--teal-wash);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--ink-soft);
+}
+
+.letter-memo__badge--empty {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.letter-memo__save {
+  appearance: none;
+  margin: 0;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line-strong));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.letter-memo__save:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.letter-memo__textarea {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 6.5rem;
+  margin: 0;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.letter-memo__textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.letter-memo__textarea:disabled {
+  opacity: 0.7;
+}
+
+.letter-memo__flash {
+  margin: 0;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+}

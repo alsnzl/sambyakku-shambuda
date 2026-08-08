@@ -6,6 +6,11 @@ import {
   refreshHangulCloudStore,
   type HangulHintSource,
 } from '../lib/hangulHintsStore'
+import {
+  getEffectiveLetterMemo,
+  refreshLetterMemoCloudStore,
+  type LetterMemoSource,
+} from '../lib/letterMemosStore'
 import { getTeachingInfo } from '../lib/strokeRecord'
 import { refreshCloudStore } from '../lib/strokeCloud'
 import {
@@ -22,7 +27,7 @@ type Props = {
   refreshKey?: number
 }
 
-type CellKind = 'theory' | 'guide' | 'hangul'
+type CellKind = 'theory' | 'guide' | 'hangul' | 'memo'
 
 type CellStatus =
   | 'checking'
@@ -72,6 +77,15 @@ function hangulStatus(source: HangulHintSource, checking: boolean, errored: bool
   return 'empty'
 }
 
+function memoStatus(source: LetterMemoSource, checking: boolean, errored: boolean): CellStatus {
+  if (checking) return 'checking'
+  if (errored) return 'error'
+  if (source === 'local') return 'local'
+  if (source === 'cloud') return 'synced'
+  if (!hasCloudWriteToken()) return 'no-token'
+  return 'empty'
+}
+
 function guideStatus(
   letterId: string,
   track: ScriptTrack,
@@ -97,6 +111,7 @@ function buildCells(
 ): Cell[] {
   const theory = getEffectiveTheoryTip(letterId)
   const hangul = getEffectiveHangulHint(letterId)
+  const memo = getEffectiveLetterMemo(letterId)
 
   return [
     {
@@ -125,6 +140,14 @@ function buildCells(
           ? '번들 기본값'
           : '클라우드 hangulHints',
     },
+    {
+      kind: 'memo',
+      label: '글 메모',
+      status: memoStatus(memo.source, checking.memo, errors.memo),
+      detail: memo.updatedAt
+        ? `갱신 ${memo.updatedAt.slice(0, 10)}`
+        : '클라우드 letterMemos',
+    },
   ]
 }
 
@@ -134,17 +157,19 @@ export function TeachSyncStatusBar({ letterId, track, refreshKey = 0 }: Props) {
     theory: true,
     guide: true,
     hangul: true,
+    memo: true,
   })
   const [errors, setErrors] = useState<Record<CellKind, boolean>>({
     theory: false,
     guide: false,
     hangul: false,
+    memo: false,
   })
 
   useEffect(() => {
     let cancelled = false
-    setChecking({ theory: true, guide: true, hangul: true })
-    setErrors({ theory: false, guide: false, hangul: false })
+    setChecking({ theory: true, guide: true, hangul: true, memo: true })
+    setErrors({ theory: false, guide: false, hangul: false, memo: false })
 
     async function run(
       kind: CellKind,
@@ -170,6 +195,7 @@ export function TeachSyncStatusBar({ letterId, track, refreshKey = 0 }: Props) {
     void run('theory', () => refreshTheoryCloudStore({ maxAgeMs: 15_000 }))
     void run('guide', () => refreshCloudStore({ maxAgeMs: 15_000 }))
     void run('hangul', () => refreshHangulCloudStore({ maxAgeMs: 15_000 }))
+    void run('memo', () => refreshLetterMemoCloudStore({ maxAgeMs: 15_000 }))
 
     return () => {
       cancelled = true

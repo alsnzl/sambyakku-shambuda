@@ -54,6 +54,7 @@ import {
   STROKE_PLAY_MIN_MS,
   STROKE_PLAY_SPEED,
   applyStrokeRevealAtStep,
+  startSingleStrokeRevealPlayback,
   startStrokeRevealPlayback,
 } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
@@ -71,7 +72,7 @@ type Props = {
 }
 
 type PracticeMode = 'trace' | 'watch'
-type WatchMode = 'playing' | 'scrub'
+type WatchMode = 'playing' | 'scrub' | 'single'
 
 export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = false }: Props) {
   const fontEpoch = useScriptFontEpoch()
@@ -104,6 +105,8 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
+  /** When set with watchMode `single`, replay only this stroke index */
+  const [replayStroke, setReplayStroke] = useState<number | null>(null)
   const [drawn, setDrawn] = useState<GlyphStroke[]>([])
   const [redoStack, setRedoStack] = useState<GlyphStroke[]>([])
   const [drawing, setDrawing] = useState<FreehandPoint[]>([])
@@ -192,6 +195,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
       const strokeCount = taughtData.strokes.length
       const step = Math.max(0, Math.min(strokeCount - 1, index))
 
+      setReplayStroke(null)
       setWatchMode('scrub')
       setActiveStep(step)
       setWatchDone(step === strokeCount - 1)
@@ -209,7 +213,21 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
     [taughtData?.strokes.length],
   )
 
-  /** Watch animation — taught strokes only; scrub freezes via seekWatchTo */
+  const replayWatchStroke = useCallback(
+    (index: number) => {
+      if (!taughtData?.strokes.length) return
+      const strokeCount = taughtData.strokes.length
+      const step = Math.max(0, Math.min(strokeCount - 1, index))
+      setReplayStroke(step)
+      setWatchMode('single')
+      setWatchDone(false)
+      setActiveStep(step)
+      setPlayId((n) => n + 1)
+    },
+    [taughtData?.strokes.length],
+  )
+
+  /** Full watch animation — taught strokes only */
   useEffect(() => {
     if (mode !== 'watch' || watchMode !== 'playing' || !taughtData?.strokes.length) return
 
@@ -251,6 +269,65 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
       stopPlayback?.()
     }
   }, [mode, watchMode, playId, letterId, script, taughtData?.strokes.length, taughtData?.d, watchPlaySpeed])
+
+  /** Single-stroke replay from number tap */
+  useEffect(() => {
+    if (mode !== 'watch' || watchMode !== 'single' || replayStroke == null || !taughtData?.strokes.length)
+      return
+
+    let cancelled = false
+    let raf = 0
+    let stopPlayback: (() => void) | null = null
+    const strokeCount = taughtData.strokes.length
+    const strokeSnapshot = taughtData.strokes.map((s) => ({ ...s }))
+    const index = Math.max(0, Math.min(strokeCount - 1, replayStroke))
+    const speedMul = watchPlaySpeed
+
+    const start = () => {
+      if (cancelled) return
+      const paths = revealRefs.current.slice(0, strokeCount)
+      if (paths.some((el) => !el) || paths.length < strokeCount) {
+        raf = requestAnimationFrame(start)
+        return
+      }
+
+      setWatchDone(false)
+      setActiveStep(index)
+      stopPlayback = startSingleStrokeRevealPlayback({
+        paths: paths as SVGPathElement[],
+        tip: tipRef.current,
+        strokeWidths: strokeSnapshot.map((s) => s.width),
+        strokeIndex: index,
+        speed: STROKE_PLAY_SPEED * speedMul,
+        minStrokeMs: Math.max(90, Math.round(STROKE_PLAY_MIN_MS / speedMul)),
+        onStep: setActiveStep,
+        onDone: () => {
+          if (cancelled) return
+          applyStrokeRevealAtStep(paths as SVGPathElement[], index, tipRef.current)
+          setActiveStep(index)
+          setWatchDone(index === strokeCount - 1)
+          setWatchMode('scrub')
+        },
+      })
+    }
+
+    raf = requestAnimationFrame(start)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      stopPlayback?.()
+    }
+  }, [
+    mode,
+    watchMode,
+    playId,
+    replayStroke,
+    letterId,
+    script,
+    taughtData?.strokes.length,
+    taughtData?.d,
+    watchPlaySpeed,
+  ])
 
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (mode !== 'trace' || traceDone || !glyph) return
@@ -378,6 +455,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                     return
                   }
                   setWatchBlocked(false)
+                  setReplayStroke(null)
                   setWatchMode('playing')
                   setMode('watch')
                   setPlayId((n) => n + 1)
@@ -393,6 +471,7 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
               onClick={() => {
                 if (mode === 'trace') resetTrace()
                 else {
+                  setReplayStroke(null)
                   setWatchMode('playing')
                   setPlayId((n) => n + 1)
                 }
@@ -638,12 +717,13 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
                 <StrokeOrderTrack
                   className="write__scrub-order"
                   label="획 번호"
-                  onSelect={seekWatchTo}
+                  onSelect={replayWatchStroke}
                   steps={taughtData.strokes.map((_, i) => {
                     const playingDone = watchMode === 'playing' && watchDone
+                    const step = Math.min(activeStep, taughtData.strokes.length - 1)
                     return {
-                      done: playingDone || i < activeStep,
-                      current: !playingDone && i === Math.min(activeStep, taughtData.strokes.length - 1),
+                      done: playingDone || i < step,
+                      current: !playingDone && i === step,
                     }
                   })}
                 />

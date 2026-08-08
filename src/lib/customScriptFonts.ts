@@ -455,7 +455,7 @@ function applySlotCss(slot: ScriptFontSlot) {
     // Noto Sans Siddham ink sits high in the em box — optical nudge for all UI glyphs.
     document.documentElement.style.setProperty(
       '--siddham-optical-nudge',
-      choice === 'noto-siddham' ? '0.18em' : '0',
+      choice === 'noto-siddham' ? '0.26em' : '0',
     )
   }
 }

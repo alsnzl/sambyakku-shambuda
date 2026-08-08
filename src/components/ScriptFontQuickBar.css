@@ -112,7 +112,7 @@
 
 /* Noto Siddham preview always needs the optical nudge (even when not selected). */
 .script-font-bar__sample--noto {
-  translate: 0 0.18em;
+  translate: 0 var(--siddham-optical-nudge, 0.26em);
 }
 
 .script-font-bar__opt-label {

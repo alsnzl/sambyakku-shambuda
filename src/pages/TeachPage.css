@@ -271,11 +271,11 @@
 
 .teach-page__sync-dot {
   position: absolute;
-  top: 0.62rem;
-  right: 0.62rem;
+  top: 0.52rem;
+  right: 0.52rem;
   z-index: 2;
-  width: 0.42rem;
-  height: 0.42rem;
+  width: 0.72rem;
+  height: 0.72rem;
   border-radius: 50%;
   pointer-events: none;
   box-shadow: none;
@@ -286,7 +286,7 @@
 }
 
 .teach-page__sync-dot.is-empty {
-  background: color-mix(in srgb, var(--ink) 22%, transparent);
+  background: var(--clay);
 }
 
 .teach-page__sync-dot.is-error {

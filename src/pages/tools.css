@@ -846,7 +846,7 @@
 }
 
 .tool__font-preview--noto-siddham {
-  translate: 0 0.18em;
+  translate: 0 var(--siddham-optical-nudge, 0.26em);
 }
 
 .tool__font-card-label {

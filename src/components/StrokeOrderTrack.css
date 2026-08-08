@@ -19,6 +19,12 @@
   margin: 0.2rem 0;
 }
 
+.stroke-order__node {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .stroke-order__rail {
   width: 0.85rem;
   height: 2px;
@@ -117,6 +123,139 @@ button.stroke-order__badge {
 
 .stroke-order--compact .stroke-order__rail {
   width: 0.55rem;
+}
+
+/* Vertical timeline — fills a tall narrow column */
+.stroke-order--timeline {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-evenly;
+  gap: 0;
+  padding: 0.25rem 0.15rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stroke-order--timeline .stroke-order__item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0;
+  min-height: 0;
+}
+
+.stroke-order--timeline .stroke-order__rail {
+  width: 2px;
+  height: 0.55rem;
+  min-height: 0.4rem;
+  margin: 0 0 0 calc(1.05rem - 1px);
+  border-radius: 999px;
+  align-self: flex-start;
+}
+
+.stroke-order--timeline .stroke-order__node {
+  display: grid;
+  grid-template-columns: 2.1rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.stroke-order--timeline .stroke-order__badge {
+  width: 2.1rem;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  font-size: 0.84rem;
+}
+
+.stroke-order--timeline .stroke-order__item.is-current .stroke-order__badge {
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  font-size: 0.95rem;
+  transform: none;
+}
+
+.stroke-order--timeline .stroke-order__caption {
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stroke-order--timeline .stroke-order__item.is-current .stroke-order__caption {
+  color: var(--accent);
+  font-weight: 750;
+}
+
+.stroke-order--timeline .stroke-order__item.is-done .stroke-order__caption {
+  color: color-mix(in srgb, var(--moss) 75%, var(--muted));
+}
+
+.stroke-order--timeline .stroke-order__item.is-todo .stroke-order__caption {
+  opacity: 0.78;
+}
+
+/* Equal cells — compact fill for narrow panels */
+.stroke-order--segments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.32rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  align-content: start;
+}
+
+.stroke-order--segments .stroke-order__item {
+  margin: 0;
+  display: block;
+  min-width: 0;
+}
+
+.stroke-order--segments .stroke-order__node {
+  display: block;
+  width: 100%;
+}
+
+.stroke-order--segments .stroke-order__badge {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 750;
+  border-width: 1px;
+  transform: none;
+  box-shadow: none;
+}
+
+.stroke-order--segments .stroke-order__item.is-current .stroke-order__badge {
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  font-size: 0.88rem;
+  transform: none;
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--on-accent) 35%, transparent);
+}
+
+.stroke-order--segments .stroke-order__item.is-done .stroke-order__badge {
+  background: color-mix(in srgb, var(--moss) 82%, var(--surface));
+}
+
+.stroke-order--segments .stroke-order__item.is-todo .stroke-order__badge {
+  opacity: 0.55;
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface));
 }
 
 .visually-hidden {

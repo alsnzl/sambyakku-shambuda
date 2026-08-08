@@ -1,5 +1,5 @@
 # Read-only snapshot of live cloud JSON → cloud/backups/YYYY-MM-DD/
-# Never modifies cloud/taughtStrokes.json, theoryTips.json, or hangulHints.json.
+# Never modifies cloud/taughtStrokes.json, theoryTips.json, hangulHints.json, or letterMemos.json.
 
 name: Cloud data backup
 
@@ -35,7 +35,7 @@ jobs:
           mkdir -p "${DEST}"
 
           copied=0
-          for f in taughtStrokes.json theoryTips.json hangulHints.json; do
+          for f in taughtStrokes.json theoryTips.json hangulHints.json letterMemos.json; do
             src="${SRC_DIR}/${f}"
             if [[ ! -f "${src}" ]]; then
               echo "skip missing ${src}"
@@ -53,7 +53,7 @@ jobs:
           fi
 
           # Guard: never stage changes to live files (path filter below also enforces this).
-          if ! git diff --quiet -- cloud/taughtStrokes.json cloud/theoryTips.json cloud/hangulHints.json 2>/dev/null; then
+          if ! git diff --quiet -- cloud/taughtStrokes.json cloud/theoryTips.json cloud/hangulHints.json cloud/letterMemos.json 2>/dev/null; then
             echo "::error::Live cloud JSON would change; aborting backup commit."
             exit 1
           fi

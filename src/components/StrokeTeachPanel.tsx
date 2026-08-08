@@ -54,8 +54,13 @@ import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
 import { FoldChevron } from './FoldChevron'
 import { ScriptFontQuickBar } from './ScriptFontQuickBar'
+import { LetterMemoPanel } from './LetterMemoPanel'
 import { StrokeVersionPanel } from './StrokeVersionPanel'
-import { startStrokeRevealPlayback } from '../lib/strokePlayback'
+import {
+  applyStrokeRevealAtStep,
+  startSingleStrokeRevealPlayback,
+  startStrokeRevealPlayback,
+} from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './StrokeTeachPanel.css'
 
@@ -162,6 +167,8 @@ export function StrokeTeachPanel({
   const [playId, setPlayId] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [watchDone, setWatchDone] = useState(false)
+  /** When set, watch mode replays only this stroke index */
+  const [replayStroke, setReplayStroke] = useState<number | null>(null)
   const [penOnly, setPenOnlyState] = useState(() => getPenOnly())
   const [pressureSens, setPressureSensState] = useState(() => getPressureSens())
   const [saveAckLow, setSaveAckLow] = useState(false)
@@ -218,6 +225,7 @@ export function StrokeTeachPanel({
     setMode('draw')
     setWatchDone(false)
     setActiveStep(0)
+    setReplayStroke(null)
   }
 
   function allowPointer(e: React.PointerEvent) {
@@ -262,15 +270,6 @@ export function StrokeTeachPanel({
     const next = getTeachingInfo(letterId, script)
     setGuideTip(next.note?.trim() || DEFAULT_TEACH_GUIDE_TIP)
     refresh()
-    if (next.strokeCount > 0) {
-      setFlash(`「${next.fontLabel}」에 저장된 획 ${next.strokeCount}개`)
-    } else if (next.otherFonts.length > 0) {
-      setFlash(
-        `「${next.fontLabel}」에는 획 없음 · 다른 폰트 ${next.otherFonts.length}개에 기록됨`,
-      )
-    } else {
-      setFlash(`「${next.fontLabel}」로 새 획을 기록합니다`)
-    }
   }, [fontEpoch])
 
   useEffect(() => {
@@ -324,12 +323,33 @@ export function StrokeTeachPanel({
     let stopPlayback: (() => void) | null = null
     const strokeCount = previewStrokes.length
     const strokeSnapshot = previewStrokes.map((s) => ({ ...s }))
+    const single = replayStroke
 
     const start = () => {
       if (cancelled) return
       const paths = revealRefs.current.slice(0, strokeCount)
       if (paths.some((el) => !el) || paths.length < strokeCount) {
         raf = requestAnimationFrame(start)
+        return
+      }
+
+      if (single != null) {
+        const index = Math.max(0, Math.min(strokeCount - 1, single))
+        setWatchDone(false)
+        setActiveStep(index)
+        stopPlayback = startSingleStrokeRevealPlayback({
+          paths: paths as SVGPathElement[],
+          tip: tipRef.current,
+          strokeWidths: strokeSnapshot.map((s) => s.width),
+          strokeIndex: index,
+          onStep: setActiveStep,
+          onDone: () => {
+            if (cancelled) return
+            applyStrokeRevealAtStep(paths as SVGPathElement[], index, tipRef.current)
+            setActiveStep(index)
+            setWatchDone(index === strokeCount - 1)
+          },
+        })
         return
       }
 
@@ -352,9 +372,21 @@ export function StrokeTeachPanel({
       cancelAnimationFrame(raf)
       stopPlayback?.()
     }
-    // playId / stroke identity drive restarts; length is enough with playId bump on edits
-  }, [mode, playId, letterId, script, previewStrokes.length])
+  }, [mode, playId, letterId, script, previewStrokes.length, replayStroke])
 
+  function replayGuideStroke(index: number) {
+    if (saving || !previewStrokes.length) return
+    const step = Math.max(0, Math.min(previewStrokes.length - 1, index))
+    setReplayStroke(step)
+    setWatchDone(false)
+    setActiveStep(step)
+    if (mode !== 'watch') {
+      setMode('watch')
+      setPlayId((n) => n + 1)
+      return
+    }
+    setPlayId((n) => n + 1)
+  }
   function pointerDown(e: React.PointerEvent<SVGSVGElement>) {
     if (!glyph || saving) return
     if (mode === 'watch') {
@@ -427,6 +459,7 @@ export function StrokeTeachPanel({
     setScrollLock(false)
     pointsRef.current = []
     setDrawing([])
+    setReplayStroke(null)
     if (mode === 'watch') {
       setPlayId((n) => n + 1)
       return
@@ -635,6 +668,26 @@ export function StrokeTeachPanel({
       mode === 'watch' ? !watchDone && activeStep === i : i === recorded.length
     return { done, current }
   })
+  const currentIdx = orderSteps.findIndex((s) => s.current)
+  const doneCount = orderSteps.filter((s) => s.done).length
+  const currentStrokeDisplay =
+    mode === 'watch' && watchDone
+      ? orderCount
+      : currentIdx >= 0
+        ? currentIdx + 1
+        : Math.min(doneCount + 1, orderCount)
+  const orderStatusLabel =
+    mode === 'watch' && watchDone
+      ? '모든 획 재생 완료'
+      : mode === 'watch' && replayStroke != null
+        ? `${replayStroke + 1}번 획`
+        : currentIdx >= 0
+          ? mode === 'watch'
+            ? `${currentIdx + 1}번 획 재생 중`
+            : `${currentIdx + 1}번 획 그리는 중`
+          : doneCount >= orderCount
+            ? '기록 완료'
+            : '대기'
 
   return (
     <section className="teach is-open" aria-label="획 가르치기">
@@ -680,35 +733,47 @@ export function StrokeTeachPanel({
           className="teach__guide teach__nav-fade"
           aria-label="획 기록 가이드"
         >
-          <div className="teach__guide-letter">
-            <span className="teach__guide-glyph" lang="sa" style={{ fontFamily }}>
-              {glyph}
-            </span>
+          <header className="teach__guide-letter">
+            <div className="teach__guide-mark" aria-hidden="true">
+              <span className="teach__guide-glyph" lang="sa" style={{ fontFamily }}>
+                {glyph}
+              </span>
+            </div>
             <div className="teach__guide-meta">
               {iast ? <p className="teach__guide-iast">{iast}</p> : null}
               {hangulHint ? <p className="teach__guide-hangul">{hangulHint}</p> : null}
             </div>
-            {flash ? (
-              <p className="teach__guide-flash" role="status">
-                {flash}
-              </p>
-            ) : null}
-          </div>
+          </header>
 
-          <div className="teach__guide-scroll">
-            <p className="teach__guide-title">획 순서</p>
+          <section className="teach__guide-scroll" aria-label="획 순서">
+            <div className="teach__guide-progress-head">
+              <p className="teach__guide-title">획 순서</p>
+              <p className="teach__guide-progress-count" aria-live="polite">
+                <strong>{Math.min(currentStrokeDisplay, orderCount)}</strong>
+                <span aria-hidden="true"> / </span>
+                <span>{orderCount}</span>
+              </p>
+            </div>
             <StrokeOrderTrack
-              className="stroke-order--compact teach__guide-order"
+              className="teach__guide-order"
+              variant="segments"
               steps={orderSteps}
               label="획 순서"
+              onSelect={(i) => {
+                if (i >= previewStrokes.length) return
+                replayGuideStroke(i)
+              }}
             />
-          </div>
+            <p className="teach__guide-progress-status">
+              {orderStatusLabel}
+            </p>
+          </section>
 
           <label className="teach__guide-tip-field">
             <span className="teach__guide-tip-label">기록 팁</span>
             <textarea
               className="teach__guide-tip-input"
-              rows={3}
+              rows={2}
               value={guideTip}
               disabled={saving}
               aria-label="획 기록 팁"
@@ -1017,6 +1082,12 @@ export function StrokeTeachPanel({
                 onSyncChange?.()
               })()
             }}
+          />
+
+          <LetterMemoPanel
+            letterId={letterId}
+            disabled={saving}
+            onUpdated={() => onSyncChange?.()}
           />
           </div>
         </div>

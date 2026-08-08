@@ -6,7 +6,7 @@
 const TOKEN_KEY = 'sambyakku-stroke-cloud-token'
 const INDEX_MAX = 200
 
-export type TextVersionKind = 'theoryTips' | 'hangulHints'
+export type TextVersionKind = 'theoryTips' | 'hangulHints' | 'letterMemos'
 
 type RepoConfig = {
   owner: string
@@ -61,12 +61,15 @@ function indexPath(kind: TextVersionKind) {
 }
 
 function emptyIndex(kind: TextVersionKind): TextVersionIndex {
+  const description =
+    kind === 'theoryTips'
+      ? '이론·쓰기 팁 버전 인덱스 — 라이브 theoryTips.json 과 별도.'
+      : kind === 'hangulHints'
+        ? '한글 발음 힌트 버전 인덱스 — 라이브 hangulHints.json 과 별도.'
+        : '글 메모 버전 인덱스 — 라이브 letterMemos.json 과 별도.'
   return {
     meta: {
-      description:
-        kind === 'theoryTips'
-          ? '이론·쓰기 팁 버전 인덱스 — 라이브 theoryTips.json 과 별도.'
-          : '한글 발음 힌트 버전 인덱스 — 라이브 hangulHints.json 과 별도.',
+      description,
       updatedAt: null,
     },
     versions: [],

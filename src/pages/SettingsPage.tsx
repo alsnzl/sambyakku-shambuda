@@ -451,10 +451,11 @@ export function SettingsPage({ onBack }: Props) {
           </span>
         </div>
         <p className="tool__meta" style={{ marginBottom: '0.75rem' }}>
-          획 가르치기·이론/쓰기 팁·한글 발음을 GitHub({cloudRepoLabel()})에 올리는 데 씁니다.
+          획 가르치기·이론/쓰기 팁·한글 발음·글 메모를 GitHub({cloudRepoLabel()})에 올리는 데 씁니다.
           fine-grained PAT에 이 저장소 접근 + Contents 읽기·쓰기가 필요합니다. (읽기만 있으면
           확인은 되고 저장은 실패합니다.)
-          대상 파일: cloud/taughtStrokes.json, cloud/theoryTips.json, cloud/hangulHints.json
+          대상 파일: cloud/taughtStrokes.json, cloud/theoryTips.json, cloud/hangulHints.json,
+          cloud/letterMemos.json
         </p>
 
         {!editingToken && hasCloudWriteToken() ? (
