@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import { getDueLetters, reviewSrs } from '../lib/learnerStore'
 import { playLetterPronunciation } from '../lib/audio'
+import { getEffectiveHangulHint } from '../lib/hangulHintsStore'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import './tools.css'
 
@@ -67,7 +68,7 @@ export function ReviewPage({ track, onBack, backLabel = '← 학습' }: Props) {
         ) : (
           <>
             <h2>{current.iast}</h2>
-            <p className="tool__meta">{current.hangulHint}</p>
+            <p className="tool__meta">{getEffectiveHangulHint(current.id).text || current.hangulHint}</p>
             {current.note ? <p className="tool__lead">{current.note}</p> : null}
           </>
         )}

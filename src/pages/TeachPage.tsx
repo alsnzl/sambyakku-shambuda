@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { getLetterGroups, type Letter } from '../data/letters'
 import { MotionPage } from '../components/MotionPage'
+import { HangulHintPanel } from '../components/HangulHintPanel'
 import { StrokeTeachPanel } from '../components/StrokeTeachPanel'
+import { TeachSyncStatusBar } from '../components/TeachSyncStatusBar'
 import { TheoryTipPanel } from '../components/TheoryTipPanel'
 import type { ScriptTrack } from '../types/track'
 import { trackMeta } from '../types/track'
 import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import { getEffectiveHangulHint } from '../lib/hangulHintsStore'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
@@ -25,6 +28,8 @@ export function TeachPage({ onBack }: Props) {
   const [track, setTrack] = useState<ScriptTrack>('sanskrit')
   const [letter, setLetter] = useState<Letter | null>(null)
   const [slide, setSlide] = useState<'slide-left' | 'slide-right' | 'pop'>('pop')
+  const [hangulEpoch, setHangulEpoch] = useState(0)
+  const [syncEpoch, setSyncEpoch] = useState(0)
   const fontEpoch = useScriptFontEpoch()
 
   const meta = trackMeta[track]
@@ -81,6 +86,8 @@ export function TeachPage({ onBack }: Props) {
     const prev = index > 0 ? sequence[index - 1] : null
     const next = index >= 0 && index < sequence.length - 1 ? sequence[index + 1] : null
     const glyph = glyphForTrack(letter, track)
+    void hangulEpoch
+    const hangul = getEffectiveHangulHint(letter.id).text
 
     return (
       <main className="learn teach-page">
@@ -113,14 +120,9 @@ export function TeachPage({ onBack }: Props) {
           </div>
         </header>
 
-        <ScriptFontQuickBar track={track} />
-
         <div className="teach-page__stage">
           <article className="teach-page__card">
-            <div
-              key={`id-${letter.id}`}
-              className="teach-page__identity teach-page__blur-swap"
-            >
+            <div className="teach-page__identity">
               <p className="teach-page__script">{meta.scriptLabel}</p>
               <div className="teach-page__identity-row">
                 <span
@@ -131,35 +133,47 @@ export function TeachPage({ onBack }: Props) {
                 >
                   {glyph}
                 </span>
-                <div>
+                <div className="teach-page__identity-meta">
                   <p className="teach-page__iast">{letter.iast}</p>
-                  <p className="teach-page__hangul">{letter.hangulHint}</p>
+                  <p className="teach-page__hangul">{hangul}</p>
                 </div>
+                <HangulHintPanel
+                  letterId={letter.id}
+                  editable
+                  onUpdated={() => {
+                    setHangulEpoch((n) => n + 1)
+                    setSyncEpoch((n) => n + 1)
+                  }}
+                />
               </div>
               <p className="teach-page__lead">
                 글자 위에 획을 그려 저장하면, 따라 쓰기·보기에서 쓸 수 있어요.
               </p>
             </div>
-            <div
-              key={`canvas-${letter.id}`}
-              className={
-                slide === 'slide-left'
-                  ? 'teach-page__canvas-motion teach-page__canvas-motion--next'
-                  : slide === 'slide-right'
-                    ? 'teach-page__canvas-motion teach-page__canvas-motion--prev'
-                    : 'teach-page__canvas-motion teach-page__canvas-motion--pop'
-              }
-            >
-              <StrokeTeachPanel
+            <StrokeTeachPanel
+              letterId={letter.id}
+              glyph={glyph}
+              track={track}
+              iast={letter.iast}
+              hangulHint={hangul}
+              navMotion={slide}
+              hasPrevLetter={Boolean(prev)}
+              hasNextLetter={Boolean(next)}
+              onPrevLetter={prev ? () => goPrev(prev) : undefined}
+              onNextLetter={next ? () => goNext(next) : undefined}
+              onSyncChange={() => setSyncEpoch((n) => n + 1)}
+            />
+            <div key={`tip-${letter.id}`} className="teach-page__fade-swap">
+              <TheoryTipPanel
                 letterId={letter.id}
-                glyph={glyph}
-                track={track}
-                iast={letter.iast}
-                hangulHint={letter.hangulHint}
+                editable
+                onUpdated={() => setSyncEpoch((n) => n + 1)}
               />
-            </div>
-            <div key={`tip-${letter.id}`} className="teach-page__blur-swap">
-              <TheoryTipPanel letterId={letter.id} editable />
+              <TeachSyncStatusBar
+                letterId={letter.id}
+                track={track}
+                refreshKey={syncEpoch + hangulEpoch}
+              />
             </div>
           </article>
         </div>

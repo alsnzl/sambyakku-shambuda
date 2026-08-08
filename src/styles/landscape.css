@@ -220,12 +220,12 @@
 
   /* —— Write / teach workbench —— */
   .write__chrome {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
   }
 
   .write__chrome .write__head,
   .teach__chrome {
-    margin-bottom: 0.35rem;
+    margin-bottom: var(--space-2);
   }
 
   .write__chrome .write__head {
@@ -246,11 +246,11 @@
   }
 
   .teach__chrome .teach__head {
-    margin-bottom: 0.15rem;
+    margin-bottom: var(--space-1);
   }
 
   .teach__chrome .teach__meta {
-    margin: 0 0 1.25rem;
+    margin: 0 0 var(--space-4);
     font-size: 0.78rem;
   }
 
@@ -498,13 +498,13 @@
     position: static;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--gap-tight);
     width: 100%;
     min-width: 0;
     margin-left: 0;
     /* Tall 그리기 설정: scroll inside rail; workspace height follows the rail box */
     max-height: min(92svh, calc(100dvh - 3.25rem));
-    padding: 0.7rem 0.75rem;
+    padding: var(--space-3);
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -526,7 +526,7 @@
   .teach.is-open .teach__rail .stroke-history {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.45rem;
+    gap: var(--gap-tight);
     flex-direction: row;
     padding: 0;
   }
@@ -538,10 +538,44 @@
     box-shadow: none;
   }
 
+  .teach.is-open .teach__rail .teach__actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    margin: 0;
+    width: 100%;
+  }
+
+  .teach.is-open .teach__rail .teach__letter-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-tight);
+    order: 0;
+  }
+
+  .teach.is-open .teach__rail .teach__rail-rule {
+    order: 1;
+    margin: var(--space-2) 0 var(--space-3);
+    border-top: 1px solid color-mix(in srgb, var(--line-strong) 55%, transparent);
+  }
+
+  .teach.is-open .teach__rail .teach__rail-body {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    min-width: 0;
+  }
+
+  .teach.is-open .teach__rail .teach__letter-nav .teach__btn--letter-nav {
+    width: 100%;
+    min-height: 2.55rem;
+  }
+
   .teach.is-open .teach__rail .teach__actions-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    gap: var(--gap-tight);
     margin: 0;
   }
 
@@ -588,15 +622,15 @@
 
   /* Teach page card: identity compact + workspace fills */
   .teach-page__card {
-    gap: 0.45rem;
+    gap: var(--gap-group);
   }
 
   .teach-page__identity-row {
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
   }
 
   .teach-page__lead {
-    margin-top: 0.35rem;
+    margin-top: var(--space-2);
   }
 
   .teach-page .learn__bar {

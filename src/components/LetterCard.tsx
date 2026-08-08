@@ -10,6 +10,10 @@ import {
 } from '../lib/learnerStore'
 import { getSimilarLetters } from '../data/similarLetters'
 import { getActiveScriptFontStack } from '../lib/customScriptFonts'
+import {
+  getEffectiveHangulHint,
+  refreshHangulCloudStore,
+} from '../lib/hangulHintsStore'
 import { glyphForTrack } from '../lib/scriptDisplay'
 import { useHardwareBack } from '../lib/useHardwareBack'
 import { useScriptFontEpoch } from '../lib/useScriptFontEpoch'
@@ -72,6 +76,7 @@ export function LetterCard({
   const glyph = glyphForTrack(letter, track)
   const [fav, setFav] = useState(() => isFavorite(track, letter.id))
   const [writeOpen, setWriteOpen] = useState(false)
+  const [hangulTick, setHangulTick] = useState(0)
   const similar = getSimilarLetters(letter.id)
   const glyphClass =
     track === 'sanskrit' ? 'letter-card__similar-glyph--deva' : 'letter-card__similar-glyph--siddham'
@@ -84,12 +89,29 @@ export function LetterCard({
       : navMotion === 'slide-right'
         ? 'letter-card__hero--slide-prev'
         : 'letter-card__hero--pop'
+  void hangulTick
+  const hangul = getEffectiveHangulHint(letter.id).text
 
   useEffect(() => {
     markLetterSeen(track, letter.id)
     setFav(isFavorite(track, letter.id))
     setWriteOpen(false)
   }, [letter.id, track])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        await refreshHangulCloudStore({ maxAgeMs: 30_000 })
+        if (!cancelled) setHangulTick((n) => n + 1)
+      } catch {
+        /* keep cached / default */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [letter.id])
 
   useEffect(() => {
     onWritingChange?.(writeOpen)
@@ -185,7 +207,7 @@ export function LetterCard({
           <div key={`rail-${letter.id}`} className="letter-card__rail letter-card__blur-swap">
             <div className="letter-card__meta">
               <p className="letter-card__iast">{letter.iast}</p>
-              <p className="letter-card__hangul">{letter.hangulHint}</p>
+              <p className="letter-card__hangul">{hangul}</p>
               {letter.note ? <p className="letter-card__note">{letter.note}</p> : null}
             </div>
 

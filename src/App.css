@@ -10,7 +10,7 @@
   padding-top: env(safe-area-inset-top);
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
-  overflow-x: clip;
+  overflow-x: visible;
   overflow-y: visible;
   transition: max-width var(--motion-base) var(--motion-ease-out);
 }
@@ -19,7 +19,7 @@
   appearance: none;
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y));
-  right: calc(env(safe-area-inset-right, 0px) + var(--space));
+  right: calc(env(safe-area-inset-right, 0px) + var(--page-pad-x));
   z-index: 50;
   width: var(--touch-min);
   height: var(--touch-min);
@@ -50,7 +50,18 @@
   transform: translateY(-0.05rem);
 }
 
-/* Keep letter prev/next clear of the floating home control */
+/* Keep letter prev/next clear of the floating home control, same row height */
 .app-shell:has(.app-home-fab) .teach-page__nav {
   margin-right: calc(var(--touch-min) + var(--space-2));
+  min-height: var(--touch-min);
+}
+
+/* Pin home FAB to the same top band as teach prev/next circles */
+.app-shell:has(.teach-page__nav) .app-home-fab {
+  top: calc(env(safe-area-inset-top, 0px) + var(--page-pad-y));
+}
+
+.teach-page .learn__bar {
+  align-items: center;
+  min-height: var(--touch-min);
 }

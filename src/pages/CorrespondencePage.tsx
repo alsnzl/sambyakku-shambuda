@@ -1,4 +1,5 @@
 import { getLetterGroups, type Letter } from '../data/letters'
+import { getEffectiveHangulHint } from '../lib/hangulHintsStore'
 import './tools.css'
 
 type Props = {
@@ -48,7 +49,9 @@ export function CorrespondencePage({
                 </button>
                 <div className="tool__corr-mid">
                   <span className="tool__corr-iast">{letter.iast}</span>
-                  <span className="tool__corr-hangul">{letter.hangulHint}</span>
+                  <span className="tool__corr-hangul">
+                    {getEffectiveHangulHint(letter.id).text || letter.hangulHint}
+                  </span>
                 </div>
                 <button
                   type="button"

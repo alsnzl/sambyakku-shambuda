@@ -111,7 +111,9 @@ export function Home({ onOpen, onAbout, onOpenGlobal, onOpenLetter }: Props) {
             <p className="home__card-title">획 기록하기</p>
           </div>
           <span className="home__card-glyphs home__card-glyphs--teach" aria-hidden="true">
-            <span className="home__card-glyphs-mark">획</span>
+            <span className="home__card-rec">
+              <span className="home__card-rec__led" />
+            </span>
           </span>
         </div>
         <p className="home__card-verse">

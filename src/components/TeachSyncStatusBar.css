@@ -1,0 +1,117 @@
+.teach-sync {
+  margin-top: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 2.5%, transparent);
+  overflow: hidden;
+}
+
+.teach-sync__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.teach-sync__cell {
+  min-width: 0;
+  padding: 0.55rem 0.6rem 0.6rem;
+  text-align: center;
+}
+
+.teach-sync__cell + .teach-sync__cell {
+  border-left: 1px solid var(--line);
+}
+
+.teach-sync__label {
+  margin: 0 0 0.28rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teach-sync__status {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  max-width: 100%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.teach-sync__dot {
+  flex: 0 0 auto;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.teach-sync__status--synced {
+  color: color-mix(in srgb, var(--moss) 75%, var(--ink));
+}
+
+.teach-sync__status--synced .teach-sync__dot {
+  background: var(--moss);
+}
+
+.teach-sync__status--local,
+.teach-sync__status--checking {
+  color: color-mix(in srgb, var(--accent) 70%, var(--ink));
+}
+
+.teach-sync__status--local .teach-sync__dot,
+.teach-sync__status--checking .teach-sync__dot {
+  background: var(--accent);
+}
+
+.teach-sync__status--bundled,
+.teach-sync__status--default {
+  color: var(--ink-soft);
+}
+
+.teach-sync__status--bundled .teach-sync__dot,
+.teach-sync__status--default .teach-sync__dot {
+  background: var(--muted);
+}
+
+.teach-sync__status--empty,
+.teach-sync__status--no-token {
+  color: var(--muted);
+}
+
+.teach-sync__status--empty .teach-sync__dot,
+.teach-sync__status--no-token .teach-sync__dot {
+  background: var(--muted);
+  opacity: 0.55;
+}
+
+.teach-sync__status--error {
+  color: color-mix(in srgb, var(--clay) 80%, var(--ink));
+}
+
+.teach-sync__status--error .teach-sync__dot {
+  background: var(--clay);
+}
+
+@media (max-width: 380px) {
+  .teach-sync__label {
+    font-size: 0.6rem;
+  }
+
+  .teach-sync__status {
+    font-size: 0.66rem;
+  }
+
+  .teach-sync__cell {
+    padding: 0.48rem 0.35rem 0.52rem;
+  }
+}

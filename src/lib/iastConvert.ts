@@ -1,4 +1,5 @@
 import { letters } from '../data/letters'
+import { getEffectiveHangulHint } from './hangulHintsStore'
 
 const NORM: Record<string, string> = {
   ā: 'aa',
@@ -157,10 +158,13 @@ export function convertIastInput(raw: string): {
 export function lookupByIastFragment(q: string) {
   const n = normalizeIast(q)
   if (!n) return []
-  return letters.filter(
-    (l) =>
+  return letters.filter((l) => {
+    const hangul = getEffectiveHangulHint(l.id).text || l.hangulHint
+    return (
       l.iast.toLowerCase().includes(n) ||
       l.id.includes(n) ||
-      l.hangulHint.includes(q.trim()),
-  )
+      hangul.includes(q.trim()) ||
+      l.hangulHint.includes(q.trim())
+    )
+  })
 }

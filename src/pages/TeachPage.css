@@ -6,7 +6,7 @@
 .teach-page__tracks {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--gap-group);
 }
 
 .teach-page__track {
@@ -14,9 +14,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.2rem;
+  gap: var(--space-1);
   width: 100%;
-  padding: 1.15rem 1.15rem 1.1rem;
+  padding: var(--space-5) var(--space-5) calc(var(--space-5) - 0.05rem);
   border: 1px solid color-mix(in srgb, var(--clay) 32%, var(--block-border));
   border-radius: var(--radius-lg);
   background:
@@ -62,7 +62,7 @@
 }
 
 .teach-page__track-sample {
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   font-size: calc(1.45rem * var(--glyph-scale));
   line-height: 1.2;
   color: var(--ink-soft);
@@ -78,7 +78,7 @@
 }
 
 .teach-page__track-cta {
-  margin-top: 0.7rem;
+  margin-top: var(--space-3);
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--clay);
@@ -87,23 +87,38 @@
 .teach-page__nav {
   margin-left: auto;
   display: flex;
-  gap: 0.35rem;
+  align-items: center;
+  gap: var(--gap-tight);
 }
 
 .teach-page__nav-btn {
   appearance: none;
-  width: 2.4rem;
-  height: 2.4rem;
+  box-sizing: border-box;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  border-radius: var(--radius-capsule);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--ink-soft);
+  font-size: 0.78rem;
   line-height: 1;
   cursor: pointer;
   display: grid;
   place-items: center;
+  -webkit-backdrop-filter: var(--block-blur-soft);
+  backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--glass-specular, none);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.teach-page__nav-btn:hover,
+.teach-page__nav-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--line-strong) 55%, transparent);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
 }
 
 .teach-page__nav-btn:disabled {
@@ -111,8 +126,13 @@
   cursor: not-allowed;
 }
 
+.teach-page__nav-btn__icon {
+  display: block;
+  transform: translateY(0.02rem);
+}
+
 .teach-page__stage {
-  overflow-x: clip;
+  overflow-x: visible;
 }
 
 .teach-page__canvas-motion {
@@ -136,11 +156,19 @@
   animation: letter-blur-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
+.teach-page__fade-swap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-group);
+  animation: teach-nav-fade 0.38s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .teach-page__canvas-motion--next,
   .teach-page__canvas-motion--prev,
   .teach-page__canvas-motion--pop,
-  .teach-page__blur-swap {
+  .teach-page__blur-swap,
+  .teach-page__fade-swap {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -151,8 +179,8 @@
 .teach-page__card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 1.05rem 0.95rem 1.2rem;
+  gap: var(--gap-group);
+  padding: var(--space-5) var(--space-4) var(--space-6);
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--clay) 22%, var(--block-border));
@@ -165,7 +193,7 @@
 
 .teach-page__identity {
   text-align: left;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .teach-page__script {
@@ -182,8 +210,13 @@
 .teach-page__identity-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.55rem;
+  gap: var(--gap-group);
+  margin-top: var(--space-3);
+}
+
+.teach-page__identity-meta {
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .teach-page__glyph {
@@ -209,19 +242,25 @@
 }
 
 .teach-page__hangul {
-  margin: 0.15rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--ink-soft);
 }
 
 .teach-page__lead {
-  margin: 0.65rem 0 0;
+  margin: var(--space-3) 0 0;
   font-size: 0.88rem;
   line-height: 1.5;
   color: var(--muted);
 }
 
 .teach-page .teach {
-  margin-top: 0.55rem;
+  margin-top: 0;
+}
+
+.teach-page .hangul-hint,
+.teach-page .theory-tip,
+.teach-page .teach-sync {
+  margin-top: 0;
 }

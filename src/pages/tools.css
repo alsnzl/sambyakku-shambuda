@@ -1,7 +1,7 @@
 /* Shared styles for tool pages */
 .tool {
   min-height: 100%;
-  padding: var(--page-pad-y) var(--space) var(--page-pad-bottom);
+  padding: var(--page-pad-y) var(--page-pad-x) var(--page-pad-bottom);
   display: flex;
   flex-direction: column;
 }
@@ -355,10 +355,6 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-1);
-  padding: var(--space-1);
-  border-radius: var(--radius-capsule);
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
 }
 
 .tool__seg--palette {

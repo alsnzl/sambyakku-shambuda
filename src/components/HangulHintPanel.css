@@ -1,0 +1,143 @@
+.hangul-hint {
+  flex: 0 0 auto;
+  margin-left: auto;
+  min-width: 5.75rem;
+  max-width: 10.5rem;
+  padding: 0.4rem 0.5rem 0.45rem;
+  text-align: left;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hangul-hint.is-editing {
+  max-width: 12.5rem;
+  min-width: 8.25rem;
+}
+
+.hangul-hint__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+
+.hangul-hint__head h4 {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.hangul-hint__badge {
+  font-size: 0.56rem;
+  font-weight: 700;
+  padding: 0.06rem 0.28rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hangul-hint__badge--cloud {
+  background: var(--moss-wash);
+  border-color: color-mix(in srgb, var(--moss) 28%, transparent);
+  color: var(--ink-soft);
+}
+
+.hangul-hint__badge--local {
+  background: var(--teal-wash);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--ink-soft);
+}
+
+.hangul-hint__badge--default,
+.hangul-hint__badge--empty {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.hangul-hint__open {
+  appearance: none;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.28rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hangul-hint__open:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hangul-hint__open-label {
+  line-height: 1;
+}
+
+.hangul-hint__input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.hangul-hint__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+  justify-content: flex-end;
+}
+
+.hangul-hint__btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.22rem 0.45rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hangul-hint__btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.hangul-hint__btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.hangul-hint__flash {
+  margin: 0.3rem 0 0;
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: var(--muted);
+}

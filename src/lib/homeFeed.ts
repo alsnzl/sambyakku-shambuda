@@ -1,6 +1,7 @@
 import { letters, type Letter } from '../data/letters'
 import { MANTRA_SAMPLES } from '../data/mantras'
 import { PATH_STAGES } from '../data/pathStages'
+import { getEffectiveHangulHint } from './hangulHintsStore'
 import {
   getDailyCourse,
   getProgressSummary,
@@ -48,7 +49,7 @@ export function getHomeFeed(): HomeFeedItem[] {
     id: 'letter-day',
     kicker: '오늘의 글자',
     title: dayLetter.iast,
-    body: `${dayLetter.hangulHint}${dayLetter.note ? ` · ${dayLetter.note}` : ' · 눌러서 학습으로 가 보세요.'}`,
+    body: `${getEffectiveHangulHint(dayLetter.id).text || dayLetter.hangulHint}${dayLetter.note ? ` · ${dayLetter.note}` : ' · 눌러서 학습으로 가 보세요.'}`,
     glyph: dayLetter.dewa,
     script: 'deva',
     target: { type: 'track', track: 'sanskrit', mode: 'learn', letterId: dayLetter.id },

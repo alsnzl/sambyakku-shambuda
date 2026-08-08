@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   clearLocalTheoryTip,
   getEffectiveTheoryTip,
@@ -9,12 +9,15 @@ import {
   type EffectiveTheoryTip,
   type TheoryTipSource,
 } from '../lib/theoryTipsStore'
+import { renderTheoryTipText, wrapTheoryTipBold } from '../lib/theoryTipFormat'
 import './TheoryTipPanel.css'
 
 type Props = {
   letterId: string
   /** When false, tip is read-only (learner view). Default true. */
   editable?: boolean
+  /** Fired after local/cloud save so parent can refresh sync status. */
+  onUpdated?: () => void
 }
 
 const sourceLabel: Record<TheoryTipSource, string> = {
@@ -24,12 +27,13 @@ const sourceLabel: Record<TheoryTipSource, string> = {
   empty: '없음',
 }
 
-export function TheoryTipPanel({ letterId, editable = true }: Props) {
+export function TheoryTipPanel({ letterId, editable = true, onUpdated }: Props) {
   const [tick, setTick] = useState(0)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [saving, setSaving] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const tip: EffectiveTheoryTip = getEffectiveTheoryTip(letterId)
   void tick
@@ -69,6 +73,20 @@ export function TheoryTipPanel({ letterId, editable = true }: Props) {
     setDraft(fallback)
   }
 
+  function applyBold() {
+    const el = textareaRef.current
+    const start = el?.selectionStart ?? draft.length
+    const end = el?.selectionEnd ?? draft.length
+    const next = wrapTheoryTipBold(draft, start, end)
+    setDraft(next.text)
+    requestAnimationFrame(() => {
+      const node = textareaRef.current
+      if (!node) return
+      node.focus()
+      node.setSelectionRange(next.selectionStart, next.selectionEnd)
+    })
+  }
+
   async function handleSave() {
     if (saving) return
     const text = draft.trim()
@@ -79,6 +97,7 @@ export function TheoryTipPanel({ letterId, editable = true }: Props) {
 
     saveLocalTheoryTip(letterId, text)
     setTick((n) => n + 1)
+    onUpdated?.()
 
     if (!hasCloudWriteToken()) {
       setEditing(false)
@@ -93,12 +112,14 @@ export function TheoryTipPanel({ letterId, editable = true }: Props) {
       clearLocalTheoryTip(letterId)
       await refreshTheoryCloudStore({ force: true })
       setTick((n) => n + 1)
+      onUpdated?.()
       setEditing(false)
       setFlash('클라우드에 저장했어요')
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setFlash(`클라우드 실패 · 기기에만 보관됨 (${msg.slice(0, 80)})`)
       setTick((n) => n + 1)
+      onUpdated?.()
     } finally {
       setSaving(false)
     }
@@ -140,13 +161,33 @@ export function TheoryTipPanel({ letterId, editable = true }: Props) {
 
       {editable && editing ? (
         <div className="theory-tip__editor">
+          <div className="theory-tip__toolbar" role="toolbar" aria-label="서식">
+            <button
+              type="button"
+              className="theory-tip__fmt motion-press"
+              disabled={saving}
+              onClick={applyBold}
+              aria-label="굵게"
+              title="굵게 (**선택**)"
+            >
+              <strong>B</strong>
+            </button>
+            <span className="theory-tip__fmt-hint">선택 후 B · 또는 **텍스트**</span>
+          </div>
           <textarea
+            ref={textareaRef}
             className="theory-tip__textarea"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault()
+                applyBold()
+              }
+            }}
             rows={5}
             disabled={saving}
-            placeholder="이론·쓰기 팁을 적어 주세요"
+            placeholder="이론·쓰기 팁을 적어 주세요. 굵게는 **이렇게** 또는 B 버튼."
           />
           <div className="theory-tip__bar">
             {tip.defaultText ? (
@@ -178,7 +219,7 @@ export function TheoryTipPanel({ letterId, editable = true }: Props) {
           </div>
         </div>
       ) : tip.text ? (
-        <p className="theory-tip__body">{tip.text}</p>
+        <div className="theory-tip__body">{renderTheoryTipText(tip.text)}</div>
       ) : (
         <p className="theory-tip__body theory-tip__body--empty">
           {editable ? '아직 팁이 없습니다. 편집 아이콘으로 추가할 수 있어요.' : '아직 팁이 없습니다.'}

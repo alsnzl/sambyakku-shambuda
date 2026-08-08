@@ -97,6 +97,9 @@ html[data-siddham-face='user'] {
   --gap-section: var(--space-6);
   --page-pad-y: var(--space-5);
   --page-pad-bottom: calc(var(--space-8) + 0.35rem);
+  /* Extra inset so press/hover lift shadows (~36–48px blur) are not clipped */
+  --shadow-gutter: 2.25rem;
+  --page-pad-x: calc(var(--space) + var(--shadow-gutter));
   --touch-min: 2.75rem; /* 44×44pt */
   /* Nested control inside a padded card (parent − inset) */
   --radius-nested: max(var(--radius-sm), calc(var(--radius-lg) - var(--space-3)));

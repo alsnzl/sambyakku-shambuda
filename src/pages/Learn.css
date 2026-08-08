@@ -1,6 +1,6 @@
 .learn {
   min-height: 100%;
-  padding: var(--page-pad-y) var(--space) var(--page-pad-bottom);
+  padding: var(--page-pad-y) var(--page-pad-x) var(--page-pad-bottom);
 }
 
 .learn__bar {
@@ -287,7 +287,7 @@
   position: relative;
   margin-top: 0.15rem;
   padding: 0.55rem 0.5rem 0.65rem;
-  overflow-x: clip;
+  overflow-x: visible;
 }
 
 .learn__focus-backdrop {
@@ -328,7 +328,7 @@
 .learn__sheet {
   position: relative;
   margin-top: 0;
-  overflow-x: clip;
+  overflow-x: visible;
 }
 
 .learn__sheet-panel--slide {

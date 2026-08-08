@@ -55,6 +55,20 @@
   box-shadow: var(--press-shadow-active);
 }
 
+/* Fold / expand headers: half the default press shrink (4% → 2%). */
+:is(
+  .write__advanced-summary,
+  .teach__advanced-summary,
+  .script-font-bar__toggle,
+  .home__feed-toggle,
+  .home__track-more-toggle,
+  .home__shared-toggle,
+  .tool__labs-toggle,
+  .teach__toggle
+).motion-press:not(:disabled):active {
+  transform: scale(0.98);
+}
+
 /* Text back links — HIG ~44pt hit area */
 .learn__back,
 .tool__back,
@@ -93,7 +107,9 @@
 }
 
 .app-home-fab.motion-press:not(:disabled):hover,
-.app-home-fab.motion-press:not(:disabled):focus-visible {
+.app-home-fab.motion-press:not(:disabled):focus-visible,
+.teach-page__nav-btn.motion-press:not(:disabled):hover,
+.teach-page__nav-btn.motion-press:not(:disabled):focus-visible {
   background: color-mix(in srgb, var(--surface) 72%, transparent);
   border-color: color-mix(in srgb, var(--line-strong) 55%, transparent);
   box-shadow: var(--press-shadow);
@@ -112,7 +128,8 @@
   opacity: 0.55;
 }
 
-.app-home-fab.motion-press:not(:disabled):active {
+.app-home-fab.motion-press:not(:disabled):active,
+.teach-page__nav-btn.motion-press:not(:disabled):active {
   box-shadow: var(--press-shadow-active);
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { ScriptTrack } from '../types/track'
 import {
   DEVA_FONT_OPTIONS,
@@ -16,6 +16,13 @@ import './ScriptFontQuickBar.css'
 
 type Props = {
   track: ScriptTrack
+  /**
+   * `record`: teach “기록 폰트” badge + fold-out picker.
+   * Default: compact top bar used on chart / learn / practice.
+   */
+  variant?: 'default' | 'record'
+  /** Active-font stroke count — only used with `variant="record"`. */
+  strokeCount?: number
 }
 
 function slotForTrack(track: ScriptTrack): ScriptFontSlot {
@@ -31,8 +38,9 @@ function bundledForSlot(slot: ScriptFontSlot) {
  * Deva: Noto Sans Devanagari | Tiro Devanagari Sanskrit.
  * Siddham: Muktamsiddham | Noto Sans Siddham.
  */
-export function ScriptFontQuickBar({ track }: Props) {
+export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0 }: Props) {
   useScriptFontEpoch()
+  const panelId = useId()
   const slot = slotForTrack(track)
   const options = bundledForSlot(slot)
   const choice = getScriptFontChoice(slot)
@@ -44,6 +52,8 @@ export function ScriptFontQuickBar({ track }: Props) {
 
   const activeLabel =
     options.find((o) => o.id === choice)?.label ?? getActiveScriptFontLabel(slot)
+  const isRecord = variant === 'record'
+  const strokeLabel = strokeCount > 0 ? `${strokeCount}획 저장됨` : '미기록'
 
   async function pick(next: ScriptFontChoice) {
     if (next === choice || busy) return
@@ -59,20 +69,44 @@ export function ScriptFontQuickBar({ track }: Props) {
   }
 
   return (
-    <div className={`script-font-bar ${open ? 'is-open' : ''}`}>
+    <div
+      className={`script-font-bar ${isRecord ? 'script-font-bar--record' : ''} ${
+        open ? 'is-open' : ''
+      }`}
+    >
       <button
         type="button"
         className="script-font-bar__toggle motion-press"
         aria-expanded={open}
+        aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="script-font-bar__toggle-main">
-          <span className="script-font-bar__title">폰트</span>
-          <span className="script-font-bar__current">{activeLabel}</span>
-        </span>
-        <FoldChevron open={open} />
+        {isRecord ? (
+          <>
+            <FoldChevron open={open} />
+            <span className="script-font-bar__record-main">
+              <span className="script-font-bar__title">기록 폰트</span>
+              <strong className="script-font-bar__current">{activeLabel}</strong>
+            </span>
+            <span
+              className={`script-font-bar__stroke-state${
+                strokeCount > 0 ? ' is-saved' : ' is-empty'
+              }`}
+            >
+              {strokeLabel}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="script-font-bar__toggle-main">
+              <span className="script-font-bar__title">폰트</span>
+              <span className="script-font-bar__current">{activeLabel}</span>
+            </span>
+            <FoldChevron open={open} />
+          </>
+        )}
       </button>
-      <div className={`fold-panel ${open ? 'is-expanded' : ''}`}>
+      <div id={panelId} className={`fold-panel ${open ? 'is-expanded' : ''}`}>
         <div className="fold-panel__inner">
           <div className="script-font-bar__body" role="group" aria-label="기본 폰트 선택">
             {options.map((opt) => (

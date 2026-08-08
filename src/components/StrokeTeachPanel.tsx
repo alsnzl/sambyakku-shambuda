@@ -51,6 +51,7 @@ import { assessTeachCoverage } from '../lib/teachCoverage'
 import { StrokeArrowLayer } from './StrokeArrowLayer'
 import { StrokeHistoryRail } from './StrokeHistoryRail'
 import { FoldChevron } from './FoldChevron'
+import { ScriptFontQuickBar } from './ScriptFontQuickBar'
 import { startStrokeRevealPlayback } from '../lib/strokePlayback'
 import { useLockScrollWhileDrawing } from '../lib/useLockScrollWhileDrawing'
 import './StrokeTeachPanel.css'
@@ -61,6 +62,14 @@ type Props = {
   track: ScriptTrack
   iast?: string
   hangulHint?: string
+  /** Letter paging motion — canvas slides; guide fades; rail stays still. */
+  navMotion?: 'slide-left' | 'slide-right' | 'pop'
+  onPrevLetter?: () => void
+  onNextLetter?: () => void
+  hasPrevLetter?: boolean
+  hasNextLetter?: boolean
+  /** Fired after local/cloud stroke save so parent sync bar can refresh. */
+  onSyncChange?: () => void
 }
 
 type TeachMode = 'draw' | 'watch'
@@ -75,7 +84,45 @@ type CloudUiStatus =
   | 'no-token'
   | 'error'
 
-export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: Props) {
+function LetterNavChevron({ dir }: { dir: 'prev' | 'next' }) {
+  return (
+    <svg className="teach__letter-nav-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      {dir === 'prev' ? (
+        <path
+          d="M14.5 5.5 8 12l6.5 6.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9.5 5.5 16 12l-6.5 6.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  )
+}
+
+export function StrokeTeachPanel({
+  letterId,
+  glyph,
+  track,
+  iast,
+  hangulHint,
+  navMotion = 'pop',
+  onPrevLetter,
+  onNextLetter,
+  hasPrevLetter = false,
+  hasNextLetter = false,
+  onSyncChange,
+}: Props) {
   const fontEpoch = useScriptFontEpoch()
   const script = track === 'sanskrit' ? 'deva' : 'siddham'
   const fontSlot = script
@@ -524,6 +571,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       setFlash(
         `${count}획 · ${faceLabel} · ${coverageNote} · 이 기기에만 저장 (설정에서 토큰을 저장하세요)`,
       )
+      onSyncChange?.()
       return
     }
 
@@ -542,12 +590,14 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       setGuideTip(tip)
       setCloudPhase('idle')
       setFlash(`${count}획 · ${faceLabel} · ${coverageNote} · 클라우드 저장 완료`)
+      onSyncChange?.()
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setCloudPhase('error')
       setCloudError(msg)
       setFlash(`클라우드 저장 실패 · 기기에만 보관됨 — ${msg}`)
       refresh()
+      onSyncChange?.()
     } finally {
       setSaving(false)
     }
@@ -621,13 +671,24 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
       <div className="teach__chrome">
         <div className="teach__head">
           <h3>획 그리기</h3>
-          <span
-            className={`teach__status ${statusClass[cloudStatus]}`}
-            title={cloudError ?? cloudRepoLabel()}
-          >
-            <span className="teach__status-dot" aria-hidden="true" />
-            {statusText[cloudStatus]}
-          </span>
+          <div className="teach__status-row">
+            <span
+              className={`teach__status ${statusClass[cloudStatus]}`}
+              title={cloudError ?? cloudRepoLabel()}
+            >
+              <span className="teach__status-dot" aria-hidden="true" />
+              {statusText[cloudStatus]}
+            </span>
+            {otherFontHint ? (
+              <span
+                className="teach__status teach__status--other-font"
+                title={`다른 폰트에만 있는 기록(현재 폰트에서는 숨김): ${otherFontHint}`}
+              >
+                <span className="teach__status-dot" aria-hidden="true" />
+                다른 폰트 {otherFontHint}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <p className="teach__meta">
@@ -641,26 +702,19 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                 ? `이 폰트 저장 ${info.strokeCount}획 · 불러오기로 수정`
                 : '이 폰트에는 아직 획이 없습니다 · 펜으로 그려 주세요'}
         </p>
-        <div className="teach__font-badge" aria-label={`기록 폰트 ${activeFontLabel}`}>
-          <span className="teach__font-badge-kicker">기록 폰트</span>
-          <strong className="teach__font-badge-name">{activeFontLabel}</strong>
-          <span
-            className={`teach__font-badge-state${
-              info.strokeCount > 0 ? ' is-saved' : ' is-empty'
-            }`}
-          >
-            {info.strokeCount > 0 ? `${info.strokeCount}획 저장됨` : '미기록'}
-          </span>
-        </div>
-        {otherFontHint ? (
-          <p className="teach__font-other">
-            다른 폰트 기록(숨김): {otherFontHint}
-          </p>
-        ) : null}
+        <ScriptFontQuickBar
+          track={track}
+          variant="record"
+          strokeCount={info.strokeCount}
+        />
       </div>
 
       <div className="teach__workspace">
-        <aside className="teach__guide" aria-label="획 기록 가이드">
+        <aside
+          key={`guide-${letterId}`}
+          className="teach__guide teach__nav-fade"
+          aria-label="획 기록 가이드"
+        >
           <div className="teach__guide-letter">
             <span className="teach__guide-glyph" lang="sa" style={{ fontFamily }}>
               {glyph}
@@ -715,7 +769,16 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
           </label>
         </aside>
 
-        <div className="teach__main">
+        <div
+          key={`canvas-${letterId}`}
+          className={
+            navMotion === 'slide-left'
+              ? 'teach__main teach__nav-slide teach__nav-slide--next'
+              : navMotion === 'slide-right'
+                ? 'teach__main teach__nav-slide teach__nav-slide--prev'
+                : 'teach__main teach__nav-slide teach__nav-slide--pop'
+          }
+        >
           {glyph ? (
             <div className="teach__canvas-row">
               <svg
@@ -867,45 +930,71 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
         </div>
 
         <div className="teach__rail">
-          {mode === 'draw' ? (
-            <StrokeHistoryRail
-              undoDisabled={recorded.length === 0 || saving}
-              redoDisabled={redoStack.length === 0 || saving}
-              onUndo={undoStroke}
-              onRedo={redoStroke}
-            />
-          ) : null}
-
-          <div className="teach__actions-row">
+          <div className="teach__letter-nav" role="group" aria-label="글자 이동">
             <button
               type="button"
-              className="teach__btn teach__btn--primary"
-              disabled={recorded.length === 0 || saving}
-              onClick={() => void handleSave()}
+              className="teach__btn teach__btn--letter-nav motion-press"
+              disabled={!hasPrevLetter || !onPrevLetter || saving}
+              onClick={onPrevLetter}
             >
-              {saving ? '저장 중…' : saveAckLow ? '그래도 저장' : '저장'}
+              <LetterNavChevron dir="prev" />
+              이전 글자
             </button>
             <button
               type="button"
-              className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
-              disabled={!canWatch || saving}
-              onClick={handleWatch}
+              className="teach__btn teach__btn--letter-nav motion-press"
+              disabled={!hasNextLetter || !onNextLetter || saving}
+              onClick={onNextLetter}
             >
-              {mode === 'watch' ? '다시 보기' : '보기'}
-            </button>
-            <button
-              type="button"
-              className="teach__btn"
-              disabled={!canLoadSaved || saving}
-              onClick={handleLoad}
-              title="저장된 획을 캔버스로 불러와 수정"
-            >
-              불러오기
-            </button>
-            <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
-              비우기
+              다음 글자
+              <LetterNavChevron dir="next" />
             </button>
           </div>
+
+          <div className="teach__rail-rule" role="separator" aria-hidden="true" />
+
+          <div className="teach__rail-body">
+            {mode === 'draw' ? (
+              <StrokeHistoryRail
+                undoDisabled={recorded.length === 0 || saving}
+                redoDisabled={redoStack.length === 0 || saving}
+                onUndo={undoStroke}
+                onRedo={redoStroke}
+              />
+            ) : null}
+
+            <div className="teach__actions-stack">
+              <div className="teach__actions-row">
+                <button
+                  type="button"
+                  className="teach__btn teach__btn--primary"
+                  disabled={recorded.length === 0 || saving}
+                  onClick={() => void handleSave()}
+                >
+                  {saving ? '저장 중…' : saveAckLow ? '그래도 저장' : '저장'}
+                </button>
+                <button
+                  type="button"
+                  className={`teach__btn ${mode === 'watch' ? 'is-active' : ''}`}
+                  disabled={!canWatch || saving}
+                  onClick={handleWatch}
+                >
+                  {mode === 'watch' ? '다시 보기' : '보기'}
+                </button>
+                <button
+                  type="button"
+                  className="teach__btn"
+                  disabled={!canLoadSaved || saving}
+                  onClick={handleLoad}
+                  title="저장된 획을 캔버스로 불러와 수정"
+                >
+                  불러오기
+                </button>
+                <button type="button" className="teach__btn" disabled={saving} onClick={handleEdit}>
+                  비우기
+                </button>
+              </div>
+            </div>
 
           {flash ? <p className="teach__message">{flash}</p> : null}
           {cloudStatus === 'error' && cloudError ? (
@@ -1016,6 +1105,7 @@ export function StrokeTeachPanel({ letterId, glyph, track, iast, hangulHint }: P
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

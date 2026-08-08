@@ -1,4 +1,5 @@
 import { letters, type Letter } from '../data/letters'
+import { getEffectiveHangulHint } from './hangulHintsStore'
 import { glyphForTrack } from './scriptDisplay'
 import type { ScriptTrack } from '../types/track'
 
@@ -36,8 +37,12 @@ function scriptOf(track: ScriptTrack): 'deva' | 'siddham' {
   return track === 'sanskrit' ? 'deva' : 'siddham'
 }
 
+function hangulOf(letter: Letter): string {
+  return getEffectiveHangulHint(letter.id).text || letter.hangulHint
+}
+
 function iastLabel(letter: Letter): string {
-  return `${letter.iast} · ${letter.hangulHint}`
+  return `${letter.iast} · ${hangulOf(letter)}`
 }
 
 function buildQuestion(
@@ -76,7 +81,7 @@ function buildQuestion(
     id: `${track}-${letter.id}-${mode}-${index}`,
     mode,
     letter,
-    prompt: `${letter.iast} (${letter.hangulHint})`,
+    prompt: `${letter.iast} (${hangulOf(letter)})`,
     promptScript: 'latin',
     choices: shuffle([answer, ...distractors]),
     choiceScript: script,

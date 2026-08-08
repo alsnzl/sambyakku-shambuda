@@ -181,6 +181,20 @@
   background: var(--glass-fill);
 }
 
+.teach-page__nav-btn {
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--block-shadow);
+  -webkit-backdrop-filter: var(--block-blur);
+  backdrop-filter: var(--block-blur);
+  color: var(--ink-soft);
+}
+
+.teach-page__nav-btn:hover,
+.teach-page__nav-btn:focus-visible {
+  background: var(--glass-fill);
+}
+
 /* —— Controls: buttons, chips, segmented, folds —— */
 :is(
   .home__btn,
@@ -199,7 +213,7 @@
   .write__replay,
   .write__brush-btn,
   .teach__brush-btn,
-  .teach__btn,
+  .teach__btn:not(.teach__btn--letter-nav),
   .letter-card__fav,
   .letter-card__write-btn,
   .letter-card__audio,
@@ -207,9 +221,7 @@
   .letter-card__similar-btn,
   .script-font-bar__opt,
   .stroke-history__btn,
-  .theory-tip__edit,
-  .theory-tip__btn,
-  .teach-page__nav-btn
+  .theory-tip__btn
 ) {
   -webkit-backdrop-filter: var(--block-blur-soft);
   backdrop-filter: var(--block-blur-soft);
@@ -231,6 +243,13 @@
   backdrop-filter: none;
   background: transparent;
   box-shadow: none;
+}
+
+/* Compact controls inside glass cards — no nested blur slab over labels */
+:is(.theory-tip__edit, .theory-tip__fmt, .hangul-hint__edit) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
 }
 
 :is(
@@ -274,7 +293,6 @@
   .script-font-bar__opt:not(.is-active),
   .write__advanced,
   .teach__advanced,
-  .theory-tip__edit,
   .theory-tip__btn:not(.theory-tip__btn--primary)
 ) {
   background: var(--glass-fill-strong);

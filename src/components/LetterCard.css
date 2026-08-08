@@ -74,20 +74,27 @@
 
 .letter-card__side-nav {
   appearance: none;
-  width: 2.85rem;
-  height: 2.85rem;
+  box-sizing: border-box;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  border-radius: var(--radius-capsule);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--ink-soft);
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 2px 8px var(--shadow);
+  -webkit-backdrop-filter: var(--block-blur-soft);
+  backdrop-filter: var(--block-blur-soft);
+  box-shadow: var(--glass-specular, none);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .letter-card__side-nav:disabled {

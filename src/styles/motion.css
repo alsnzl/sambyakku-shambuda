@@ -369,7 +369,12 @@
   .teach-page__canvas-motion--next,
   .teach-page__canvas-motion--prev,
   .teach-page__canvas-motion--pop,
-  .teach-page__blur-swap {
+  .teach-page__blur-swap,
+  .teach-page__fade-swap,
+  .teach__nav-fade,
+  .teach__nav-slide--next,
+  .teach__nav-slide--prev,
+  .teach__nav-slide--pop {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

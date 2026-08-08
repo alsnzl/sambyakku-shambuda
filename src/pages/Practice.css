@@ -1,6 +1,6 @@
 .practice {
   min-height: 100%;
-  padding: var(--page-pad-y) var(--space) var(--page-pad-bottom);
+  padding: var(--page-pad-y) var(--page-pad-x) var(--page-pad-bottom);
   display: flex;
   flex-direction: column;
 }
