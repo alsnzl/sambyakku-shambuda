@@ -49,9 +49,6 @@
   font-weight: 700;
   line-height: 1.15;
   color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
 }
 
@@ -83,6 +80,7 @@
   color: inherit;
   cursor: pointer;
   text-align: left;
+  min-width: 0;
 }
 
 .script-font-bar__opt.is-active {
@@ -118,21 +116,78 @@
 }
 
 .script-font-bar__opt-label {
-  display: block;
   margin: 0;
   padding: 0;
   font-size: 0.86rem;
   font-weight: 650;
   line-height: 1.2;
   color: var(--ink-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .script-font-bar__opt.is-active .script-font-bar__opt-label {
   color: var(--control-on-fg);
   font-weight: 700;
+}
+
+/* Overflow ping-pong: only when .is-overflow (JS measures scrollWidth). */
+.sfb-marquee {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sfb-marquee__text {
+  display: inline-block;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.sfb-marquee.is-overflow {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 0.65rem,
+    #000 calc(100% - 0.65rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 0.65rem,
+    #000 calc(100% - 0.65rem),
+    transparent 100%
+  );
+}
+
+.sfb-marquee.is-overflow .sfb-marquee__text {
+  animation: sfb-marquee-pingpong var(--sfb-marquee-duration, 4.5s) ease-in-out infinite alternate;
+}
+
+@keyframes sfb-marquee-pingpong {
+  0%,
+  16% {
+    transform: translateX(0);
+  }
+  84%,
+  100% {
+    transform: translateX(var(--sfb-marquee-x, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfb-marquee.is-overflow .sfb-marquee__text {
+    animation: none;
+    transform: none;
+  }
+
+  .sfb-marquee.is-overflow {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 .script-font-bar__error {
@@ -155,30 +210,32 @@
 .script-font-bar--record.script-font-bar--always-open {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.55rem 0.65rem 0.6rem;
+  gap: 0.35rem;
+  padding: 0.5rem 0.55rem 0.5rem;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .script-font-bar--record .script-font-bar__record-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.45rem 0.65rem;
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 .script-font-bar--record .script-font-bar__record-main {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: baseline;
-  gap: 0.15rem 0.5rem;
+  gap: 0.35rem;
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .script-font-bar--record .script-font-bar__title {
-  flex: 1 0 100%;
+  flex: 0 0 auto;
   font-size: 0.68rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -186,7 +243,9 @@
 }
 
 .script-font-bar--record .script-font-bar__current {
-  font-size: 0.9rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.88rem;
   font-weight: 750;
   letter-spacing: -0.01em;
   color: var(--ink);
@@ -219,25 +278,28 @@
 .script-font-bar--record .script-font-bar__body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.4rem;
+  gap: 0.35rem;
   padding: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .script-font-bar--record .script-font-bar__opt {
-  min-height: 2.35rem;
-  padding: 0.3rem 0.45rem;
-  column-gap: 0.45rem;
-  grid-template-columns: 1.85rem minmax(0, 1fr);
+  min-height: 2.15rem;
+  padding: 0.28rem 0.4rem;
+  column-gap: 0.4rem;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  min-width: 0;
 }
 
 .script-font-bar--record .script-font-bar__sample {
-  width: 1.85rem;
-  height: 1.85rem;
-  font-size: 1.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 1.05rem;
 }
 
 .script-font-bar--record .script-font-bar__opt-label {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
 }
 
 .script-font-bar--record .script-font-bar__error {

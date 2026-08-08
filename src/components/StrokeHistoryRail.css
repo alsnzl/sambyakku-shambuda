@@ -39,10 +39,18 @@
   gap: 0.5rem;
   width: 100%;
   touch-action: none;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 .write__canvas-row .write__svg,
 .teach__canvas-row .teach__svg {
   margin: 0;
   flex: 0 1 var(--canvas-draw-max);
+}
+
+.teach__canvas-row .teach__svg {
+  /* Portrait: don't let flex siblings shrink the square canvas. */
+  flex: 0 0 auto;
+  width: min(100%, var(--canvas-draw-max));
 }

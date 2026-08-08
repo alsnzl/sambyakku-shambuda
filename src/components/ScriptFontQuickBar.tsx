@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import type { ScriptTrack } from '../types/track'
 import {
   DEVA_FONT_OPTIONS,
@@ -31,6 +31,81 @@ function slotForTrack(track: ScriptTrack): ScriptFontSlot {
 
 function bundledForSlot(slot: ScriptFontSlot) {
   return slot === 'deva' ? DEVA_FONT_OPTIONS : SIDDHAM_FONT_OPTIONS
+}
+
+/** Ping-pong scroll only when label overflows its slot; edges fade via CSS mask. */
+function OverflowPingPongText({ text, className }: { text: string; className?: string }) {
+  const wrapRef = useRef<HTMLSpanElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [overflowPx, setOverflowPx] = useState(0)
+
+  useEffect(() => {
+    const wrap = wrapRef.current
+    const el = textRef.current
+    if (!wrap || !el) return
+
+    let cancelled = false
+
+    const measure = () => {
+      if (cancelled) return
+      /* Wrap must be width-constrained by parent; compare natural text width. */
+      const wrapW = wrap.clientWidth
+      const textW = el.scrollWidth
+      if (wrapW < 2) {
+        setOverflowPx(0)
+        return
+      }
+      const delta = Math.ceil(textW - wrapW)
+      setOverflowPx(delta > 2 ? delta : 0)
+    }
+
+    const run = () => {
+      measure()
+      requestAnimationFrame(measure)
+    }
+
+    run()
+    const ro = new ResizeObserver(run)
+    ro.observe(wrap)
+    if (wrap.parentElement) ro.observe(wrap.parentElement)
+
+    const fontsReady =
+      typeof document !== 'undefined' && document.fonts?.ready
+        ? document.fonts.ready.then(run)
+        : null
+
+    return () => {
+      cancelled = true
+      ro.disconnect()
+      void fontsReady
+    }
+  }, [text])
+
+  const overflowing = overflowPx > 0
+  /* ~24px/s with pause at ends — readable on tablet */
+  const durationSec = overflowing ? Math.min(8, Math.max(4, overflowPx / 24)) : 0
+
+  return (
+    <span
+      ref={wrapRef}
+      className={`sfb-marquee${overflowing ? ' is-overflow' : ''}${className ? ` ${className}` : ''}`}
+    >
+      <span
+        ref={textRef}
+        className="sfb-marquee__text"
+        style={
+          overflowing
+            ? ({
+                '--sfb-marquee-x': `-${overflowPx}px`,
+                '--sfb-marquee-duration': `${durationSec}s`,
+              } as CSSProperties)
+            : undefined
+        }
+      >
+        {text}
+      </span>
+    </span>
+  )
 }
 
 /**
@@ -89,7 +164,7 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
           >
             {slot === 'siddham' && opt.id === 'noto-siddham' ? '𑖀' : 'अ'}
           </span>
-          <span className="script-font-bar__opt-label">{opt.label}</span>
+          <OverflowPingPongText text={opt.label} className="script-font-bar__opt-label" />
         </button>
       ))}
       {error ? <p className="script-font-bar__error">{error}</p> : null}
@@ -103,7 +178,7 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
         <div className="script-font-bar__record-head">
           <span className="script-font-bar__record-main">
             <span className="script-font-bar__title">기록 폰트</span>
-            <strong className="script-font-bar__current">{activeLabel}</strong>
+            <OverflowPingPongText text={activeLabel} className="script-font-bar__current" />
           </span>
           <span
             className={`script-font-bar__stroke-state${
@@ -130,7 +205,7 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
         <FoldChevron open={open} />
         <span className="script-font-bar__toggle-main">
           <span className="script-font-bar__title">폰트</span>
-          <span className="script-font-bar__current">{activeLabel}</span>
+          <OverflowPingPongText text={activeLabel} className="script-font-bar__current" />
         </span>
       </button>
       <div id={panelId} className={`fold-panel ${open ? 'is-expanded' : ''}`}>

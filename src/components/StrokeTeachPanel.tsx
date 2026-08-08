@@ -745,6 +745,11 @@ export function StrokeTeachPanel({
               {iast ? <p className="teach__guide-iast">{iast}</p> : null}
               {hangulHint ? <p className="teach__guide-hangul">{hangulHint}</p> : null}
             </div>
+            {flash ? (
+              <p className="teach__guide-flash" role="status">
+                {flash}
+              </p>
+            ) : null}
           </div>
 
           <div className="teach__guide-scroll">
@@ -1027,7 +1032,7 @@ export function StrokeTeachPanel({
               </div>
             </div>
 
-          {flash ? <p className="teach__message">{flash}</p> : null}
+          {flash ? <p className="teach__message teach__flash-rail">{flash}</p> : null}
           {cloudStatus === 'error' && cloudError ? (
             <p className="teach__message teach__message--warn">{cloudError}</p>
           ) : null}

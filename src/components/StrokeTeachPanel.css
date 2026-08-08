@@ -164,6 +164,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  overflow: visible;
 }
 
 .teach__main {
@@ -172,6 +173,7 @@
   align-items: stretch;
   gap: var(--space-3);
   min-width: 0;
+  overflow: visible;
 }
 
 .teach__center-stack {
@@ -181,6 +183,10 @@
   gap: var(--space-3);
   width: 100%;
   min-width: 0;
+  /* Keep canvas + font bar shadows/borders from being clipped by parents */
+  overflow: visible;
+  padding-inline: 1px;
+  box-sizing: border-box;
 }
 
 .teach__center-stack > .script-font-bar--record {
@@ -189,6 +195,8 @@
   width: 100%;
   max-width: var(--canvas-draw-max, 100%);
   margin-inline: auto;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 /* Landscape-only (see landscape.css). Portrait: keep canvas + right rail flow. */
@@ -201,8 +209,9 @@
 }
 
 .teach__nav-slide {
-  overflow: hidden;
-  border-radius: var(--radius-xl);
+  /* Visible so portrait font bar + canvas corners aren't clipped by radius. */
+  overflow: visible;
+  border-radius: 0;
 }
 
 .teach__nav-slide--next {
@@ -601,6 +610,7 @@
   aspect-ratio: 1;
   display: block;
   overflow: hidden;
+  flex: 0 0 auto;
   border-radius: var(--radius-xl);
   border: 1px solid var(--block-border);
   background: var(--block-bg);
