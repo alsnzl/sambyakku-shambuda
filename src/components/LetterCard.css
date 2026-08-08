@@ -131,6 +131,9 @@
   border: 1px solid var(--block-border);
   background: var(--block-bg);
   box-shadow: var(--block-shadow);
+  /* Size HTML glyph relative to frame (match SVG fontSize 158 / viewBox 240). */
+  container-type: inline-size;
+  container-name: letter-hero;
 }
 
 .letter-card__hero-reveal {
@@ -148,11 +151,11 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: 0.12em 0.08em 0;
+  padding: 0;
   box-sizing: border-box;
   color: var(--ink);
   line-height: 1;
-  font-size: calc(4.85rem * var(--glyph-scale));
+  font-size: calc(100cqw * 158 / 240);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1);
@@ -164,7 +167,8 @@
 
 .letter-card__hero-glyph--deva {
   font-family: var(--deva);
-  padding-top: max(0.32em, var(--deva-matra-clearance));
+  /* Slight top room for mātrā — keep smaller than rem-era padding so size stays SVG-like */
+  padding-top: 0.08em;
 }
 
 .letter-card__hero-glyph--siddham {

@@ -907,8 +907,7 @@ textarea {
   line-height: 1.15;
 }
 
-.letter-card__hero--deva,
-.letter-card__hero-glyph--deva {
+.letter-card__hero--deva {
   padding-top: max(0.32em, var(--deva-matra-clearance));
 }
 
