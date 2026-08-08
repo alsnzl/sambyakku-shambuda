@@ -41,7 +41,6 @@ import { StrokeHistoryRail } from './StrokeHistoryRail'
 import {
   ensureScriptFontReady,
   getActiveScriptFontStack,
-  getScriptFontChoice,
   getScriptFontStack,
   parseScriptFontChoice,
 } from '../lib/customScriptFonts'
@@ -84,7 +83,6 @@ export function WritePractice({ letterId, glyph, track, onClose, hideFontBar = f
   const canvasData = data ?? fallback
   const inkWidth = FREEHAND_INK_WIDTH
   const canWatchStrokes = Boolean(taughtData?.strokes.length)
-  const fontChoice = getScriptFontChoice(fontSlot)
   const fontFamily = getActiveScriptFontStack(fontSlot)
   const recordedFontChoice = parseScriptFontChoice(fontSlot, teachInfo.fontFace)
   const watchFontFamily = recordedFontChoice
