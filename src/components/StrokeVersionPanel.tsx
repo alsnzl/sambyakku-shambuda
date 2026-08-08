@@ -21,13 +21,31 @@ type Props = {
 
 function formatWhen(iso: string) {
   try {
+    const d = new Date(iso)
     return new Intl.DateTimeFormat('ko-KR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date(iso))
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(d)
   } catch {
     return iso
   }
+}
+
+function versionKindLabel(kind: StrokeVersionMeta['kind']) {
+  if (kind === 'pre-restore') return '복원 전 보관'
+  if (kind === 'manual') return '복원한 기록'
+  return '저장한 기록'
+}
+
+function versionTitle(v: StrokeVersionMeta) {
+  return `${formatWhen(v.createdAt)} · ${v.strokeCount}획`
+}
+
+function versionSubtitle(v: StrokeVersionMeta) {
+  return versionKindLabel(v.kind)
 }
 
 export function StrokeVersionPanel({
@@ -167,10 +185,8 @@ export function StrokeVersionPanel({
                       disabled={busy}
                       onClick={() => setSelectedId(v.id)}
                     >
-                      <span className="stroke-version__item-when">{formatWhen(v.createdAt)}</span>
-                      <span className="stroke-version__item-meta">
-                        {v.strokeCount}획 · {v.fontLabel || v.fontFace} · {v.kind}
-                      </span>
+                      <span className="stroke-version__item-when">{versionTitle(v)}</span>
+                      <span className="stroke-version__item-meta">{versionSubtitle(v)}</span>
                     </button>
                   </li>
                 ))}

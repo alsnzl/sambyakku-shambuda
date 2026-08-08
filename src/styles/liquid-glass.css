@@ -200,7 +200,6 @@
   .home__btn,
   .home__link,
   .home__tool,
-  .home__track-more-toggle,
   .learn__tile,
   .tool__btn,
   .tool__chip,
@@ -237,7 +236,10 @@
   .script-font-bar__toggle,
   .write__advanced-summary,
   .teach__advanced-summary,
-  .teach__toggle
+  .teach__toggle,
+  .home__track-more-toggle,
+  .home__shared-toggle,
+  .today-results__toggle
 ) {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

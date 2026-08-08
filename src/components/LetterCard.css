@@ -61,29 +61,33 @@
   align-items: center;
   gap: 0.85rem;
   padding: 0.35rem 0 0.5rem;
+  overflow: visible;
 }
 
 .letter-card__stage {
   display: grid;
-  grid-template-columns: 2.85rem minmax(0, 1fr) 2.85rem;
+  grid-template-columns: var(--touch-min) minmax(0, 1fr) var(--touch-min);
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
   width: 100%;
   max-width: var(--stage-max);
+  overflow: visible;
 }
 
 .letter-card__side-nav {
   appearance: none;
+  position: relative;
+  z-index: 3;
   box-sizing: border-box;
   width: var(--touch-min);
   height: var(--touch-min);
   min-width: var(--touch-min);
   min-height: var(--touch-min);
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 45%, transparent);
   border-radius: var(--radius-capsule);
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
-  color: var(--ink-soft);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: var(--ink);
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1;
@@ -95,6 +99,7 @@
   box-shadow: var(--glass-specular, none);
   overflow: hidden;
   isolation: isolate;
+  justify-self: center;
 }
 
 .letter-card__side-nav:disabled {
@@ -113,6 +118,8 @@
 
 .letter-card__hero-frame {
   container-type: inline-size;
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--canvas-draw-max);
   aspect-ratio: 1;

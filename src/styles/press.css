@@ -42,7 +42,10 @@
     .script-font-bar__toggle,
     .write__advanced-summary,
     .teach__advanced-summary,
-    .teach__toggle
+    .teach__toggle,
+    .home__track-more-toggle,
+    .home__shared-toggle,
+    .today-results__toggle
   ).motion-press:not(:disabled):hover {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -64,7 +67,8 @@
   .home__track-more-toggle,
   .home__shared-toggle,
   .tool__labs-toggle,
-  .teach__toggle
+  .teach__toggle,
+  .today-results__toggle
 ).motion-press:not(:disabled):active {
   transform: scale(0.98);
 }
@@ -144,7 +148,8 @@
   .home__feed,
   .home__track-more,
   .home__shared--fold,
-  .tool__labs
+  .tool__labs,
+  .today-results
 ).is-open
   :is(
     .write__advanced-summary,
@@ -153,7 +158,8 @@
     .home__feed-toggle,
     .home__track-more-toggle,
     .home__shared-toggle,
-    .tool__labs-toggle
+    .tool__labs-toggle,
+    .today-results__toggle
   ).motion-press:not(:disabled):is(:hover, :active, :focus-visible) {
   box-shadow: none;
   transform: none;
@@ -167,7 +173,8 @@
   .home__feed,
   .home__track-more,
   .home__shared--fold,
-  .tool__labs
+  .tool__labs,
+  .today-results
 ).is-open
   > .fold-panel.is-expanded,
 :is(
@@ -177,7 +184,8 @@
   .home__feed,
   .home__track-more,
   .home__shared--fold,
-  .tool__labs
+  .tool__labs,
+  .today-results
 ).is-open
   .fold-panel.is-expanded {
   position: relative;

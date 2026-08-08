@@ -47,10 +47,16 @@ export function Learn({
   const meta = trackMeta[track]
   const isSanskrit = track === 'sanskrit'
 
+  const allLetters = useMemo(() => groups.flatMap((g) => g.letters), [groups])
   const activeGroup = groups.find((g) => g.id === groupId) ?? null
+  const groupIndex = activeGroup ? groups.findIndex((g) => g.id === activeGroup.id) : -1
+  const prevGroup = groupIndex > 0 ? groups[groupIndex - 1] : null
+  const nextGroup =
+    groupIndex >= 0 && groupIndex < groups.length - 1 ? groups[groupIndex + 1] : null
 
   function openLetter(item: Letter, from: 'chart' | 'group') {
     setLetter(item)
+    setGroupId(item.group)
     setLetterReturn(from)
     setSlide('pop')
     setView('letter')
@@ -58,7 +64,13 @@ export function Learn({
 
   function openGroup(id: string) {
     setGroupId(id)
+    setSlide('pop')
     setView('group')
+  }
+
+  function goGroup(targetId: string, dir: 'prev' | 'next') {
+    setSlide(dir === 'prev' ? 'slide-right' : 'slide-left')
+    setGroupId(targetId)
   }
 
   function backFromLetter() {
@@ -78,11 +90,13 @@ export function Learn({
 
   function goPrev(prev: Letter) {
     setSlide('slide-right')
+    setGroupId(prev.group)
     setLetter(prev)
   }
 
   function goNext(next: Letter) {
     setSlide('slide-left')
+    setGroupId(next.group)
     setLetter(next)
   }
 
@@ -110,13 +124,11 @@ export function Learn({
   })
 
   if (view === 'letter' && letter) {
-    const sequence =
-      letterReturn === 'chart'
-        ? groups.flatMap((g) => g.letters)
-        : (activeGroup?.letters ?? [letter])
+    const sequence = allLetters
     const index = sequence.findIndex((item) => item.id === letter.id)
     const prev = index > 0 ? sequence[index - 1] : null
     const next = index >= 0 && index < sequence.length - 1 ? sequence[index + 1] : null
+    const groupLabel = letter.groupKo
 
     return (
       <main className="learn">
@@ -129,7 +141,10 @@ export function Learn({
             ← 목록
           </button>
           <h1>
-            {index + 1} / {sequence.length}
+            <span className="learn__bar-group">{groupLabel}</span>
+            <span className="learn__bar-count">
+              {index + 1} / {sequence.length}
+            </span>
           </h1>
         </header>
 
@@ -157,26 +172,90 @@ export function Learn({
   }
 
   if (view === 'group' && activeGroup) {
+    const samples = activeGroup.letters.slice(0, 6).map((l) => glyphForTrack(l, track))
+    const heroMotion =
+      slide === 'slide-left'
+        ? 'learn__group-hero-panel--next'
+        : slide === 'slide-right'
+          ? 'learn__group-hero-panel--prev'
+          : 'learn__group-hero-panel--pop'
+
     return (
-      <MotionPage motionKey={`group-${activeGroup.id}`} variant="fade-up">
-        <main className="learn">
-          <header className="learn__bar">
+      <main className="learn learn--group">
+        <header className="learn__bar learn__bar--group">
+          <button
+            type="button"
+            className="learn__back motion-press"
+            onClick={backFromGroup}
+          >
+            ← 계열
+          </button>
+        </header>
+
+        <section className="learn__group-hero" aria-labelledby={`group-title-${activeGroup.id}`}>
+          <div className="learn__group-hero-row">
             <button
               type="button"
-              className="learn__back motion-press"
-              onClick={backFromGroup}
+              className="learn__group-nav-btn motion-press"
+              disabled={!prevGroup}
+              aria-label={prevGroup ? `이전 계열 ${prevGroup.labelKo}` : '이전 계열 없음'}
+              onClick={prevGroup ? () => goGroup(prevGroup.id, 'prev') : undefined}
             >
-              ← 계열
+              ◀
             </button>
-            <h1>{activeGroup.labelKo}</h1>
-          </header>
-          <ScriptFontQuickBar track={track} />
-          <ul key={`learn-group-${fontEpoch}`} className="learn__grid motion-stagger">
+
+            <div className="learn__group-hero-viewport">
+              <div
+                key={`hero-${activeGroup.id}`}
+                className={`learn__group-hero-panel ${heroMotion}`}
+              >
+                <p className="learn__group-kicker">
+                  {activeGroup.type === 'vowel' ? '모음' : '자음 계열'} · {groupIndex + 1}/
+                  {groups.length}
+                </p>
+                <h1 id={`group-title-${activeGroup.id}`} className="learn__group-title">
+                  {activeGroup.labelKo}
+                </h1>
+                <p className="learn__group-count">{activeGroup.letters.length}글자</p>
+                <p
+                  className={
+                    isSanskrit
+                      ? 'learn__group-samples learn__group-samples--deva'
+                      : 'learn__group-samples learn__group-samples--siddham'
+                  }
+                  lang="sa"
+                  style={{ fontFamily: scriptStack }}
+                  aria-hidden="true"
+                >
+                  {samples.join(' ')}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="learn__group-nav-btn motion-press"
+              disabled={!nextGroup}
+              aria-label={nextGroup ? `다음 계열 ${nextGroup.labelKo}` : '다음 계열 없음'}
+              onClick={nextGroup ? () => goGroup(nextGroup.id, 'next') : undefined}
+            >
+              ▶
+            </button>
+          </div>
+        </section>
+
+        <ScriptFontQuickBar track={track} />
+
+        <div className="learn__group-tiles">
+          <ul
+            key={`learn-group-${fontEpoch}-${activeGroup.id}`}
+            className="learn__grid learn__grid--group learn__group-tiles-fade"
+          >
             {activeGroup.letters.map((item) => (
               <li key={item.id} className="learn__cell">
                 <button
                   type="button"
-                  className="learn__tile motion-press"
+                  className="learn__tile learn__tile--group motion-press"
                   onClick={() => openLetter(item, 'group')}
                 >
                   <span className="learn__tile-glyph" aria-hidden="true">
@@ -189,8 +268,8 @@ export function Learn({
               </li>
             ))}
           </ul>
-        </main>
-      </MotionPage>
+        </div>
+      </main>
     )
   }
 

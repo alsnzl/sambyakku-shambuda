@@ -981,6 +981,19 @@
   font-weight: 600;
   cursor: pointer;
   text-align: left;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.home__track-more-toggle.motion-press:not(:disabled):hover,
+.home__track-more-toggle.motion-press:not(:disabled):active,
+.home__track-more-toggle.motion-press:not(:disabled):focus-visible {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
 }
 
 .home__track-more-hint {
@@ -1061,6 +1074,19 @@
   font-weight: 600;
   cursor: pointer;
   text-align: left;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.home__shared-toggle.motion-press:not(:disabled):hover,
+.home__shared-toggle.motion-press:not(:disabled):active,
+.home__shared-toggle.motion-press:not(:disabled):focus-visible {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
 }
 
 .home__shared-toggle span:last-child {

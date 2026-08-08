@@ -664,6 +664,10 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .learn__grid--group {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   /* Keep section titles in normal flow — sticky + transparent head overlapped tiles. */
   .learn__chart-section {
     position: static;

@@ -98,11 +98,11 @@ export function ScriptFontQuickBar({ track, variant = 'default', strokeCount = 0
           </>
         ) : (
           <>
+            <FoldChevron open={open} />
             <span className="script-font-bar__toggle-main">
               <span className="script-font-bar__title">폰트</span>
               <span className="script-font-bar__current">{activeLabel}</span>
             </span>
-            <FoldChevron open={open} />
           </>
         )}
       </button>

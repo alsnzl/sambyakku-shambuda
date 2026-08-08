@@ -12,8 +12,8 @@
   appearance: none;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
+  justify-content: flex-start;
+  gap: 0.55rem;
   width: 100%;
   min-height: 2.75rem;
   padding: 0.5rem var(--sfb-pad-x);
@@ -32,6 +32,7 @@
   align-items: flex-start;
   gap: 0.12rem;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .script-font-bar__title {
@@ -55,6 +56,7 @@
 }
 
 .script-font-bar__toggle .fold-chevron {
+  flex: 0 0 auto;
   color: var(--teal);
   font-size: 0.78rem;
 }
